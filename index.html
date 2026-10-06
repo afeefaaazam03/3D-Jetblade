@@ -15,6 +15,7 @@
   <nav class="rail" aria-label="Sections">
     <a class="brand" href="#top">InspectVLM → Main Jet</a>
     <ol>
+      <li><a href="#latest">Latest updates</a></li>
       <li><a href="#idea">The idea</a></li>
       <li><a href="#journey">How it evolved</a></li>
       <li><a href="#data">Data we used</a></li>
@@ -34,7 +35,7 @@
   <main id="top">
     <!-- HERO -->
     <section class="hero" aria-labelledby="h-hero">
-      <span class="eyebrow">Research project · status as of 6 October 2026</span>
+      <span class="eyebrow">Research project · last updated 6 October 2026, evening</span>
       <h1 id="h-hero">Can photos tell us what is wrong with a jet-engine blade, and <em>where it is in 3D</em>?</h1>
       <p class="lede">Jet engines are inspected by people looking at camera images of the blades inside. Damage can be a few pixels wide. We are building AI that finds that damage, writes a correct report about it, and places it on the blade's 3D shape, while admitting when the pictures are not enough to be sure.</p>
       <div class="status-strip" role="list">
@@ -49,6 +50,34 @@
         <a href="#progress">See research progress →</a>
         <a href="demo.html"><b>Try the working model →</b></a>
       </div>
+    </section>
+
+    <!-- LATEST UPDATES -->
+    <section id="latest" aria-labelledby="h-latest">
+      <span class="eyebrow">Latest updates · 6 October 2026, evening</span>
+      <h2 id="h-latest">What happened since this afternoon</h2>
+      <div class="stats">
+        <div class="stat"><span class="big">0.853</span><span class="lbl">safety gate passed on practice blades (needed 0.80), after the stain fix</span></div>
+        <div class="stat"><span class="big">1.52</span><span class="lbl">official "dent supported" threshold, set on 60 separate healthy/stained calibration blades</span></div>
+        <div class="stat"><span class="big">0.61</span><span class="lbl">real-object separation so far (3 of 6 stools): still the weak spot</span></div>
+        <div class="stat"><span class="big">~1.5 d</span><span class="lbl">until the sealed test on 30 never-seen blades finishes</span></div>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>What</th><th>Result</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td><b>Stain mistaken for a dent</b> (the last practice failure)</td><td>Stains are now searched the same way as dents; the stain is found exactly and the false score drops from 20 to 1.2</td><td><span class="chip done">fixed</span></td></tr>
+            <tr><td><b>Safety gate</b> before locking the method</td><td>Separation 0.853 on practice blades (needed ≥ 0.80)</td><td><span class="chip done">passed</span></td></tr>
+            <tr><td><b>Calibration</b> of our method</td><td>All 120 calibration cases done; threshold 1.52 (the demo's provisional 1.45 was close)</td><td><span class="chip done">done</span></td></tr>
+            <tr><td><b>Real objects: why they failed</b></td><td>Healthy and damaged scanner photos were shifted 4–18 pixels, so wood grain looked like damage. Now aligned first: mismatch 31.8 → 12.1 grey levels; worst false score 715 → 149</td><td><span class="chip done">fixed</span></td></tr>
+            <tr><td><b>Real objects: fair scoring</b></td><td>7 of 29 annotated defects are paint or dirt with 0 mm shape change; "no dent" is now counted as the right answer there</td><td><span class="chip done">fixed</span></td></tr>
+            <tr><td><b>Real objects: results so far</b></td><td>3 of 6 stools: separation 0.61, 1 of 5 physical defects located within 15 mm</td><td><span class="chip partial">open problem</span></td></tr>
+            <tr><td><b>"Pick the next photo" idea</b></td><td>Surveyed: already well studied (FisherRF, ActiveInspect 2026). Dropped to keep the paper focused on one idea</td><td><span class="chip paused">dropped</span></td></tr>
+            <tr><td><b>Automation</b></td><td>Experiments now run as system services that survive closing VS Code; remote access from any browser; one-command status check</td><td><span class="chip done">running</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note"><strong>Running now, unattended</strong><p>Baseline calibration → ablations and view study → method lock → sealed test on 30 never-seen blades → paper tables and final report. Real-object rerun (3 of 6 stools done) takes turns on the GPU.</p></div>
     </section>
 
     <!-- 1 IDEA -->
@@ -581,6 +610,7 @@ Verdict: FAIL</pre><span class="verdict">Caught: YOLO found corrosion at 0.55 co
           <li><span class="d">6 Oct</span><span class="x">Stain failure fixed with stain score proposals. <b>Safety gate passed (0.853);</b> fully automated pipeline running: calibration → ablations → method lock → sealed test.</span></li>
           <li class="key"><span class="d">6 Oct</span><span class="x"><b>Real data found online:</b> SiM3D (ICCV 2025), real objects scanned before and after damage. Real <b>detection works</b> (damaged 400–1,170 vs. undamaged ≈ 0); real 3D <b>localisation not yet.</b></span></li>
           <li><span class="d">6 Oct</span><span class="x">Paper draft (conference template, 22 verified references), meeting presentation and the working-model demo.</span></li>
+          <li><span class="d">6 Oct eve</span><span class="x">Calibration done (threshold 1.52). "Next photo" idea surveyed and dropped. Real-data failure traced to misaligned scanner photos and fixed; paint/dirt defects scored fairly. Experiments moved to system services; remote access set up.</span></li>
         </ul>
       </div>
 
