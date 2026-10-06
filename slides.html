@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BladeDelta · Meeting Slides</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<style>
+  html,body{margin:0;background:#0b0f13;color:#e7ecf1;font-family:'IBM Plex Sans',Arial,sans-serif}
+  .bar{position:sticky;top:0;z-index:9;display:flex;gap:16px;align-items:center;justify-content:space-between;padding:10px 16px;background:#0b0f13;border-bottom:1px solid #2a343e;font-size:14px}
+  .bar a{color:#f0a14a} .bar button{background:#1d262e;color:#e7ecf1;border:1px solid #2a343e;border-radius:6px;padding:6px 10px;cursor:pointer;font:inherit}
+  .deck{display:grid;gap:24px;padding:24px 16px 64px;justify-items:center}
+  .frame{width:min(100%,1280px);aspect-ratio:16/9;position:relative;overflow:hidden;border-radius:8px;box-shadow:0 6px 30px rgba(0,0,0,.4)}
+  .slide{position:absolute;left:0;top:0;width:1920px;height:1080px;box-sizing:border-box;transform-origin:0 0}
+  .slide h1,.slide h2,.slide h3,.slide p,.slide ul,.slide table{margin:0}
+  .slide table{border-collapse:collapse} .slide th,.slide td{text-align:left;padding:.35em .6em;border-bottom:1px solid #D6DCE2;vertical-align:top}
+  .slide th{font-weight:600;color:#475360}
+  .notes{display:none} body.shownotes .notes{display:block;position:absolute;left:0;right:0;bottom:0;background:rgba(11,15,19,.92);color:#e7ecf1;font-size:26px;line-height:1.4;padding:24px 128px}
+  body.present .bar{display:none} body.present .deck{padding:0;gap:0;height:100vh;overflow-y:auto;scroll-snap-type:y mandatory}
+  body.present .frame{width:min(100vw,177.78vh);border-radius:0;box-shadow:none;scroll-snap-align:center;margin:auto}
+  body.present .deck>.frame{height:auto}
+</style></head><body>
+<div class="bar"><span><b>BladeDelta</b> · research meeting slides · <a href="index.html">project page</a> · <a href="demo.html">working model</a></span>
+<span><button id="present">Present (P)</button> <button id="notes">Speaker notes (N)</button></span></div>
+<main class="deck">
+<div class="frame"><section class="slide" id="cover" data-transition="fade" style="background:#131A21;color:#E7ECF1;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:space-between">
+<p style="font-size:28px;color:#F0A14A;letter-spacing:4px;text-transform:uppercase;font-weight:600">Research meeting · 7 October 2026</p>
+<div style="display:flex;flex-direction:column;gap:40px">
+<h1 style="font-family:'Oswald', Arial, sans-serif;font-size:120px;font-weight:600;line-height:1.05;color:#F2F4F6">Which damage do the images support?</h1>
+<p style="font-size:44px;line-height:1.3;color:#A9B4BF;max-width:1400px">Evidence-bounded 3D damage estimation on turbine blades, from a few photos and the healthy CAD design</p>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:end">
+<p style="font-size:32px;color:#E7ECF1">[Your name] · [Advisor] · [Lab / university]</p>
+<p style="font-size:28px;color:#7F8A96">Target: top-tier vision conference · paper due 16 Nov 2026</p>
+</div>
+<aside class="notes">Opening: one sentence. We want a computer to look at a few inspection photos of a jet-engine blade, compare them with the blade's design, and say "there is a dent here, this deep", or honestly say "these photos cannot tell". Today: the idea, what I built in the last month, the first results, and the plan to submission.</aside>
+</section>
+</div><div class="frame"><section class="slide" id="problem" data-transition="fade" style="background:#F2F4F6;color:#131A21;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;gap:56px">
+<h2 style="font-family:'Oswald', Arial, sans-serif;font-size:72px;font-weight:600;line-height:1.1">The problem: damage is tiny, and AI reports about it are confidently wrong</h2>
+<div style="display:flex;gap:64px;align-items:start">
+<div style="flex:1;display:flex;flex-direction:column;gap:32px">
+<p style="font-size:32px;line-height:1.4;color:#475360">Blade inspectors look at camera images and decide: is there damage, where is it, how bad is it?</p>
+<div style="display:flex;gap:24px">
+<div style="flex:1;background:#FBFCFD;border:1px solid #D6DCE2;border-radius:16px;padding:32px;display:flex;flex-direction:column;gap:8px">
+<p style="font-family:'Oswald', Arial, sans-serif;font-size:96px;font-weight:600;color:#A8540A;line-height:1">46 px</p>
+<p style="font-size:28px;color:#475360;line-height:1.35">of corrosion on a 1-megapixel image</p>
+</div>
+<div style="flex:1;background:#FBFCFD;border:1px solid #D6DCE2;border-radius:16px;padding:32px;display:flex;flex-direction:column;gap:8px">
+<p style="font-family:'Oswald', Arial, sans-serif;font-size:96px;font-weight:600;color:#A8540A;line-height:1">2%</p>
+<p style="font-size:28px;color:#475360;line-height:1.35">of dents named correctly by an off-the-shelf vision-language model</p>
+</div>
+</div>
+<p style="font-size:32px;line-height:1.4;color:#475360">And a dark patch in a photo can be a dent, a stain, a lighting change or a 1° camera error.</p>
+</div>
+<img src="img/example_corrosion.jpg" alt="Silver blade close-up with three tiny amber circles around barely visible corrosion spots" style="width:620px;height:480px;object-fit:cover;border-radius:16px;border:1px solid #D6DCE2">
+</div>
+<aside class="notes">Right: real BladeSynth image, 46 pixels of corrosion. The VLM said "Defect: None, PASS". Our Phase 1 checker fixed reports using a detector (Dent 2% to 100%, Nick 5% to 99%), but it can only say "a dent somewhere in the photo", not where on the part or how deep.</aside>
+</section>
+</div><div class="frame"><section class="slide" id="question" data-transition="fade" style="background:#F2F4F6;color:#131A21;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;gap:64px">
+<h2 style="font-family:'Oswald', Arial, sans-serif;font-size:72px;font-weight:600;line-height:1.1">The research question</h2>
+<p style="font-size:44px;line-height:1.3;color:#131A21">Given the healthy design and a few calibrated photos, <span style="color:#A8540A">which physical damage do the images actually support?</span></p>
+<div style="display:flex;gap:24px;align-items:stretch">
+<div style="flex:1;background:#FBFCFD;border:1px solid #D6DCE2;border-radius:16px;padding:32px;display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;letter-spacing:2px;text-transform:uppercase;color:#6F7B87;font-weight:600">Input</p>
+<p style="font-size:32px;line-height:1.35">Healthy CAD mesh + 2 photos, nominal camera and lights</p>
+</div>
+<div style="font-size:72px;color:#A3ACB6;align-self:center">→</div>
+<div style="flex:1;background:#FBFCFD;border:1px solid #D6DCE2;border-radius:16px;padding:32px;display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;letter-spacing:2px;text-transform:uppercase;color:#6F7B87;font-weight:600">Output 1</p>
+<p style="font-size:32px;line-height:1.35">Damaged 3D shape: where, how deep, how wide</p>
+</div>
+<div style="flex:1;background:#FBEEDD;border:2px solid #A8540A;border-radius:16px;padding:32px;display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;letter-spacing:2px;text-transform:uppercase;color:#8A4407;font-weight:600">Output 2 · the new part</p>
+<p style="font-size:32px;line-height:1.35">"Supported" or "not supported by these photos", with a controlled false-alarm rate</p>
+</div>
+</div>
+<aside class="notes">The key word is "supported". Existing methods give anomaly heatmaps, boxes or voxels, or need a 3D scanner. None says whether the views are enough to distinguish a real dent from a stain, a light change or a slightly wrong camera. That decision, with a calibrated false-alarm rate, is our contribution.</aside>
+</section>
+</div><div class="frame"><section class="slide" id="journey" data-transition="fade" style="background:#F2F4F6;color:#131A21;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;gap:48px">
+<h2 style="font-family:'Oswald', Arial, sans-serif;font-size:72px;font-weight:600;line-height:1.1">How we got here: five phases, each fixing what the last could not do</h2>
+<table style="font-size:28px;color:#131A21;width:1664px">
+<tr><th style="width:17%">When</th><th style="width:33%">Phase</th><th style="width:50%">Outcome</th></tr>
+<tr><td>4–7 Sep</td><td>1 · Check AI-written reports</td><td>Detector-grounded agents: dent accuracy 2% → 100%</td></tr>
+<tr><td>7–14 Sep</td><td>2 · Multi-view report checking</td><td>Tied a simple rule baseline → redesign</td></tr>
+<tr><td>14–17 Sep</td><td>3 · Real photographs</td><td>Synthetic AUROC 0.99 → 0.61 on real photos</td></tr>
+<tr><td>17 Sep–1 Oct</td><td>4 · 3D damage from images</td><td>Exact on 18/18 dents, but a fixed search on 2 blades</td></tr>
+<tr style="background:#FBEEDD"><td><b>5 Oct–now</b></td><td><b>5 · BladeDelta</b></td><td><b>Continuous, evidence-bounded, sealed test</b></td></tr>
+</table>
+<aside class="notes">Each phase was stopped for a recorded reason, not abandoned. Phase 4 showed that recovering 3D damage from images is possible, but only inside a fixed family of dent shapes on two blades we had already looked at. Phase 5 is the version a strong reviewer would accept: continuous estimation, unseen blades, harder capture changes, and an honest "not supported" answer.</aside>
+</section>
+</div><div class="frame"><section class="slide" id="gap" data-transition="fade" style="background:#F2F4F6;color:#131A21;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;gap:48px">
+<h2 style="font-family:'Oswald', Arial, sans-serif;font-size:72px;font-weight:600;line-height:1.1">What exists, and the gap we target</h2>
+<table style="font-size:26px;color:#131A21;width:1664px">
+<tr><th style="width:24%">Closest work</th><th style="width:38%">Gives</th><th style="width:38%">Missing for us</th></tr>
+<tr><td>Looking 3D (CVPR 2024)</td><td>Photo + reference CAD → anomaly boxes</td><td>No 3D shape, no depth</td></tr>
+<tr><td>SiM3D (ICCV 2025)</td><td>Multi-view → 3D anomaly voxels</td><td>Needs scans; no physical-change test</td></tr>
+<tr><td>CADSplat (Sep 2026)</td><td>Sparse views + CAD → deformation field</td><td>Leaves measured damage to future work</td></tr>
+<tr><td>PASDF (ICCV 2025)</td><td>Point cloud → repaired shape</td><td>Needs a 3D scan as input</td></tr>
+<tr><td>Bayes' Rays, OCSplats</td><td>Generic reconstruction uncertainty</td><td>Does not test damage vs. look-alikes</td></tr>
+</table>
+<p style="font-size:32px;line-height:1.4;color:#475360"><b style="color:#131A21">Gap:</b> no method decides whether a few photos support a physical change, rather than a stain, light or camera error, and no benchmark has the paired truth to test it.</p>
+<aside class="notes">Survey of 19 works, references verified from arXiv and Crossref. CADSplat is the closest and explicitly leaves measurement-quality deformed surfaces as future work; we position directly against that. Six survey entries still need their primary sources checked before submission.</aside>
+</section>
+</div><div class="frame"><section class="slide" id="benchmark" data-transition="fade" style="background:#F2F4F6;color:#131A21;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;gap:48px">
+<h2 style="font-family:'Oswald', Arial, sans-serif;font-size:72px;font-weight:600;line-height:1.1">BladeDelta benchmark: exact 3D truth, sealed test</h2>
+<div style="display:flex;gap:24px">
+<div style="flex:1;background:#FBFCFD;border:1px solid #D6DCE2;border-radius:16px;padding:32px;display:flex;flex-direction:column;gap:8px">
+<p style="font-family:'Oswald', Arial, sans-serif;font-size:96px;font-weight:600;color:#A8540A;line-height:1">456</p>
+<p style="font-size:28px;color:#475360;line-height:1.35">rendered inspection cases</p>
+</div>
+<div style="flex:1;background:#FBFCFD;border:1px solid #D6DCE2;border-radius:16px;padding:32px;display:flex;flex-direction:column;gap:8px">
+<p style="font-family:'Oswald', Arial, sans-serif;font-size:96px;font-weight:600;color:#A8540A;line-height:1">54</p>
+<p style="font-size:28px;color:#475360;line-height:1.35">fresh public Rotor37 blades</p>
+</div>
+<div style="flex:1;background:#FBFCFD;border:1px solid #D6DCE2;border-radius:16px;padding:32px;display:flex;flex-direction:column;gap:8px">
+<p style="font-family:'Oswald', Arial, sans-serif;font-size:96px;font-weight:600;color:#A8540A;line-height:1">30</p>
+<p style="font-size:28px;color:#475360;line-height:1.35">test blades never rendered until the method is locked</p>
+</div>
+</div>
+<ul style="font-size:30px;line-height:1.5;color:#475360">
+<li>Healthy, stain-only, dent and dent + stain cases; three dent shapes the method was not designed for</li>
+<li>Camera jitter (±1.5°) and lighting changes (±15%); the method only gets the nominal values</li>
+<li>Protocol, hypotheses and metrics hash-frozen before testing; every change logged with a date</li>
+</ul>
+<aside class="notes">Dev 96 cases on blades 13–24, calib 120 on blades 25–36 (used only to set the threshold), test 240 on blades 36–66. Blades 0–12 were seen in earlier work and are used only to train the renderer. Depths 0.04–0.45 mm on a 74 mm blade.</aside>
+</section>
+</div><div class="frame"><section class="slide" id="method" data-transition="fade" style="background:#F2F4F6;color:#131A21;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;gap:56px">
+<h2 style="font-family:'Oswald', Arial, sans-serif;font-size:72px;font-weight:600;line-height:1.1">Method: explain the photos without damage first, then ask if a dent does clearly better</h2>
+<div style="display:flex;gap:16px;align-items:stretch">
+<div style="flex:1;background:#FBFCFD;border:1px solid #D6DCE2;border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;color:#6F7B87;font-weight:600">1 · No-damage fit</p>
+<p style="font-size:28px;line-height:1.35">Camera from the outline, then lighting and any stain</p>
+</div>
+<div style="flex:1;background:#FBFCFD;border:1px solid #D6DCE2;border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;color:#6F7B87;font-weight:600">2 · Score every spot</p>
+<p style="font-size:28px;line-height:1.35">One gradient pass rates a small dent or stain anywhere</p>
+</div>
+<div style="flex:1;background:#FBFCFD;border:1px solid #D6DCE2;border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;color:#6F7B87;font-weight:600">3 · Continuous dent</p>
+<p style="font-size:28px;line-height:1.35">Position, depth, size, shape and rim, same nuisance freedom</p>
+</div>
+<div style="flex:1;background:#FBEEDD;border:2px solid #A8540A;border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;color:#8A4407;font-weight:600">4 · Decision</p>
+<p style="font-size:28px;line-height:1.35">Report only if the fit gain beats a threshold set on calibration blades</p>
+</div>
+</div>
+<p style="font-size:32px;line-height:1.4;color:#475360">Built on a differentiable renderer with a light-linear neural shader (0.9 grey-level error on an unseen blade), and judged only on reliable interior pixels.</p>
+<aside class="notes">Fit gain = loss without dent minus loss with dent; the dent model contains "no dent", so the gain is never negative. The threshold is a split-conformal quantile on healthy and stain-only calibration blades, which bounds the false-change rate. Step 2 is a Rao score test: one backward pass gives the evidence for a small dent at every surface location and radius.</aside>
+</section>
+</div><div class="frame"><section class="slide" id="lessons" data-transition="fade" style="background:#F2F4F6;color:#131A21;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;gap:48px">
+<h2 style="font-family:'Oswald', Arial, sans-serif;font-size:72px;font-weight:600;line-height:1.1">What building it taught us: 12 problems found by measurement, not guessing</h2>
+<table style="font-size:26px;color:#131A21;width:1664px">
+<tr><th style="width:34%">Problem</th><th style="width:33%">How we found it</th><th style="width:33%">Fix</th></tr>
+<tr><td>Fake dents at the blade root</td><td>Residual map of a healthy blade</td><td>Ignore a thin band at the edges: false gain 28 → 0</td></tr>
+<tr><td>Renderer ignored lighting</td><td>Correlation with Blender ≈ 0</td><td>Light-linear shader: 0.90–0.98</td></tr>
+<tr><td>A stain hid the real dent</td><td>True dent was #1 when run alone</td><td>Search dent and stain symmetrically</td></tr>
+<tr><td>Lighting moved the camera</td><td>2.7° pose on a light-only case</td><td>Camera from the outline only</td></tr>
+<tr><td>70% of dents barely visible</td><td>Visibility check per dent</td><td>Report observable vs. unobservable</td></tr>
+</table>
+<p style="font-size:30px;line-height:1.4;color:#475360">Each fix is on development data only, logged in the protocol before any test image existed.</p>
+<aside class="notes">Top 5 of 12. The others: a pose step size bug, wrong gradients from flat shading, pose stuck in a wrong basin, a silent NaN, baselines on different pixels, and stain proposals. All in PROGRESS.md with dates.</aside>
+</section>
+</div><div class="frame"><section class="slide" id="results" data-transition="fade" style="background:#F2F4F6;color:#131A21;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<h2 style="font-family:'Oswald', Arial, sans-serif;font-size:72px;font-weight:600;line-height:1.1">First results: ours beats both baselines on the development blades</h2>
+<table style="font-size:30px;color:#131A21;width:1664px">
+<tr><th style="width:34%">Method</th><th style="width:22%">Separation (AUROC)</th><th style="width:22%">Located ≤ 0.1</th><th style="width:22%">Found at 10% false alarms</th></tr>
+<tr style="background:#E4EEFA"><td><b>BladeDelta (ours)</b></td><td><b>0.855</b></td><td><b>72%</b></td><td><b>61%</b></td></tr>
+<tr><td>Free-form field (CADSplat-style)</td><td>0.600</td><td>50%</td><td>11%</td></tr>
+<tr><td>Discrete search (our Phase 4)</td><td>0.532</td><td>28%</td><td>6%</td></tr>
+</table>
+<div style="display:flex;gap:24px">
+<div style="flex:1;background:#FBFCFD;border:1px solid #D6DCE2;border-radius:16px;padding:28px">
+<p style="font-size:28px;line-height:1.35;color:#475360">Separation improved <b style="color:#131A21">0.71 → 0.855</b> over two days of fixes</p>
+</div>
+<div style="flex:1;background:#FBFCFD;border:1px solid #D6DCE2;border-radius:16px;padding:28px">
+<p style="font-size:28px;line-height:1.35;color:#475360">Target for the paper: <b style="color:#131A21">70% found at ≤ 10% false alarms</b></p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6F7B87">Dev split, 96 cases (18 observable dents, 36 healthy or stained blades). Before the stain fix; sealed test not yet run.</p>
+<aside class="notes">All baselines use the same renderer, cameras and evidence pixels, so the gap is not from masking. The free-form field is the CADSplat-style per-vertex deformation. These are dev numbers used during development; the paper's numbers come from the sealed test, run once.</aside>
+</section>
+</div><div class="frame"><section class="slide" id="examples" data-transition="fade" style="background:#F2F4F6;color:#131A21;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;gap:40px">
+<h2 style="font-family:'Oswald', Arial, sans-serif;font-size:72px;font-weight:600;line-height:1.1">One success and the failure we just fixed</h2>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px">
+<img src="img/dev_0013_4.jpg" alt="Blade photo with a dent, the residual showing the dent, and the residual after our fit with the dent gone" style="width:816px;height:323px;object-fit:contain;background:#FBFCFD;border-radius:12px">
+<p style="font-size:28px;line-height:1.35;color:#475360"><b style="color:#131A21">Success:</b> depth 3.31 vs. 3.23 (×10⁻³ span), centre exact. After our dent fit, the signal disappears.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px">
+<img src="img/dev_0014_1.jpg" alt="Blade with a rust-coloured stain that a fake dent explained" style="width:816px;height:323px;object-fit:contain;background:#FBFCFD;border-radius:12px">
+<p style="font-size:28px;line-height:1.35;color:#475360"><b style="color:#131A21">Failure:</b> a strong stain was missed and a fake dent explained it. Fixed with stain score proposals: now found exactly.</p>
+</div>
+</div>
+<aside class="notes">Left to right in each image: observed photo with the true dent in orange and our estimate in blue, the residual the no-damage explanation cannot account for, and the residual after our dent fit.</aside>
+</section>
+</div><div class="frame"><section class="slide" id="real" data-transition="fade" style="background:#F2F4F6;color:#131A21;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;gap:40px">
+<h2 style="font-family:'Oswald', Arial, sans-serif;font-size:72px;font-weight:600;line-height:1.1">Real data: industrial scans of damaged objects (SiM3D, ICCV 2025)</h2>
+<div style="display:flex;gap:48px;align-items:start">
+<img src="img/sim3d_stool.jpg" alt="Real scanner photo of an upside-down wooden stool with scratches on the seat; the 3D scan outline in orange matches it" style="width:640px;height:469px;object-fit:cover;border-radius:12px">
+<div style="flex:1;display:flex;flex-direction:column;gap:24px">
+<p style="font-size:30px;line-height:1.4;color:#475360">6 stools scanned <b style="color:#131A21">before and after</b> damage with a ZEISS ATOS Q: real photos, exact poses, measured 3D truth (1.5–14 mm defects).</p>
+<table style="font-size:28px;color:#131A21">
+<tr><th style="width:60%">Finding so far</th><th style="width:40%">Status</th></tr>
+<tr><td>Detects that something changed</td><td>Working: 400–1,170 vs. ~0</td></tr>
+<tr><td>Locates it in 3D</td><td>Not yet: 4–13 cm off</td></tr>
+</table>
+<p style="font-size:28px;line-height:1.4;color:#475360">Full 6-stool run with camera refinement in progress.</p>
+</div>
+</div>
+<aside class="notes">No physical blade capture was available, so I found SiM3D. Key enabler: the scanner revisits the same 12 positions to within 1 mm, so the healthy photo from the same position is a near-perfect reference. Undamaged areas now score near zero, damaged areas 400 to 1,170. Localization on real wood texture is not solved yet; if it stays that way, the paper reports real detection and leaves real 3D localization as future work.</aside>
+</section>
+</div><div class="frame"><section class="slide" id="plan" data-transition="fade" style="background:#F2F4F6;color:#131A21;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;gap:48px">
+<h2 style="font-family:'Oswald', Arial, sans-serif;font-size:72px;font-weight:600;line-height:1.1">Plan to submission, with a go / no-go on 1 November</h2>
+<table style="font-size:28px;color:#131A21;width:1664px">
+<tr><th style="width:20%">Dates</th><th style="width:60%">Work</th><th style="width:20%">Status</th></tr>
+<tr><td>5–6 Oct</td><td>Benchmark, method, baselines, paper draft</td><td>Done</td></tr>
+<tr><td>7–9 Oct</td><td>Calibration, ablations, 2/4/7-view study, method lock</td><td>Running (automated)</td></tr>
+<tr><td>9–12 Oct</td><td>Sealed test run once; real SiM3D results</td><td>Queued</td></tr>
+<tr><td>13–31 Oct</td><td>Writing, figures, advisor review</td><td>Planned</td></tr>
+<tr style="background:#FBEEDD"><td><b>1 Nov</b></td><td><b>Go / no-go for the main track</b></td><td></td></tr>
+<tr><td>10 / 16 Nov</td><td>Abstract registration / paper deadline</td><td></td></tr>
+</table>
+<p style="font-size:30px;line-height:1.4;color:#475360">If the gates fail: a workshop or a later conference with stronger evidence, not a rushed submission.</p>
+<aside class="notes">Gates for the main track: beat strong baselines on the sealed test at a calibrated false-alarm rate; ablations show each part matters; and ideally some real-data evidence. The whole pipeline is automated and resumable, so it runs without supervision.</aside>
+</section>
+</div><div class="frame"><section class="slide" id="asks" data-transition="fade" style="background:#131A21;color:#E7ECF1;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;gap:56px">
+<h2 style="font-family:'Oswald', Arial, sans-serif;font-size:72px;font-weight:600;line-height:1.1;color:#F2F4F6">Feedback I would like today</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+<div style="background:#1D262E;border:1px solid #2A343E;border-radius:16px;padding:32px;display:flex;flex-direction:column;gap:12px">
+<h3 style="font-size:36px;color:#F0A14A">1 · Is the contribution strong enough?</h3>
+<p style="font-size:28px;line-height:1.4;color:#A9B4BF">"Evidence-bounded" decision vs. CADSplat-style fitting</p>
+</div>
+<div style="background:#1D262E;border:1px solid #2A343E;border-radius:16px;padding:32px;display:flex;flex-direction:column;gap:12px">
+<h3 style="font-size:36px;color:#F0A14A">2 · Real data framing</h3>
+<p style="font-size:28px;line-height:1.4;color:#A9B4BF">Is real detection plus synthetic 3D enough, or is real 3D required?</p>
+</div>
+<div style="background:#1D262E;border:1px solid #2A343E;border-radius:16px;padding:32px;display:flex;flex-direction:column;gap:12px">
+<h3 style="font-size:36px;color:#F0A14A">3 · Venue</h3>
+<p style="font-size:28px;line-height:1.4;color:#A9B4BF">Main conference track vs. workshop or a later venue</p>
+</div>
+<div style="background:#1D262E;border:1px solid #2A343E;border-radius:16px;padding:32px;display:flex;flex-direction:column;gap:12px">
+<h3 style="font-size:36px;color:#F0A14A">4 · Practical</h3>
+<p style="font-size:28px;line-height:1.4;color:#A9B4BF">Authors, a review slot by 25 Oct, any GPU time</p>
+</div>
+</div>
+<aside class="notes">Close: the method works clearly on synthetic dev data, real detection works, real 3D localization is the open risk. Ask for a decision on framing and venue so the next three weeks are spent on the right thing.</aside>
+</section>
+</div>
+</main>
+<script>
+function fit(){document.querySelectorAll('.frame').forEach(function(f){var s=f.querySelector('.slide');s.style.transform='scale('+(f.clientWidth/1920)+')';});}
+window.addEventListener('resize',fit);document.fonts&&document.fonts.ready.then(fit);fit();
+var frames=[].slice.call(document.querySelectorAll('.frame')),cur=0;
+function go(i){cur=Math.max(0,Math.min(frames.length-1,i));frames[cur].scrollIntoView({behavior:'smooth',block:'center'});}
+document.addEventListener('keydown',function(e){
+  if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(cur+1);}
+  else if(e.key==='ArrowLeft'||e.key==='ArrowUp'||e.key==='PageUp'){e.preventDefault();go(cur-1);}
+  else if(e.key==='p'||e.key==='P'){togglePresent();}
+  else if(e.key==='n'||e.key==='N'){document.body.classList.toggle('shownotes');}
+});
+function togglePresent(){document.body.classList.toggle('present');if(document.body.classList.contains('present')&&document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(function(){});setTimeout(function(){fit();go(cur);},300);}
+document.getElementById('present').onclick=togglePresent;
+document.getElementById('notes').onclick=function(){document.body.classList.toggle('shownotes');};
+</script></body></html>

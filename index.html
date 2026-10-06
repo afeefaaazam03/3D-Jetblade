@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>InspectVLM &amp; Main Jet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,600..800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="shell">
+  <nav class="rail" aria-label="Sections">
+    <a class="brand" href="#top">InspectVLM → Main Jet</a>
+    <ol>
+      <li><a href="#idea">The idea</a></li>
+      <li><a href="#journey">How it evolved</a></li>
+      <li><a href="#data">Data we used</a></li>
+      <li><a href="#method">How it works</a></li>
+      <li><a href="#results">Results</a></li>
+      <li><a href="#survey">Survey &amp; gaps</a></li>
+      <li><a href="#left">What's left</a></li>
+      <li><a href="#cvpr">Conference plan</a></li>
+      <li><a href="#progress">Research progress</a></li>
+      <li><a href="#timeline">Full timeline</a></li>
+    </ol>
+    <a class="rail-cta" href="demo.html">Try the working model →</a>
+    <a class="rail-cta" href="slides.html">Meeting slides →</a>
+    <a class="rail-cta" href="proposal.html">Read the full proposal →</a>
+  </nav>
+
+  <main id="top">
+    <!-- HERO -->
+    <section class="hero" aria-labelledby="h-hero">
+      <span class="eyebrow">Research project · status as of 6 October 2026</span>
+      <h1 id="h-hero">Can photos tell us what is wrong with a jet-engine blade, and <em>where it is in 3D</em>?</h1>
+      <p class="lede">Jet engines are inspected by people looking at camera images of the blades inside. Damage can be a few pixels wide. We are building AI that finds that damage, writes a correct report about it, and places it on the blade's 3D shape, while admitting when the pictures are not enough to be sure.</p>
+      <div class="status-strip" role="list">
+        <div role="listitem"><span class="k">Phase 1 · AI report checker</span><span class="v">Works on synthetic data</span><span class="chip done">done</span></div>
+        <div role="listitem"><span class="k">Phases 2–3 · Multi-view, real photos</span><span class="v">Method tied rules; big synthetic→real drop</span><span class="chip partial">lessons kept</span></div>
+        <div role="listitem"><span class="k">Phase 4 · Main Jet 3D</span><span class="v">Exact on controlled synthetic tests</span><span class="chip done">done</span></div>
+        <div role="listitem"><span class="k">Phase 5 · BladeDelta</span><span class="v">Beats both baselines on dev; test sealed</span><span class="chip partial">in progress</span></div>
+      </div>
+      <div class="callout-new">
+        <span class="chip done">new</span>
+        <span><b>5–6 October:</b> new benchmark, new method, first head-to-head results and a paper draft.</span>
+        <a href="#progress">See research progress →</a>
+        <a href="demo.html"><b>Try the working model →</b></a>
+      </div>
+    </section>
+
+    <!-- 1 IDEA -->
+    <section id="idea" aria-labelledby="h-idea">
+      <span class="eyebrow">01 · The idea in plain words</span>
+      <h2 id="h-idea">Damage is tiny, and AI reports about it can be confidently wrong</h2>
+      <div class="two">
+        <div class="read">
+          <p>A turbine blade can have four common kinds of damage: a <b>dent</b> (pushed-in metal), a <b>nick</b> (a small chip on the edge), a <b>scratch</b>, and <b>corrosion</b> (rust-like spots). An inspector looks at images and writes a short report: what the damage is, where it is, how bad it is, and whether the blade passes.</p>
+          <p>Modern "vision-language" AI models can look at an image and write that report automatically. The problem is that they often get it wrong, and they sound just as confident when they do. In our tests, an off-the-shelf model named the damage correctly on only <b>2% of dented blades</b> and <b>5% of nicked blades</b>.</p>
+          <p>The picture on the right shows why. This blade has corrosion, labelled by the dataset at <b class="num">46 pixels</b> out of more than a million. The AI said "Defect: None, Verdict: PASS".</p>
+          <p>Our project grew in two steps. First we built a <b>checker</b> that catches and fixes wrong AI reports using evidence from a defect detector. Then we asked a harder question: can the images tell us the actual <b>3D shape change</b> on the blade, so the report points to a place on the real part rather than a place in a photo?</p>
+        </div>
+        <figure>
+          <img src="img/example_corrosion.jpg" alt="Close-up of a silver turbine blade with three tiny amber circles marking corrosion spots that are barely visible." width="660" height="510">
+          <figcaption>BladeSynth image <span class="mono">Corrosion_417</span>, cropped and enlarged 1.5×. Amber circles mark the three labelled corrosion sites. Total damage: 46 pixels.</figcaption>
+        </figure>
+      </div>
+      <details>
+        <summary>Words used on this page</summary>
+        <dl class="gloss">
+          <div><dt>VLM</dt><dd>Vision-language model. An AI that reads an image and writes text about it. We used Qwen2-VL-7B.</dd></div>
+          <div><dt>Segmentation / mask</dt><dd>Colouring exactly which pixels are damage. A "mask" is that coloured map.</dd></div>
+          <div><dt>YOLO</dt><dd>A fast object detector. Ours (YOLOv8-seg) draws a box and a mask around each defect.</dd></div>
+          <div><dt>CAD / mesh</dt><dd>The blade's digital 3D design. A mesh is that shape stored as points (vertices) joined into triangles.</dd></div>
+          <div><dt>IoU</dt><dd>Overlap between the predicted and true damage area. 100% is perfect, 0% means no overlap.</dd></div>
+          <div><dt>AUROC</dt><dd>How well a score ranks damaged cases above healthy ones. 0.5 is a coin flip; 1.0 is perfect.</dd></div>
+          <div><dt>Precision / recall</dt><dd>Precision: of the things flagged, how many were right. Recall: of the real problems, how many were found.</dd></div>
+          <div><dt>PFCS</dt><dd>Our report score (0 to 1). It combines correct defect type, correct pass/fail, correct location and text similarity.</dd></div>
+          <div><dt>Synthetic vs real</dt><dd>Synthetic images are computer-rendered with known answers. Real images are photographs, where answers must be labelled by people.</dd></div>
+          <div><dt>Fit gain</dt><dd>How much better "dent + nuisance" explains the images than "nuisance only" (camera error, lighting, a stain). Large gain = the images support a dent.</dd></div>
+          <div><dt>Dev / calib / test</dt><dd>Dev: used to build the method. Calib: used only to set the decision threshold. Test: sealed, rendered and scored once at the end.</dd></div>
+        </dl>
+      </details>
+    </section>
+
+    <!-- 2 JOURNEY -->
+    <section id="journey" aria-labelledby="h-journey">
+      <span class="eyebrow">02 · How the project evolved</span>
+      <h2 id="h-journey">Five phases, each started by what the last one could not do</h2>
+      <div class="timeline">
+        <div class="phase">
+          <span class="when">4 – 7 September 2026</span>
+          <div class="head"><h3>Phase 1 · InspectVLM: check and fix AI-written reports</h3><span class="chip done">done</span></div>
+          <p>A team of AI "agents" reviews each report. One checks the text for contradictions, one compares it with what the YOLO detector actually found, one decides if the report is wrong, and one rewrites it. Scaled from 100 to 500 images, then confirmed on 125 images never used during development.</p>
+          <p class="why"><b>Why we moved on:</b> every image was a single synthetic picture with no notion of which physical blade or which viewing angle it came from. An independent audit found the required multi-view workflow was missing entirely.</p>
+        </div>
+        <div class="phase">
+          <span class="when">7 – 14 September 2026</span>
+          <div class="head"><h3>Phase 2 · ClosureGuard / BladeGuard: check reports using several views</h3><span class="chip partial">redesign</span></div>
+          <p>Every claim in a report must be supported by the images, and every defect visible in the images must appear in the report. We built multi-view data contracts, a shortcut-proof benchmark and a canonical-surface method, with 68 then 126 automated tests passing.</p>
+          <p class="why"><b>Why we moved on:</b> the new method tied a simple "detector + rules" baseline and could not meet its safety target with only 42 clean calibration groups. Recorded verdict: <b>not ready for submission, redesign</b>.</p>
+        </div>
+        <div class="phase">
+          <span class="when">14 – 17 September 2026</span>
+          <div class="head"><h3>Phase 3 · From synthetic images to real photographs</h3><span class="chip partial">gap found</span></div>
+          <p>We tested synthetic-trained detectors on real aero-engine photos (AeBAD) and trained a model on real labelled photos (AEBIS). We ran 45 training runs across 19 conditions to push real-photo accuracy toward a fixed goal.</p>
+          <p class="why"><b>Why we moved on:</b> a detector that was near-perfect on synthetic images was close to a coin flip on real ones, and the best real-photo model stopped just short of its 65% IoU goal. Flat 2D masks also cannot say how deep a dent is.</p>
+        </div>
+        <div class="phase">
+          <span class="when">17 September – 1 October 2026</span>
+          <div class="head"><h3>Phase 4 · Main Jet: estimate the 3D damage from images</h3><span class="chip done">done</span></div>
+          <p>Input: the healthy 3D blade design plus two inspection images. Output: where on the 3D surface the damage is, and the changed 3D shape. Exact recovery on controlled synthetic dents, including fresh locations and a 1° camera error.</p>
+          <p class="why"><b>Why we moved on:</b> it was a search over a fixed family of dent shapes on two exposed blades. A strong paper needs continuous estimation, unseen blades, harder capture changes and an honest "not enough evidence" answer.</p>
+        </div>
+        <div class="phase current">
+          <span class="when">5 October – now</span>
+          <div class="head"><h3>Phase 5 · BladeDelta: evidence-bounded 3D damage</h3><span class="chip partial">in progress</span></div>
+          <p>A new benchmark on 54 fresh Rotor37 blades (30 sealed for testing), a continuous estimator built on a differentiable renderer, and a decision that says "dent supported" only when the images rule out camera error, lighting and stains. <a href="#progress">Details below.</a></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 DATA -->
+    <section id="data" aria-labelledby="h-data">
+      <span class="eyebrow">03 · Data we used</span>
+      <h2 id="h-data">Six sources, from fully synthetic to real photographs</h2>
+      <figure>
+        <img src="img/classes.jpg" alt="Five synthetic turbine blade images in a row, one per class: corrosion, dent, nick, normal, scratch." width="1532" height="300">
+        <figcaption>One BladeSynth example per class, left to right: Corrosion, Dent, Nick, Normal, Scratch. Each damaged image also has a pixel mask of the damage.</figcaption>
+      </figure>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Dataset</th><th>What it is</th><th style="text-align:right">Size</th><th>Used for</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td><b>BladeSynth</b><span class="sub">Scientific Data, 2025</span></td><td>Computer-rendered blades, 5 classes, with damage masks</td><td class="n">12,505 images<span class="sub">12,489 after cleaning</span></td><td>Phase 1 checker, detector training, synthetic tests</td><td><span class="chip done">used</span></td></tr>
+            <tr><td><b>AeBAD</b><span class="sub">real aero-engine blades</span></td><td>Real photos (AeBAD-S) and video frames (AeBAD-V)</td><td class="n">5,570 images<span class="sub">4,342 official test kept sealed</span></td><td>Measuring the synthetic-to-real drop</td><td><span class="chip done">used</span></td></tr>
+            <tr><td><b>AEBIS</b><span class="sub">real labelled photos</span></td><td>Real damaged-blade photos with pixel masks</td><td class="n">528 images<span class="sub">397 train · 131 dev</span></td><td>Training the real-photo damage model</td><td><span class="chip done">used</span></td></tr>
+            <tr><td><b>Our own photos</b></td><td>Photographs of different physical blades</td><td class="n">174 files<span class="sub">43 used for dev</span></td><td>Checking the real model on new blades</td><td><span class="chip partial">unlabelled</span></td></tr>
+            <tr><td><b>PLAID Rotor37</b><span class="sub">CC BY-SA 4.0</span></td><td>Public 3D blade shapes (29,989 vertices each). We add known dents and colour changes, then render images in Blender.</td><td class="n">110 shapes<span class="sub">13 exposed · 97 fresh</span></td><td>Phases 4–5: images → 3D damage, with exact ground truth</td><td><span class="chip done">current</span></td></tr>
+            <tr><td><b>RAD</b><span class="sub">multi-view industrial</span></td><td>Multi-view photos of 18 physical objects</td><td class="n">4,047 images</td><td>Phase 2 multi-view tests</td><td><span class="chip paused">paused</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note">
+        <strong>Cleaning mattered.</strong>
+        <p>Before trusting any number we audited BladeSynth: 16 blank images were removed (this also removed all 5 duplicate pairs), 149 damage images whose masks were too small to trace were excluded, and train/test were kept strictly separate. Real test sets (AeBAD official test, sealed Rotor37 shapes) stay unopened until a method is frozen.</p>
+      </div>
+    </section>
+
+    <!-- 4 METHOD -->
+    <section id="method" aria-labelledby="h-method">
+      <span class="eyebrow">04 · How it works</span>
+      <h2 id="h-method">Two pipelines: one checks reports, one recovers 3D damage</h2>
+
+      <h3>Phase 1 · The report checker</h3>
+      <div class="flow" role="list" aria-label="Report checker pipeline">
+        <div class="node" role="listitem"><span class="tag">input</span><b>Image + AI report</b><span>Defect, location, severity, verdict</span></div>
+        <span class="arrow" aria-hidden="true">→</span>
+        <div class="node" role="listitem"><span class="tag">agent 1</span><b>Detector</b><span>Does the text contradict itself? (e.g. "Dent" but "PASS")</span></div>
+        <span class="arrow" aria-hidden="true">→</span>
+        <div class="node" role="listitem"><span class="tag">agent 2</span><b>Grounding verifier</b><span>Does the report match what YOLO found in the image?</span></div>
+        <span class="arrow" aria-hidden="true">→</span>
+        <div class="node key" role="listitem"><span class="tag">agent 3</span><b>Arbitrator</b><span>Decides "wrong or right" using fixed rules plus location checks on a 3×3 grid</span></div>
+        <span class="arrow" aria-hidden="true">→</span>
+        <div class="node" role="listitem"><span class="tag">agent 4</span><b>Corrector</b><span>Rewrites only the wrong reports from the evidence</span></div>
+      </div>
+      <p class="read">We tested it two ways. <b>Track 1:</b> start with correct reports, deliberately plant one of four kinds of error in half of them (swap the defect type, hide the defect, move the location, change pass/fail), and see if the checker catches them without touching the correct half. <b>Track 2:</b> use reports the AI wrote itself, with its natural mistakes.</p>
+
+      <div class="cards" aria-label="Worked example for Corrosion_417">
+        <div class="report"><span class="who">Truth (from mask)</span><pre>Defect: Corrosion
+Location: center (3 sites)
+Severity: Minor
+Verdict: FAIL</pre></div>
+        <div class="report wrong"><span class="who">Report with planted error</span><pre>Defect: None
+Location: n/a
+Severity: None
+Verdict: PASS</pre><span class="verdict">Error type: hide the defect</span></div>
+        <div class="report wrong"><span class="who">Single AI asked to fix it</span><pre>Defect: None
+Location: Blade
+Severity: None
+Verdict: PASS</pre><span class="verdict">Missed the error</span></div>
+        <div class="report right"><span class="who">Our multi-agent checker</span><pre>Defect: Corrosion
+Location: Center of frame
+Severity: Moderate
+Verdict: FAIL</pre><span class="verdict">Caught: YOLO found corrosion at 0.55 confidence, so "None" is ruled out. Severity still off by one level.</span></div>
+      </div>
+      <p class="small">Real saved outputs from the 500-image run. The AI grounding verifier itself was fooled here (confidence 100); a fixed rule ("report says None but the detector found something") caught it. Several of our biggest gains came from replacing an unreliable AI judgement with a simple rule like this.</p>
+
+      <h3 style="margin-top:18px">Phase 4 · From two images to a 3D damage estimate</h3>
+      <div class="flow" role="list" aria-label="3D damage pipeline">
+        <div class="node" role="listitem"><span class="tag">input</span><b>Healthy 3D blade + 2 images</b><span>Known camera and lighting, views at 60° and 120°</span></div>
+        <span class="arrow" aria-hidden="true">→</span>
+        <div class="node" role="listitem"><span class="tag">step 1</span><b>Propose locations</b><span>Compare each image with a render of the healthy blade; differences suggest where to look</span></div>
+        <span class="arrow" aria-hidden="true">→</span>
+        <div class="node" role="listitem"><span class="tag">step 2</span><b>Try candidate dents</b><span>Render the blade with dents of several depths at each proposed spot, plus a separate colour-change option</span></div>
+        <span class="arrow" aria-hidden="true">→</span>
+        <div class="node key" role="listitem"><span class="tag">step 3</span><b>Pick what explains the images</b><span>Keep the candidate whose renders match the photos best; "no dent" is always an option</span></div>
+        <span class="arrow" aria-hidden="true">→</span>
+        <div class="node" role="listitem"><span class="tag">output</span><b>Location + changed 3D mesh</b><span>Damaged shape = healthy shape + predicted movement of each point</span></div>
+      </div>
+      <figure>
+        <img src="img/camera_q052.jpg" alt="Two grey synthetic blade images at the top. Below, four wireframe panels: healthy CAD with green proposal rings, known truth in orange, an older method that selected nothing, and the image-guided method's blue selection matching the truth." width="1600" height="998">
+        <figcaption>Case q052 from the 1 October test, with the real cameras shifted by 1°. Green rings: locations proposed from image differences. Orange: the known synthetic dent (used only for scoring). The older fixed-location method found nothing; the image-guided method (blue) recovered the exact location and shape.</figcaption>
+      </figure>
+      <div class="note">
+        <strong>Important honesty point</strong>
+        <p>The Phase 4 method is a search over a fixed family of dent shapes. Exact recovery was possible because the test dents came from that same family. Phase 5 replaces it with a continuous estimator tested on dent shapes it was not designed for (see <a href="#progress">Research progress</a>).</p>
+      </div>
+    </section>
+
+    <!-- 5 RESULTS -->
+    <section id="results" aria-labelledby="h-results">
+      <span class="eyebrow">05 · Results</span>
+      <h2 id="h-results">What the numbers say</h2>
+      <p class="read">Every number below comes from saved result files in the project. Blue is our method; grey is a baseline. Hover a bar for details.</p>
+
+      <h3>Phase 1 · Report checker</h3>
+      <div class="charts">
+        <div class="chart" id="ch-class"></div>
+        <div class="chart" id="ch-pfcs"></div>
+        <div class="chart" id="ch-catch"></div>
+        <div class="chart" id="ch-yolo"></div>
+      </div>
+      <div class="note">
+        <strong>Read with care</strong>
+        <p>The checker recovers Dent and Nick because the YOLO detector sees what the language model misses. Track 1 reports follow a strict template, so these are best-case numbers. The 125-image held-out check showed no sign of over-tuning (arbitrator 98.4% precision and recall), but all of it is still synthetic data.</p>
+      </div>
+
+      <h3 style="margin-top:12px">Phase 3 · Synthetic to real</h3>
+      <div class="charts">
+        <div class="chart" id="ch-s2r"></div>
+        <div class="chart" id="ch-real"></div>
+      </div>
+
+      <h3 style="margin-top:12px">Phase 4 · 3D damage from images</h3>
+      <div class="chart">
+        <h3>How the 3D method improved, test by test</h3>
+        <p class="sub">Each square is one synthetic dent. Blue = correct location and improved 3D shape. All tests use two public Rotor37 blade shapes.</p>
+        <div id="dots3d"></div>
+      </div>
+      <div class="two">
+        <div class="chart">
+          <h3>Small capture changes caused false dents (older method)</h3>
+          <p class="sub">28 September. Out of 14 healthy or colour-only blades, how many got any 3D movement that is not there (some very small). Red = false change.</p>
+          <div id="dotsfalse"></div>
+          <p class="small">The 1 October image-guided method had 0 of 14 false dents under the +1° camera shift, against 14 of 14 here.</p>
+        </div>
+        <figure>
+          <img src="img/mesh_compare.jpg" alt="Three wireframe surface patches: a flat healthy reference, a known synthetic dent in teal, and an estimated dent in orange with the same shape." width="1600" height="546">
+          <figcaption>Healthy surface, known synthetic dent, and our estimate for case q001 (movement enlarged 50× only for display). Estimated depth differs from the true depth by about 0.26%.</figcaption>
+          <div class="note" style="margin-top:6px">
+            <strong>A key finding</strong>
+            <p>A better image match does not always mean a better 3D shape. On unfamiliar dents, the image score preferred a less accurate shape in 8 of 12 depth sweeps. This is the core scientific problem the proposal targets.</p>
+          </div>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 6 SURVEY -->
+    <section id="survey" aria-labelledby="h-survey">
+      <span class="eyebrow">06 · Literature survey and research gaps</span>
+      <h2 id="h-survey">What already exists, and what nobody has solved</h2>
+      <p class="read">We reviewed 19 closely related works in three groups (survey dated 17 September, updated with September 2026 preprints). The goal was to find what our idea must <i>not</i> claim as new, and where real gaps remain. <a href="https://afeefaaazam03.github.io/MyPortfolio/main-jet/INPUT_OUTPUT_RESEARCH_REVIEW.html#input-output">Full input/output review</a>.</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Work</th><th>Venue</th><th>Takes in → gives out</th><th>What it means for us</th></tr></thead>
+          <tbody>
+            <tr><td colspan="4" style="background:var(--surface-2)"><b>A · Finding damage in RGB images</b></td></tr>
+            <tr><td>BladeSynth</td><td>Sci. Data 2025</td><td>Procedural blade defects → images + masks</td><td>A synthetic blade dataset alone is not new</td></tr>
+            <tr><td>Beyond Cracks / DefectSynth</td><td>2026 preprint</td><td>Synthetic RGB, depth, normals, masks → RGB-only segmentation</td><td>Closest to our earlier 2D idea</td></tr>
+            <tr><td>Looking 3D</td><td>CVPR 2024</td><td>Photo + reference CAD → anomaly boxes</td><td>"Image + healthy CAD" is taken; it outputs boxes, not shape</td></tr>
+            <tr><td>PIAD</td><td>CVPR 2025</td><td>Normal views → heatmap robust to pose/light</td><td>Pose/light robustness is studied in 2D</td></tr>
+            <tr><td>CMDIAD · RADAR · When Depth Hurts</td><td>Inf. Fusion 2026 · ACM MM 2025 · 2026</td><td>Train with 3D, test on RGB only</td><td>3D-at-training helps little or even hurts</td></tr>
+            <tr><td colspan="4" style="background:var(--surface-2)"><b>B · 3D inspection and reconstruction</b></td></tr>
+            <tr><td>CADSplat</td><td>Sep 2026 preprint (arXiv 2609.18473)</td><td>Sparse posed RGB + CAD → deformation field, Gaussian twin</td><td>Closest work. Leaves measurement-quality deformed surfaces to future work</td></tr>
+            <tr><td>CAD-NeRF</td><td>2024 preprint</td><td>Few RGB + retrieved CAD → deformed shape, poses</td><td>Joint shape/pose fitting exists</td></tr>
+            <tr><td>SiM3D</td><td>ICCV 2025</td><td>Multi-view RGB + 3D + CAD → 3D anomaly volume</td><td>Multi-view 3D anomaly benchmarks exist (voxels)</td></tr>
+            <tr><td>ModMap</td><td>CVPR Findings 2026</td><td>RGB/depth views → 3D anomaly volume</td><td>Cross-view fusion exists</td></tr>
+            <tr><td>PASDF</td><td>ICCV 2025</td><td>Point cloud → anomaly + repaired shape</td><td>Needs a measured 3D scan as input</td></tr>
+            <tr><td>Hybrid CNN 3D localisation</td><td>Sensors 2025</td><td>Dual-view RGB + CAD → 3D defect polylines</td><td>3D localisation of defects exists; no depth</td></tr>
+            <tr><td colspan="4" style="background:var(--surface-2)"><b>C · Separating shape, material and uncertainty</b></td></tr>
+            <tr><td>IRON · NeRO</td><td>CVPR 2022 · SIGGRAPH 2023</td><td>Images → shape and material separately</td><td>Shape/material separation is established</td></tr>
+            <tr><td>Bayes' Rays · OCSplats</td><td>CVPR 2024 · ICCV 2025</td><td>Radiance field → spatial uncertainty</td><td>Generic uncertainty exists, not for damage claims</td></tr>
+            <tr><td>M²AD · NFAD</td><td>2025 · 2026 preprints</td><td>Varied views/light → nuisance-robust anomaly scores</td><td>Nuisance suppression exists in 2D</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>The gaps we found</h3>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Gap</th><th>Evidence</th></tr></thead>
+          <tbody>
+            <tr><td><b>G1 · Measured 3D damage from a few photos + CAD.</b> Existing methods give boxes, heatmaps or voxels, or need a 3D scan.</td><td>CADSplat §6 leaves it to future work; Looking 3D outputs boxes; PASDF needs point clouds.</td></tr>
+            <tr><td><b>G2 · Damage vs look-alikes.</b> A dark patch can be a dent, a stain, a lighting change or a 1° camera error. No method reports whether the views actually support a physical change.</td><td>Ours: 14/14 false dents from a 1° camera shift (older method); image score preferred a worse 3D shape in 8/12 sweeps.</td></tr>
+            <tr><td><b>G3 · No benchmark with paired truth.</b> No public set has blade images, healthy CAD, exact damaged meshes, negative controls and capture perturbations together.</td><td>Survey; BladeDelta (Phase 5) is our answer.</td></tr>
+            <tr><td><b>G4 · Synthetic training does not transfer.</b></td><td>Ours: AUROC 0.986 synthetic → 0.606 real photos; mask IoU 0.744 → 0.040.</td></tr>
+            <tr><td><b>G5 · AI reports are not grounded.</b> Language models miss subtle defects and write confident wrong reports.</td><td>Ours: raw VLM 2% Dent, 5% Nick accuracy; fixed to 100% / 99% with detector grounding.</td></tr>
+            <tr><td><b>G6 · No real validation data.</b> No public set pairs real blade photos with measured 3D damage.</td><td>Our 20 September geometry audit; a 3D-printed blade capture is planned.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 7 LEFT -->
+    <section id="left" aria-labelledby="h-left">
+      <span class="eyebrow">07 · What is done, what is left, what we need</span>
+      <h2 id="h-left">Where the work stands</h2>
+      <div class="cols3">
+        <div class="col">
+          <h3><span class="chip done">done</span></h3>
+          <ul>
+            <li><b>Report checker</b> at 500 + 125 held-out images, 96–98% error detection</li>
+            <li><b>Real-photo damage model</b> (61.9% IoU) and real-vs-synthetic gap measured</li>
+            <li><b>Main Jet 3D:</b> 12/12 fresh locations, 18/18 dents under +1° camera</li>
+            <li><b>BladeDelta benchmark:</b> 456 cases, protocol hash-frozen, test sealed</li>
+            <li><b>Continuous estimator</b> with calibrated "not supported" decision</li>
+            <li><b>Baselines</b> on the same renderer and evidence domain</li>
+            <li><b>Paper draft</b> on a conference template, 22 verified references</li>
+            <li><b>Print-ready blade STL</b> and real-capture guide</li>
+          </ul>
+        </div>
+        <div class="col">
+          <h3><span class="chip partial">still open</span></h3>
+          <ul>
+            <li><b>Calibration runs</b> for the decision threshold (running now)</li>
+            <li><b>One outlier type:</b> strong colour patch under camera + light change</li>
+            <li><b>Detection target:</b> 61% of observable dents at 10% false alarms on dev; goal is 70%</li>
+            <li><b>Ablations</b> and the 2 / 4 / 7-view study</li>
+            <li><b>Method freeze</b>, then the one-time sealed test</li>
+            <li><b>Scratches, corrosion, nicks</b> in 3D; dents only so far</li>
+          </ul>
+        </div>
+        <div class="col">
+          <h3><span class="chip no">needed from you</span></h3>
+          <ul>
+            <li><b>Order 3 resin prints</b> of <span class="mono">print/rotor37_s11_148mm.stl</span> (guide in <span class="mono">print/CAPTURE_GUIDE.md</span>)</li>
+            <li><b>Access to a 3D scanner,</b> or a dial gauge, to measure dents</li>
+            <li><b>Six survey papers' links/PDFs</b> I could not verify (PIAD, PASDF, ModMap, NFAD, When Depth Hurts, DefectSynth)</li>
+            <li><b>Advisor review</b> of the contribution claim by about 25 October</li>
+            <li><b>Author names and affiliations</b> for the submission</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8 PLAN -->
+    <section id="cvpr" aria-labelledby="h-cvpr">
+      <span class="eyebrow">08 · Conference plan</span>
+      <h2 id="h-cvpr">Target: a top-tier vision conference, with a clear go / no-go date</h2>
+      <div class="two">
+        <div class="read">
+          <p>The target conference needs paper registration by <b>10 November 2026</b> and the full paper by <b>16 November 2026</b>.</p>
+          <p>We submit to the main track only if, by <b>1 November</b>, the method beats strong baselines on the sealed test blades with a calibrated false-alarm rate, and ideally on at least one measured real blade.</p>
+          <p>If those gates are not met, the same paper goes to a workshop or a later conference with stronger evidence, instead of a rushed main-track submission.</p>
+          <a class="btn" href="proposal.html">Read the full proposal →</a>
+        </div>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Date</th><th>Milestone</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">Oct 5–6</td><td>Benchmark v1 frozen; continuous estimator; baselines; paper draft</td><td><span class="chip done">done</span></td></tr>
+              <tr><td class="mono">Oct 7–12</td><td>Calibration, ablations, view study; method freeze</td><td><span class="chip partial">running</span></td></tr>
+              <tr><td class="mono">Oct 13–24</td><td>Sealed test once; real 3D-printed dent capture</td><td><span class="chip paused">planned</span></td></tr>
+              <tr><td class="mono">Oct 25–31</td><td>Figures, writing, advisor review</td><td><span class="chip paused">planned</span></td></tr>
+              <tr><td class="mono"><b>Nov 1</b></td><td><b>Go / no-go decision</b></td><td></td></tr>
+              <tr><td class="mono">Nov 10</td><td>Abstract registration</td><td></td></tr>
+              <tr><td class="mono">Nov 16</td><td>Paper deadline</td><td></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9 PROGRESS -->
+    <section id="progress" aria-labelledby="h-progress">
+      <span class="eyebrow">09 · Research progress · 5–6 October 2026</span>
+      <h2 id="h-progress">Two days of execution: from a plan to a method that beats both baselines</h2>
+      <p class="read">We built <b>BladeDelta</b>: a new benchmark and a new method for one question. <i>Do these few photos actually support a dent on this blade, and if so, where and how deep?</i> Everything below is on the development and calibration blades only. The 30 test blades have never been rendered.</p>
+
+      <div class="stats">
+        <div class="stat"><span class="big">456</span><span class="lbl">benchmark cases on 54 fresh blades (96 dev · 120 calib · 240 sealed test)</span></div>
+        <div class="stat"><span class="big">0.92</span><span class="lbl">grey-level error of our renderer on an unseen blade (out of 255)</span></div>
+        <div class="stat"><span class="big">0.855</span><span class="lbl">AUROC separating observable dents from healthy/stained blades on dev (was 0.71)</span></div>
+        <div class="stat"><span class="big">72%</span><span class="lbl">of observable dents located within 0.1 blade span (was 50%)</span></div>
+      </div>
+
+      <h3>How the new method works</h3>
+      <div class="flow" role="list" aria-label="BladeDelta estimator">
+        <div class="node" role="listitem"><span class="tag">input</span><b>Healthy CAD + 2 photos</b><span>Nominal camera and lighting; real ones may differ by ±1.5° and ±15%</span></div>
+        <span class="arrow" aria-hidden="true">→</span>
+        <div class="node" role="listitem"><span class="tag">step 1</span><b>Explain without damage</b><span>Fit camera error from the blade outline, then lighting and any stain</span></div>
+        <span class="arrow" aria-hidden="true">→</span>
+        <div class="node" role="listitem"><span class="tag">step 2</span><b>Score every spot</b><span>One gradient pass rates how much a small dent anywhere would help</span></div>
+        <span class="arrow" aria-hidden="true">→</span>
+        <div class="node" role="listitem"><span class="tag">step 3</span><b>Fit a continuous dent</b><span>Position, depth, size, shape and rim, with the same nuisance freedom</span></div>
+        <span class="arrow" aria-hidden="true">→</span>
+        <div class="node key" role="listitem"><span class="tag">decision</span><b>Supported or not?</b><span>Report the dent only if it explains the images clearly better, with a threshold set on calibration blades</span></div>
+      </div>
+
+      <div class="charts">
+        <div class="chart" id="ch-h2h"></div>
+        <div class="chart" id="ch-auroc"></div>
+      </div>
+
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Method (dev, 96 cases)</th><th class="n">AUROC</th><th class="n">Located ≤0.1</th><th class="n">Median local 3D error</th><th class="n">Detected at 10% false alarms</th><th class="n">Detected and located</th></tr></thead>
+          <tbody>
+            <tr class="ours"><td><b>BladeDelta (ours)</b></td><td class="n"><b>0.855</b></td><td class="n"><b>72%</b></td><td class="n"><b>0.25</b></td><td class="n"><b>61%</b></td><td class="n"><b>56%</b></td></tr>
+            <tr><td>Free-form deformation field<span class="sub">CADSplat-style, same renderer and evidence</span></td><td class="n">0.600</td><td class="n">50%</td><td class="n">1.00</td><td class="n">11%</td><td class="n">11%</td></tr>
+            <tr><td>Discrete search<span class="sub">our Phase 4 method, re-implemented</span></td><td class="n">0.532</td><td class="n">28%</td><td class="n">1.00</td><td class="n">6%</td><td class="n">6%</td></tr>
+            <tr><td>Unchanged CAD</td><td class="n">—</td><td class="n">—</td><td class="n">1.00</td><td class="n">0%</td><td class="n">0%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small">Local 3D error is relative to leaving the CAD unchanged: 1.00 means no better than doing nothing, 0 means exact. "Observable" means at least half the dent is visible in the two input views (18 dev dents). Dev thresholds here are diagnostic; the reported threshold comes from the calibration blades.</p>
+
+      <div class="two">
+        <figure>
+          <img src="img/dev_0013_4.jpg" alt="Three panels of a blade: the observed image with a small dent marked, the residual image showing the dent as a bright spot, and the residual after the fit where the spot is gone." width="1192" height="472">
+          <figcaption><b>Success, dev_0013_4.</b> Left: observed image (orange = true dent, blue = our estimate). Middle: what "no damage" cannot explain; the dent stands out. Right: after fitting our dent, the dent signal is gone. Depth 3.31 vs 3.23 (×10⁻³ span), centre exact.</figcaption>
+        </figure>
+        <figure>
+          <img src="img/dev_0014_1.jpg" alt="Three panels of a blade with a dark rust-coloured stain that the no-damage fit failed to explain, so a dent was wrongly fitted there." width="1192" height="472">
+          <figcaption><b>Remaining failure, dev_0014_1.</b> A strong rust-coloured stain under camera and light jitter. The stain model missed it, so a fake dent explained it (fit gain 20). This single case sets the strictest threshold; it is the next fix.</figcaption>
+        </figure>
+      </div>
+
+      <h3>What we found and fixed, in order</h3>
+      <div class="tablewrap">
+        <table class="fixes">
+          <thead><tr><th>#</th><th>Problem</th><th>How we found it</th><th>Fix</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Camera corrections of 30° (truth: under 2°)</td><td>Printed the fitted pose</td><td>Separate small step sizes for pose and lighting</td></tr>
+            <tr><td>2</td><td>Wrong camera gradients</td><td>Finite-difference check: opposite signs</td><td>Smooth shading in both renderers (logged protocol change)</td></tr>
+            <tr><td>3</td><td>Pose stuck in a wrong solution</td><td>Started from the true pose: it stayed</td><td>Image-alignment start, rotation about the blade</td></tr>
+            <tr><td>4</td><td>Dents searched in the wrong places</td><td>Distance from proposals to truth</td><td>Score test: one gradient pass rates every location</td></tr>
+            <tr><td>5</td><td>70% of dents barely visible in 2 views</td><td>Visibility check per dent</td><td>Report observable and unobservable dents separately</td></tr>
+            <tr><td>6</td><td>Fake dents on silhouettes and grazing pixels</td><td>Residual maps</td><td>Compare hypotheses only on reliable interior pixels</td></tr>
+            <tr><td>7</td><td>Lighting changes moved the camera</td><td>2.7° pose on a light-only case</td><td>Pose from the outline only</td></tr>
+            <tr><td>8</td><td>Stain fitted first hid the dent</td><td>True dent was top proposal when run alone</td><td>Search dent and stain explanations symmetrically</td></tr>
+            <tr><td>9</td><td>Every dent silently discarded in one batch</td><td>All-zero results</td><td>Fixed a NaN; non-finite losses now stop the run</td></tr>
+            <tr><td>10</td><td>Renderer ignored lighting changes</td><td>Correlation with Blender ≈ 0</td><td>Light-linear shader + lighting training set (0.90–0.98)</td></tr>
+            <tr><td>11</td><td>Fake dents at the blade root</td><td>Residual map of a healthy blade</td><td>Exclude a thin band along the blade boundary; false gains 28 → 0</td></tr>
+            <tr><td>12</td><td>Baselines evaluated on different pixels</td><td>Code review</td><td>Same evidence domain for every method</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="cols3">
+        <div class="col">
+          <h3><span class="chip done">built</span></h3>
+          <ul>
+            <li><b>Code:</b> <span class="mono">bladedelta/</span> package (renderer, estimator, baselines, metrics)</li>
+            <li><b>Protocol:</b> <span class="mono">PROTOCOL.md</span>, hash-frozen, change log kept</li>
+            <li><b>Paper:</b> <span class="mono">paper/main.pdf</span>, intro to limitations drafted</li>
+            <li><b>Log:</b> <span class="mono">PROGRESS.md</span> records every finding</li>
+          </ul>
+        </div>
+        <div class="col">
+          <h3><span class="chip partial">running now</span></h3>
+          <ul>
+            <li><b>Calibration blades:</b> all four methods, to set each threshold</li>
+            <li><b>Then:</b> calibrated dev table with confidence intervals</li>
+          </ul>
+        </div>
+        <div class="col">
+          <h3><span class="chip paused">next</span></h3>
+          <ul>
+            <li>Fix the stain-proposal failure</li>
+            <li>Ablations and the 2 / 4 / 7-view study</li>
+            <li>Freeze the method, then run the sealed test once</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+    <!-- 10 FULL TIMELINE -->
+    <section id="timeline" aria-labelledby="h-timeline">
+      <span class="eyebrow">10 · Full timeline · 28 July – 6 October 2026</span>
+      <h2 id="h-timeline">Everything we did, from day one to today</h2>
+      <p class="read">Every stage and every experiment family, with what went in, what came out, and why the next step followed. Failures are kept, because each one decided the next step. Orange dots mark turning points. Sources: the complete experiment record (105 pages on 22 September, 195 pages on 29 September) and the project logs since.</p>
+      <div class="note"><strong>The full reports on your machine</strong><p><span class="mono">causal-closureguard/reports/full_status_audit_20260922T101357Z/MAIN_JET_FULL_STATUS_REPORT.pdf</span> (105 pages) and <span class="mono">causal-closureguard/reports/full_status_update_20260929/MAIN_JET_FULL_STATUS_REPORT.pdf</span> (195 pages). Since 29 September: <span class="mono">bladedelta/PROGRESS.md</span>.</p></div>
+
+      <div class="tl-phase">
+        <h3>Stage 0 · Single-image foundation <span class="chip done">done</span></h3>
+        <ul class="tl-list">
+          <li class="key"><span class="d">28–31 Jul</span><span class="x"><b>Can an image be classified and its defects outlined?</b> Trained YOLO segmentation and a CLIP-feature classifier on BladeSynth (5 classes). Output: image class, or boxes and masks; no 3D. Completed with an audit and clean-up. <b>Missing:</b> multi-view processing and 3D.</span></li>
+        </ul>
+      </div>
+
+      <div class="tl-phase">
+        <h3>Phase 1 · InspectVLM: checking AI-written inspection reports <span class="chip done">done</span></h3>
+        <figure style="max-width:880px"><img src="img/phase1_yolo.jpg" alt="Grid of eight silver blade images with small coloured detection boxes labelled Corrosion and Dent; the first has none." width="1200" height="600" loading="lazy"><figcaption>Eight synthetic BladeSynth blades with the YOLOv8 detector's boxes and labels (corrosion top row, dents bottom row). The top-left blade has corrosion the detector missed entirely.</figcaption></figure>
+        <ul class="tl-list">
+          <li><span class="d">4 Sep</span><span class="x"><b>Data audit</b> of 12,505 images. Baselines: CLIP 21.3% zero-shot, 95.8% with a trained layer; YOLOv8 mask mAP 0.98 (Nick) to 0.50 (Corrosion).</span></li>
+          <li><span class="d">4 Sep</span><span class="x"><b>Raw AI reports fail:</b> Qwen2-VL-7B named Nick in 0/5 and Dent in 1/5 sample images, and wrote the same location text for every image.</span></li>
+          <li><span class="d">4 Sep</span><span class="x"><b>Multi-agent checker pilot</b> (100 images): 93.5% precision, 86% recall, but only 16.7% of wrong locations caught.</span></li>
+          <li><span class="d">6 Sep</span><span class="x">Moved to one 12 GB GPU (4-bit model, 97% agreement). Location check: 16.7% → 100%. Verifier hallucination: 26.8% → 2.4%.</span></li>
+          <li class="key"><span class="d">7 Sep</span><span class="x"><b>500 images, three bugs fixed:</b> 96.4% precision, 95.2% recall; Dent 2% → 100%, Nick 5% → 99%. <b>Held-out 125 images: 98.4% / 98.4%.</b> Why we moved on: rules did most of the work, and there were no real reports and no 3D.</span></li>
+        </ul>
+      </div>
+
+      <div class="tl-phase">
+        <h3>Phase 2 · Checking reports against evidence and several views <span class="chip partial">redesigned</span></h3>
+        <figure style="max-width:880px"><img src="img/phase2_rad.jpg" alt="Three photographs of a small metal part on a grid-patterned surface, taken from different angles." width="1200" height="196" loading="lazy"><figcaption>Three views of the same real object from the RAD multi-view dataset, as used in the claim review. Different angles show different evidence, which is the idea Phase 2 tested.</figcaption></figure>
+        <ul class="tl-list">
+          <li><span class="d">7 Sep</span><span class="x"><b>ClosureGuard:</b> learned matching between report claims and detector evidence (600 then 320 benchmark pairs). V1 had a shortcut (wording predicted the error); V2 fixed it. <b>Result:</b> failed against a simple baseline and damaged many correct reports.</span></li>
+          <li class="key"><span class="d">9 Sep</span><span class="x"><b>BladeGuard canonical-surface pilot:</b> evidence matched across views on a common surface (896 procedural frames, 84 test records). Tied the simple comparator; the risk-limited policy repaired no errors. <b>Recorded decision: redesign, not ready for submission.</b></span></li>
+          <li><span class="d">10–14 Sep</span><span class="x"><b>RAD "different eyes" branch:</b> can another view confirm or contradict a claim? DINOv2, PatchCore, a pixel classifier and VGGT cameras on 4,047 photos of 18 objects. A review tool was built, but there were no human-verified labels. Stopped on 14 Sep to return to blades.</span></li>
+        </ul>
+      </div>
+
+      <div class="tl-phase">
+        <h3>Phase 3 · Linked 3D blade data and real photographs <span class="chip partial">gap found</span></h3>
+        <figure style="max-width:880px"><img src="img/phase3_real.jpg" alt="Three close-ups of a real blade edge with a chip: plain photo, orange predicted region, teal labelled region." width="1200" height="324" loading="lazy"><figcaption>A real blade photograph (AEBIS) with a chipped edge: the input, the real-photo model's guess in orange, and the supplied damage label in teal. Across development photos the kept model averaged 62% overlap with the labels.</figcaption></figure>
+        <ul class="tl-list">
+          <li><span class="d">14–17 Sep</span><span class="x"><b>Linked blade data (ZebraPose-inspired):</b> images and damage labels linked to healthy and damaged 3D surfaces (84, then 168 images; 14 Rotor37 nick images). Projection verified, but learning <b>transferred poorly</b> to a second blade family.</span></li>
+          <li class="key"><span class="d">14–16 Sep</span><span class="x"><b>Real 2D localisation loop:</b> synthetic AUROC 0.986 fell to 0.606 on real photos. 45 training runs and 88,000 updates on real photos (AEBIS); kept model 61.9% IoU against a 65% goal. Loop stopped 16 Sep to return to 3D.</span></li>
+          <li><span class="d">17 Sep</span><span class="x"><b>Literature survey</b> of 16 works (later 19) and a contribution decision: "image + CAD + views" alone is not new. Rotor37 shapes brought in.</span></li>
+          <li><span class="d">17–18 Sep</span><span class="x"><b>Real-photo geometry feasibility</b> on our own blade photos (details restricted in the public report).</span></li>
+        </ul>
+      </div>
+
+      <div class="tl-phase">
+        <h3>Phase 4 · Main Jet: estimating 3D damage from images <span class="chip done">done</span></h3>
+        <figure style="max-width:880px"><img src="img/camera_q052.jpg" alt="Two grey blade renders above four wireframe panels comparing proposals, the true dent, and two methods' selections." width="1600" height="998" loading="lazy"><figcaption>1 October test with the camera shifted 1°: two input images (top), then the healthy blade with proposed locations, the true dent (orange), the old method (found nothing) and the image-guided method (blue, exact).</figcaption></figure>
+        <ul class="tl-list">
+          <li><span class="d">18–21 Sep</span><span class="x"><b>Estimated geometry and tracking:</b> VGGT depth/cameras, consistency filters and triangulation on 7 nick states. All three full-surface gates failed; only known cameras worked. Showed that tiny dents need explicit 3D labels.</span></li>
+          <li><span class="d">17–22 Sep</span><span class="x"><b>Dent data, learning and templates:</b> verified dent generator, six 2D/3D-loss models, template fitting. Neural point costs <b>lost to a simple location prior</b>; amplitude fitting worked as a narrow positive control.</span></li>
+          <li><span class="d">21–22 Sep</span><span class="x"><b>Physical-change contribution screens:</b> local material-removal search and learned transfer. Bounded runs ended in STOP decisions for specific designs.</span></li>
+          <li class="key"><span class="d">22 Sep</span><span class="x"><b>Full historical audit</b> requested: the <b>105-page report</b> covering every stage so far.</span></li>
+        </ul>
+        <p class="small" style="margin-top:4px">Then 18 experiment families in 8 days, each answering one fixed question:</p>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>#</th><th>Date</th><th>Question</th><th>Result</th><th>Verdict</th></tr></thead>
+            <tbody>
+              <tr><td class="n">1</td><td class="mono">22 Sep</td><td>Can residual features remove healthy bias and survive a 1-pixel shift?</td><td>Whole-blade error −45% / −35%, but dent error +10%; uncorrected shifts still fail</td><td><span class="chip partial">mixed</span></td></tr>
+              <tr><td class="n">2</td><td class="mono">22 Sep</td><td>Do more training damage locations help?</td><td>Dent error −17% / −6%; whole-blade still 3.6% / 7.3% worse than unchanged CAD</td><td><span class="chip partial">mixed</span></td></tr>
+              <tr><td class="n">3</td><td class="mono">22 Sep</td><td>Does surface smoothing reduce false displacement?</td><td>Calibration picked "no smoothing"; every strength made it worse</td><td><span class="chip no">no</span></td></tr>
+              <tr><td class="n">4</td><td class="mono">22 Sep</td><td>Does the learned model transfer to new blades 7/8?</td><td>Dent error −21% / −23%; false deformation and shift sensitivity remain</td><td><span class="chip partial">mixed</span></td></tr>
+              <tr><td class="n">5</td><td class="mono">22 Sep</td><td>Can removing small vectors stop false deformation?</td><td>Calibration picked "no threshold"; no improvement</td><td><span class="chip no">no</span></td></tr>
+              <tr><td class="n">6</td><td class="mono">22 Sep</td><td>Does constraining motion to surface normals help?</td><td>Only 3/18 (learned) vs 4/18 (fixed rule) dents pass every check</td><td><span class="chip no">no</span></td></tr>
+              <tr><td class="n">7</td><td class="mono">23 Sep</td><td>Does a colour change fake 3D damage?</td><td>Yes: all three methods falsely deform all 12 colour-only cases</td><td><span class="chip no">no</span></td></tr>
+              <tr><td class="n">8</td><td class="mono">23 Sep</td><td>Does training colour cases as "zero change" fix it?</td><td>False displacement −73%, but dents worse in 15/18; all 12 still deform</td><td><span class="chip no">no</span></td></tr>
+              <tr><td class="n">9</td><td class="mono">23 Sep</td><td>Does a separate colour term separate stain from dent?</td><td>Colour-only false change −99.8%, but mixed-case shape error +27%</td><td><span class="chip partial">mixed</span></td></tr>
+              <tr><td class="n">10</td><td class="mono">23 Sep</td><td>Is the linear image model the problem?</td><td>Real rendering: dent error −49%; 36 better, 3 worse; negatives stay at zero</td><td><span class="chip done">yes</span></td></tr>
+              <tr><td class="n">11</td><td class="mono">24 Sep</td><td>Is depth resolution the remaining error?</td><td>Fine depth search: dent error −98%; 41 better, 0 worse</td><td><span class="chip done">yes</span></td></tr>
+              <tr><td class="n">12</td><td class="mono">24 Sep</td><td>Does the frozen procedure transfer to unseen blades 11/12?</td><td>Dent error −98.4%; all 54 beat unchanged CAD; 1/14 tiny false field</td><td><span class="chip done">yes</span></td></tr>
+              <tr><td class="n">13</td><td class="mono">28 Sep</td><td>Do small camera or light changes cause false geometry?</td><td>All 30 dents still improve, but 40/70 negatives deform; all 14 at camera +1°</td><td><span class="chip partial">mixed</span></td></tr>
+              <tr><td class="n">14</td><td class="mono">28–29 Sep</td><td>Can it handle an unfamiliar dent shape?</td><td>Beats CAD on all 6, keeping 12–14% of the error; polishing worsens 4/6</td><td><span class="chip partial">mixed</span></td></tr>
+              <tr><td class="n">15</td><td class="mono">29 Sep</td><td>Does the image score prefer the wrong 3D shape?</td><td><b>Yes: in 8/12 sweeps.</b> A key scientific finding</td><td><span class="chip paused">finding</span></td></tr>
+              <tr><td class="n">16</td><td class="mono">29 Sep</td><td>Do 15 candidate locations beat 3?</td><td>Only 1/6 in-between dents recovered; gate failed</td><td><span class="chip no">no</span></td></tr>
+              <tr><td class="n">17</td><td class="mono">29 Sep</td><td>Why were five dents missed?</td><td>No useful candidate existed in the bank (1,352 comparisons checked)</td><td><span class="chip paused">finding</span></td></tr>
+              <tr><td class="n">18</td><td class="mono">29 Sep</td><td>Can image residuals propose locations?</td><td>All 5 missed dents recovered exactly; negatives stay correct</td><td><span class="chip done">yes</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul class="tl-list" style="margin-top:12px">
+          <li class="key"><span class="d">29 Sep</span><span class="x"><b>The 195-page complete experiment record</b> published, covering all 18 families, all latest cases and every failed execution.</span></li>
+          <li><span class="d">30 Sep</span><span class="x">Fresh locations sealed in advance: 12/12 dents recovered exactly.</span></li>
+          <li class="key"><span class="d">1 Oct</span><span class="x"><b>18/18 dents exact under a 1° camera error, 0/14 false dents.</b> Why we moved on: this was a fixed dent family on two familiar blades, not yet a general method.</span></li>
+        </ul>
+      </div>
+
+      <div class="tl-phase">
+        <h3>Phase 5 · BladeDelta: the conference push <span class="chip partial">in progress</span></h3>
+        <div class="two" style="max-width:1000px">
+          <figure><img src="img/dev_0013_4.jpg" alt="Blade photo with a dent, the residual showing it, and the residual after the fit with the dent gone." width="1192" height="472" loading="lazy"><figcaption>Synthetic test blade: observed photo (orange = true dent, blue = estimate), what the no-damage explanation cannot account for, and the residual after our dent fit. Depth 3.31 vs. 3.23 (×10⁻³ span).</figcaption></figure>
+          <figure><img src="img/sim3d_stool.jpg" alt="Real scanner photo of an upside-down wooden stool with scratches on the seat and the 3D scan outline in orange." width="1024" height="750" loading="lazy"><figcaption>Real data (SiM3D): an industrial scanner photo of a damaged wooden stool, with the measured 3D scan's outline (orange) aligned to it. The scratches on the seat are real defects.</figcaption></figure>
+        </div>
+        <ul class="tl-list">
+          <li><span class="d">5 Oct</span><span class="x">Project website, research proposal and conference plan (deadline 16 Nov). Decision: execute immediately.</span></li>
+          <li class="key"><span class="d">5 Oct</span><span class="x"><b>BladeDelta built in one day:</b> loader for 97 fresh blades, Blender renderer, differentiable renderer, estimator, baselines. <b>Protocol and 456 cases hash-frozen;</b> 30 test blades sealed. Print-ready blade file and capture guide.</span></li>
+          <li><span class="d">5 Oct</span><span class="x">First fixes: camera step size (30° errors), flat shading broke gradients, pose stuck in a wrong solution, score-test dent proposals, observability strata.</span></li>
+          <li><span class="d">6 Oct</span><span class="x">Evidence judged on reliable interior pixels; camera from outlines only; dent and stain searched symmetrically; a silent bug fixed.</span></li>
+          <li><span class="d">6 Oct</span><span class="x"><b>Light-linear renderer:</b> lighting changes tracked at 0.90–0.98 correlation; error 0.92 grey levels on an unseen blade.</span></li>
+          <li class="key"><span class="d">6 Oct</span><span class="x"><b>Fake dents at the blade root removed</b> (false evidence 28 → 0). <b>Head-to-head on dev: ours 0.855 vs. 0.600 and 0.532;</b> 61% of visible dents found at 10% false alarms.</span></li>
+          <li><span class="d">6 Oct</span><span class="x">Stain failure fixed with stain score proposals. <b>Safety gate passed (0.853);</b> fully automated pipeline running: calibration → ablations → method lock → sealed test.</span></li>
+          <li class="key"><span class="d">6 Oct</span><span class="x"><b>Real data found online:</b> SiM3D (ICCV 2025), real objects scanned before and after damage. Real <b>detection works</b> (damaged 400–1,170 vs. undamaged ≈ 0); real 3D <b>localisation not yet.</b></span></li>
+          <li><span class="d">6 Oct</span><span class="x">Paper draft (conference template, 22 verified references), meeting presentation and the working-model demo.</span></li>
+        </ul>
+      </div>
+
+      <div class="note">
+        <strong>Next</strong>
+        <p>Sealed-test results in about 1.5–2 days, then the real-stool results, the paper's result tables, and the go / no-go decision for the main submission on 1 November.</p>
+      </div>
+    </section>
+  </main>
+</div>
+<footer>
+  Built from saved project artifacts in <span class="mono">inspectvlm_real/</span> (results/, causal-closureguard/reports/, jet-blade-3d/, bladedelta/). Synthetic Rotor37 shapes: PLAID Rotor37, CC BY-SA 4.0. Demos: <a href="https://afeefaaazam03.github.io/MyPortfolio/main-jet/#watch-demo">Main Jet</a> · <a href="https://afeefaaazam03.github.io/MyPortfolio/jet-blade-3d/">Jet Blade 3D</a>.
+</footer>
+
+<script>
+(function () {
+  var tip = document.createElement('div'); tip.className = 'tip'; tip.hidden = true; document.body.appendChild(tip);
+  document.addEventListener('mouseover', function (e) {
+    var t = e.target.closest('[data-tip]'); if (!t) { tip.hidden = true; return; }
+    tip.textContent = t.getAttribute('data-tip'); tip.hidden = false;
+  });
+  document.addEventListener('mousemove', function (e) {
+    if (tip.hidden) return;
+    var x = Math.min(e.clientX + 14, window.innerWidth - tip.offsetWidth - 8);
+    tip.style.left = x + 'px'; tip.style.top = (e.clientY + 14) + 'px';
+  });
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+  function bars(id, cfg) {
+    var el = document.getElementById(id); if (!el) return;
+    var h = '<h3>' + esc(cfg.title) + '</h3>';
+    if (cfg.sub) h += '<p class="sub">' + esc(cfg.sub) + '</p>';
+    if (cfg.series.length > 1 || cfg.target) {
+      h += '<div class="legend">';
+      cfg.series.forEach(function (s) { h += '<span><i class="' + s.cls + '"></i>' + esc(s.name) + '</span>'; });
+      if (cfg.target) h += '<span><i style="width:2px;background:var(--ink)"></i>' + esc(cfg.target) + '</span>';
+      h += '</div>';
+    }
+    h += '<div class="bars">';
+    cfg.groups.forEach(function (g) {
+      h += '<div class="bgroup"><div class="gl">' + esc(g.label) + (g.small ? '<small>' + esc(g.small) + '</small>' : '') + '</div><div class="brows">';
+      g.values.forEach(function (v, i) {
+        var s = cfg.series[i];
+        if (v === null) { h += '<div class="brow"><div class="track"></div><span class="val">n/a</span></div>'; return; }
+        var pct = Math.max(0, Math.min(100, v / cfg.max * 100));
+        var t = (g.targets != null && i === 0) ? '<span class="target" style="left:' + (g.targets / cfg.max * 100) + '%" data-tip="Goal: ' + cfg.fmt(g.targets) + '"></span>' : '';
+        h += '<div class="brow"><div class="track"><span class="bar ' + s.cls + '" style="width:' + pct + '%" data-tip="' + esc(g.label + ' · ' + s.name + ': ' + cfg.fmt(v)) + '"></span>' + t + '</div><span class="val">' + cfg.fmt(v) + '</span></div>';
+      });
+      h += '</div></div>';
+    });
+    h += '</div><div class="axis"><div></div><div class="ticks">';
+    cfg.ticks.forEach(function (tk) { h += '<span style="left:' + (tk / cfg.max * 100) + '%">' + cfg.fmt(tk) + '</span>'; });
+    h += '</div></div>';
+    el.innerHTML = h;
+  }
+  var pc = function (v) { return (Math.round(v * 10) / 10) + '%'; };
+  var d2 = function (v) { return v === 0 ? '0' : v === 1 ? '1' : v.toFixed(2); };
+  var d3 = function (v) { return v === 0 ? '0' : v === 1 ? '1' : v.toFixed(3).replace(/0$/, ''); };
+
+  bars('ch-class', {
+    title: 'Defect named correctly, by class',
+    sub: 'Track 2, 500 real AI-written reports (100 per class)',
+    max: 100, fmt: pc, ticks: [0, 50, 100],
+    series: [{ name: 'Raw AI report', cls: 'c-base' }, { name: 'After our checker', cls: 'c-ours' }],
+    groups: [
+      { label: 'Dent', values: [2, 100] }, { label: 'Nick', values: [5, 99] },
+      { label: 'Corrosion', values: [55, 97] }, { label: 'Scratch', values: [78, 100] },
+      { label: 'Normal', values: [99, 100] }
+    ]
+  });
+  bars('ch-pfcs', {
+    title: 'Overall report quality (PFCS, 0 to 1)',
+    sub: '500 images. A single AI fixer damages correct reports; ours leaves them almost untouched.',
+    max: 1, fmt: d2, ticks: [0, 0.5, 1],
+    series: [{ name: 'No correction', cls: 'c-base' }, { name: 'Single AI fixer', cls: 'c-base2' }, { name: 'Our multi-agent checker', cls: 'c-ours' }],
+    groups: [
+      { label: 'Reports with a planted error', small: 'Track 1, n=250', values: [0.509, 0.510, 0.962] },
+      { label: 'Correct reports', small: 'Track 1, n=250 (should stay as is)', values: [1.0, 0.741, 0.988] },
+      { label: 'Real AI reports', small: 'Track 2, n=500', values: [0.408, 0.406, 0.877] }
+    ]
+  });
+  bars('ch-catch', {
+    title: 'Planted errors caught, by error type',
+    sub: 'Pilot (100 images) → 500 images → 125 held-out images never used in development',
+    max: 100, fmt: pc, ticks: [0, 50, 100],
+    series: [{ name: 'Pilot', cls: 'c-base' }, { name: '500 images', cls: 'c-base2' }, { name: 'Held-out 125', cls: 'c-ours' }],
+    groups: [
+      { label: 'Wrong location', small: 'fixed with a 3×3 grid check', values: [16.7, 86.5, 92.9] },
+      { label: 'Defect hidden', values: [null, 95.9, 100] },
+      { label: 'Wrong defect type', values: [null, 96.9, 100] },
+      { label: 'Wrong pass/fail', values: [null, 100, 100] }
+    ]
+  });
+  bars('ch-yolo', {
+    title: 'Starting detector: YOLOv8-seg mask accuracy',
+    sub: 'Mask mAP@0.5 on the cleaned BladeSynth test set (4,944 images). CLIP image classifier: 21.3% zero-shot, 95.8% with a trained linear layer.',
+    max: 1, fmt: d2, ticks: [0, 0.5, 1],
+    series: [{ name: 'mAP@0.5', cls: 'c-ours' }],
+    groups: [
+      { label: 'Nick', values: [0.979] }, { label: 'Scratch', values: [0.555] },
+      { label: 'Dent', values: [0.545] }, { label: 'Corrosion', values: [0.496] }
+    ]
+  });
+  bars('ch-s2r', {
+    title: 'Trained on synthetic, tested on real',
+    sub: 'Same model, frozen before testing. AUROC 0.5 = coin flip.',
+    max: 1, fmt: d2, ticks: [0, 0.5, 1],
+    series: [{ name: 'Image AUROC', cls: 'c-ours' }, { name: 'Mask IoU (damage overlap)', cls: 'c-base2' }],
+    groups: [
+      { label: 'BladeSynth test', small: 'synthetic, 1,946 images', values: [0.986, 0.744] },
+      { label: 'AeBAD-S', small: 'real photos, 1,639', values: [0.606, 0.040] },
+      { label: 'AeBAD-V', small: 'real video frames, 2,703', values: [0.459, null] }
+    ]
+  });
+  bars('ch-real', {
+    title: 'Real-photo damage model vs. our goal',
+    sub: 'AEBIS development photos, mean of 3 seeds. 45 training runs across 19 conditions; none passed every goal.',
+    max: 100, fmt: pc, ticks: [0, 50, 100], target: 'Goal',
+    series: [{ name: 'Kept model', cls: 'c-ours' }, { name: 'Best rejected try', cls: 'c-base' }],
+    groups: [
+      { label: 'IoU', values: [61.9, 63.7], targets: 65 },
+      { label: 'Precision', values: [82.0, 79.4], targets: 80 },
+      { label: 'Recall', values: [71.1, 77.0], targets: 75 }
+    ]
+  });
+  bars('ch-h2h', {
+    title: 'Head-to-head on dev blades',
+    sub: '18 observable dents and 36 healthy/stained blades. Detection at a 10% false-alarm rate; goal 70%.',
+    max: 100, fmt: pc, ticks: [0, 50, 100], target: 'Goal',
+    series: [{ name: 'Ours', cls: 'c-ours' }, { name: 'Free-form field', cls: 'c-base2' }, { name: 'Discrete search', cls: 'c-base' }],
+    groups: [
+      { label: 'Detected', small: 'at 10% false alarms', values: [61, 11, 6], targets: 70 },
+      { label: 'Detected and located', values: [56, 11, 6] },
+      { label: 'Located within 0.1', small: 'regardless of threshold', values: [72, 50, 28] }
+    ]
+  });
+  bars('ch-auroc', {
+    title: 'Evidence separation, iteration by iteration',
+    sub: 'AUROC of the fit gain: observable dents vs. healthy/stained blades (dev). 0.5 = coin flip.',
+    max: 1, fmt: d3, ticks: [0, 0.5, 1],
+    series: [{ name: 'AUROC', cls: 'c-ours' }],
+    groups: [
+      { label: 'Day 1 method', small: 'full dev', values: [0.711] },
+      { label: '+ rim term', small: '36-case subset', values: [0.790] },
+      { label: '+ light-linear shader, edge band', small: 'full dev', values: [0.855] }
+    ]
+  });
+
+  function dotRows(id, rows, badClass) {
+    var el = document.getElementById(id); if (!el) return;
+    el.innerHTML = rows.map(function (r) {
+      var d = '';
+      for (var i = 0; i < r.n; i++) d += '<i class="' + (i < r.k ? (badClass || 'on') : '') + '"></i>';
+      return '<div class="dotrow" data-tip="' + esc(r.tip || '') + '"><div class="l">' + esc(r.label) + '<small>' + esc(r.date) + '</small></div><div class="dots">' + d + '</div><div class="r">' + r.k + ' / ' + r.n + '</div></div>';
+    }).join('');
+  }
+  dotRows('dots3d', [
+    { label: 'Fixed movement rule', date: '22 Sep · baseline', k: 4, n: 18, tip: 'Dents passing all improvement checks' },
+    { label: 'Learned shape-change model', date: '22 Sep', k: 3, n: 18, tip: 'Learned model did worse than the simple rule' },
+    { label: '15-location bank, new dents between spots', date: '29 Sep', k: 1, n: 6, tip: 'Five dents fell between candidate locations and were missed' },
+    { label: 'Image-guided locations, the missed dents', date: '29 Sep', k: 5, n: 5, tip: 'All five previously missed dents recovered exactly' },
+    { label: 'Image-guided, fresh locations', date: '30 Sep · sealed in advance', k: 12, n: 12, tip: '12 new locations, exact location and zero 3D error' },
+    { label: 'Image-guided, camera shifted +1°', date: '1 Oct', k: 18, n: 18, tip: 'Exact under +1° camera error; 0 of 14 healthy blades got false dents' }
+  ]);
+  dotRows('dotsfalse', [
+    { label: 'Nominal capture', date: 'no change', k: 2, n: 14 },
+    { label: 'Light −10%', date: 'lighting', k: 10, n: 14 },
+    { label: 'Light +10%', date: 'lighting', k: 5, n: 14 },
+    { label: 'Camera −1°', date: 'camera', k: 9, n: 14 },
+    { label: 'Camera +1°', date: 'camera', k: 14, n: 14 }
+  ], 'bad');
+})();
+</script>
+
+</body>
+</html>

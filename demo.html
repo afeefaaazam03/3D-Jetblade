@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BladeDelta Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,600..800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .demo { max-width: 1240px; margin: 0 auto; padding-block: 32px 0; display: grid; gap: 24px; }
+  .demo-grid { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 24px; align-items: start; }
+  @media (max-width: 900px) { .demo-grid { grid-template-columns: minmax(0, 1fr); } }
+  .cases { display: grid; gap: 8px; }
+  .case-btn { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; cursor: pointer; display: grid; gap: 4px; font: inherit; color: var(--ink); }
+  .case-btn:hover { border-color: var(--base-2); }
+  .case-btn[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .case-btn .t { font-weight: 600; font-size: 0.92rem; }
+  .case-btn .s { font-size: 0.8rem; color: var(--muted); font-family: var(--f-mono); }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
+  .verdict { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: center; }
+  .verdict .big { font-family: var(--f-display); font-weight: 800; font-stretch: 85%; font-size: 2rem; line-height: 1.05; }
+  .gainbar { position: relative; height: 18px; background: var(--surface-2); border-radius: 9px; overflow: hidden; }
+  .gainbar .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ours); border-radius: 9px; }
+  .gainbar .thr { position: absolute; top: -3px; bottom: -3px; width: 3px; background: var(--accent); }
+  .kv { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  @media (max-width: 640px) { .kv { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .kv div { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; }
+  .kv .k { font-size: 0.72rem; font-family: var(--f-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .kv .v { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .photos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .photos figure { gap: 4px; }
+  .photos img { border-radius: 6px; aspect-ratio: 1; object-fit: cover; }
+  .photos figcaption { font-size: 0.78rem; }
+  .viewer { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+  @media (max-width: 640px) { .viewer { grid-template-columns: minmax(0, 1fr); } }
+  .viewer figure { gap: 6px; }
+  .viewer canvas { width: 100%; aspect-ratio: 4 / 3; border-radius: 8px; border: 1px solid var(--line); background: var(--surface-2); touch-action: none; cursor: grab; display: block; }
+  .controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; font-size: 0.9rem; color: var(--ink-2); }
+  .controls input[type=range] { width: 180px; accent-color: var(--accent); }
+  .scale { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--muted); }
+  .scale i { width: 120px; height: 10px; border-radius: 5px; background: linear-gradient(90deg, #2a78d6, #c9ced3 50%, #e0702a); display: inline-block; }
+</style>
+</head>
+<body>
+<main class="demo">
+  <a class="small" href="index.html">← Back to the project page</a>
+  <span class="eyebrow">Working model · BladeDelta</span>
+  <h1 style="font-size:clamp(2rem,4.4vw,3rem)">Try the model on real benchmark cases</h1>
+  <p class="lede">Pick a blade. You see the two inspection photos the model received, what changed compared with the healthy design, the model's decision, and the 3D dent it estimated next to the true one.</p>
+  <div class="note"><strong>What this page shows</strong><p>These are the model's actual saved outputs on development blades: each estimate took about 90 seconds of GPU optimisation, which cannot run in a browser. Nothing here is simulated or hand-picked to look good: one case is a clear miss and one is a false alarm. The decision threshold is provisional (from development blades); the paper's threshold comes from separate calibration blades.</p></div>
+
+  <div class="demo-grid">
+    <nav class="cases" id="cases" aria-label="Cases"></nav>
+    <div style="display:grid;gap:16px;min-width:0">
+      <section class="panel" aria-labelledby="v-title" style="border-top:0;padding-block:18px">
+        <div class="verdict">
+          <div style="display:grid;gap:6px">
+            <span class="eyebrow" id="v-kind"></span>
+            <span class="big" id="v-title"></span>
+            <span class="small" id="v-sub"></span>
+          </div>
+          <span class="chip" id="v-chip"></span>
+        </div>
+        <div style="display:grid;gap:6px">
+          <div class="gainbar" id="gainbar" role="img"><span class="fill" id="gainfill"></span><span class="thr" id="thr"></span></div>
+          <div class="small" id="gaintext"></div>
+        </div>
+        <div class="kv" id="kv"></div>
+      </section>
+      <section class="panel" style="border-top:0;padding-block:18px">
+        <h3>What the model saw</h3>
+        <div id="photos" style="display:grid;gap:12px"></div>
+      </section>
+      <section class="panel" style="border-top:0;padding-block:18px">
+        <h3>3D surface near the damage</h3>
+        <div class="controls">
+          <label for="exag">Exaggerate movement <b id="exag-v">40×</b></label>
+          <input id="exag" type="range" min="1" max="120" value="40">
+          <span class="scale"><span>pushed in</span><i></i><span>pushed out</span></span>
+          <span class="small">Drag to rotate · scroll to zoom</span>
+        </div>
+        <div class="viewer">
+          <figure><canvas id="c-truth" aria-label="True dent, 3D"></canvas><figcaption><b>True change</b> (known synthetic damage)</figcaption></figure>
+          <figure><canvas id="c-pred" aria-label="Estimated dent, 3D"></canvas><figcaption><b>Model's estimate</b> (from the two photos)</figcaption></figure>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  var DATA = null, current = 0, exag = 40, views = [];
+  var NAMES = {
+    dev_0016_3: 'Dent under camera + light jitter', dev_0013_4: 'Dent, nominal capture', dev_0019_7: 'Dent next to a stain',
+    dev_0014_3: 'Shallow dent, light change', dev_0018_3: 'Faint dent (a miss)', dev_0015_5: 'Dent hidden from both cameras',
+    dev_0013_0: 'Healthy blade', dev_0016_2: 'Stain, camera + light jitter', dev_0014_1: 'Rust-coloured stain'
+  };
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function fmt(x, d) { return x == null ? '—' : Number(x).toFixed(d); }
+
+  function verdictFor(c) {
+    var supported = c.fit_gain > DATA.tau, damaged = c.kind === 'dent' || c.kind === 'mixed';
+    var observable = (c.visible_fraction || 0) >= 0.5;
+    var correct;
+    if (!damaged) correct = !supported;
+    else if (!observable) correct = !supported;
+    else correct = supported && c.centre_err != null && c.centre_err < 0.1;
+    return { supported: supported, correct: correct, damaged: damaged, observable: observable };
+  }
+
+  function renderCases() {
+    var el = document.getElementById('cases');
+    el.innerHTML = DATA.cases.map(function (c, i) {
+      var v = verdictFor(c);
+      return '<button class="case-btn" data-i="' + i + '" aria-pressed="' + (i === current) + '"><span class="t">' + esc(NAMES[c.case_id] || c.case_id) +
+        '</span><span class="s">' + esc(c.case_id) + ' · ' + (v.correct ? 'correct' : 'wrong') + '</span></button>';
+    }).join('');
+    el.querySelectorAll('button').forEach(function (b) { b.addEventListener('click', function () { show(+b.dataset.i); }); });
+  }
+
+  function show(i) {
+    current = i; var c = DATA.cases[i], v = verdictFor(c);
+    renderCases();
+    var kindTxt = { healthy: 'Healthy blade', colour: 'Stain only, no shape change', dent: 'Real dent', mixed: 'Real dent + stain' }[c.kind];
+    document.getElementById('v-kind').textContent = 'Truth: ' + kindTxt + (v.damaged ? (v.observable ? '' : ' (not visible in the photos)') : '') + ' · capture: ' + c.condition;
+    document.getElementById('v-title').textContent = v.supported ? 'Model: dent supported by the photos' : 'Model: no physical change supported';
+    document.getElementById('v-sub').textContent = v.damaged && !v.observable ? 'The dent faces away from both cameras, so "not supported" is the honest answer.' :
+      (c.kind === 'colour' ? 'A stain changes colour, not shape. The model should not report a dent.' : '');
+    var chip = document.getElementById('v-chip');
+    chip.className = 'chip ' + (v.correct ? 'done' : 'no'); chip.textContent = v.correct ? 'correct' : 'wrong';
+    var max = Math.max(10, Math.max.apply(null, DATA.cases.map(function (x) { return x.fit_gain; })));
+    var scale = function (g) { return Math.log1p(g) / Math.log1p(max) * 100; };
+    document.getElementById('gainfill').style.width = scale(c.fit_gain) + '%';
+    document.getElementById('thr').style.left = scale(DATA.tau) + '%';
+    document.getElementById('gainbar').setAttribute('aria-label', 'Fit gain ' + fmt(c.fit_gain, 1) + ', threshold ' + fmt(DATA.tau, 2));
+    document.getElementById('gaintext').innerHTML = 'Evidence for a dent (fit gain): <b>' + fmt(c.fit_gain, 1) + '</b> · threshold <b style="color:var(--accent-ink)">' + fmt(DATA.tau, 2) + '</b> (log scale)';
+    var kv = [
+      ['True depth', c.true_depth != null ? fmt(c.true_depth * 74, 2) + ' mm' : 'none'],
+      ['Estimated depth', v.supported ? fmt(c.pred_depth * 74, 2) + ' mm' : '—'],
+      ['Centre error', c.centre_err != null && v.supported ? fmt(c.centre_err * 74, 1) + ' mm' : '—'],
+      ['3D error vs. doing nothing', c.rel_local != null && v.supported ? fmt(c.rel_local * 100, 0) + '%' : '—']
+    ];
+    document.getElementById('kv').innerHTML = kv.map(function (p) { return '<div><span class="k">' + p[0] + '</span><span class="v">' + p[1] + '</span></div>'; }).join('');
+    document.getElementById('photos').innerHTML = c.images.map(function (im) {
+      var ang = im.view === 'v004' ? '60°' : '120°';
+      return '<div class="photos">' +
+        '<figure><img src="' + im.obs + '" alt="Inspection photo from ' + ang + '"><figcaption>Photo at ' + ang + '</figcaption></figure>' +
+        '<figure><img src="' + im.ref + '" alt="Healthy reference from ' + ang + '"><figcaption>Healthy design, same view</figcaption></figure>' +
+        '<figure><img src="' + im.diff + '" alt="Difference image from ' + ang + '"><figcaption>What changed (brighter = more)</figcaption></figure></div>';
+    }).join('');
+    views.forEach(function (w) { w.setCase(c); });
+  }
+
+  function colourFor(d, lim) {   // diverging: blue = pushed in, grey = none, orange = pushed out
+    var t = Math.max(-1, Math.min(1, d / lim));
+    var g = [0.79, 0.81, 0.83], blue = [0.165, 0.47, 0.84], orange = [0.88, 0.44, 0.165];
+    var e = t < 0 ? blue : orange, a = Math.abs(t);
+    return [g[0] + (e[0] - g[0]) * a, g[1] + (e[1] - g[1]) * a, g[2] + (e[2] - g[2]) * a];
+  }
+
+  function Viewer(canvas, field) {
+    var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+    var scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(35, 4 / 3, 0.001, 10);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+    var light = new THREE.DirectionalLight(0xffffff, 0.75); light.position.set(1, 1, 2); scene.add(light);
+    var mesh = null, data = null, rotX = -0.4, rotY = 0.3, dist = 0.7;
+    function size() {
+      var w = canvas.clientWidth, h = canvas.clientHeight;
+      if (canvas.width !== w * devicePixelRatio || canvas.height !== h * devicePixelRatio) { renderer.setPixelRatio(devicePixelRatio); renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); }
+    }
+    function update() {
+      if (!data) return;
+      var m = data.mesh, vals = m[field], n = vals.length, pos = new Float32Array(n * 3), col = new Float32Array(n * 3);
+      var lim = 0; for (var i = 0; i < n; i++) lim = Math.max(lim, Math.abs(m.truth[i]), Math.abs(m.pred[i])); lim = lim || 1;
+      for (var j = 0; j < n; j++) {
+        var s = vals[j] * 1e-3 * exag;
+        for (var k = 0; k < 3; k++) pos[j * 3 + k] = m.v[j * 3 + k] + m.normal[j * 3 + k] * s;
+        var cc = colourFor(vals[j], lim); col[j * 3] = cc[0]; col[j * 3 + 1] = cc[1]; col[j * 3 + 2] = cc[2];
+      }
+      if (mesh) { scene.remove(mesh); mesh.geometry.dispose(); }
+      var g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+      g.setIndex(m.f); g.computeVertexNormals();
+      mesh = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide }));
+      scene.add(mesh); draw();
+    }
+    function draw() {
+      size();
+      cam.position.set(dist * Math.sin(rotY) * Math.cos(rotX), dist * Math.sin(rotX), dist * Math.cos(rotY) * Math.cos(rotX));
+      cam.lookAt(0, 0, 0); renderer.render(scene, cam);
+    }
+    var drag = null;
+    canvas.addEventListener('pointerdown', function (e) { drag = [e.clientX, e.clientY]; canvas.setPointerCapture(e.pointerId); });
+    canvas.addEventListener('pointermove', function (e) {
+      if (!drag) return; var dx = e.clientX - drag[0], dy = e.clientY - drag[1]; drag = [e.clientX, e.clientY];
+      views.forEach(function (w) { w.rotate(dx * 0.01, dy * 0.01); });
+    });
+    canvas.addEventListener('pointerup', function () { drag = null; });
+    canvas.addEventListener('wheel', function (e) { e.preventDefault(); views.forEach(function (w) { w.zoom(e.deltaY > 0 ? 1.1 : 0.9); }); }, { passive: false });
+    window.addEventListener('resize', draw);
+    return {
+      setCase: function (c) {
+        data = c;
+        var v = c.mesh.v, nx = 0, ny = 0, nz = 0, cnt = v.length / 3;
+        for (var i = 0; i < cnt; i++) { nx += c.mesh.normal[i * 3]; ny += c.mesh.normal[i * 3 + 1]; nz += c.mesh.normal[i * 3 + 2]; }
+        rotY = Math.atan2(nx, nz); rotX = Math.asin(Math.max(-1, Math.min(1, ny / Math.sqrt(nx * nx + ny * ny + nz * nz)))); dist = 0.7;
+        update();
+      },
+      update: update,
+      rotate: function (a, b) { rotY -= a; rotX = Math.max(-1.4, Math.min(1.4, rotX + b)); draw(); },
+      zoom: function (f) { dist = Math.max(0.15, Math.min(3, dist * f)); draw(); }
+    };
+  }
+
+  document.getElementById('exag').addEventListener('input', function (e) {
+    exag = +e.target.value; document.getElementById('exag-v').textContent = exag + '×';
+    views.forEach(function (w) { w.update(); });
+  });
+
+  fetch('demo_data.json').then(function (r) { return r.json(); }).then(function (d) {
+    DATA = d;
+    views = [Viewer(document.getElementById('c-truth'), 'truth'), Viewer(document.getElementById('c-pred'), 'pred')];
+    show(0);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Main Jet Research Proposal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,600..800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .doc { max-width: 820px; margin: 0 auto; padding-block: 40px 0; display: grid; gap: 0; }
+  .doc header { display: grid; gap: 14px; padding-bottom: 28px; border-bottom: 2px solid var(--ink); }
+  .doc .meta { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 18px; font-size: 0.88rem; color: var(--ink-2); }
+  .doc .meta dt { font-family: var(--f-mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding-top: 3px; }
+  .doc .meta dd { margin: 0; }
+  .doc section { padding-block: 34px; gap: 14px; }
+  .doc h2 { font-size: 1.6rem; display: flex; gap: 12px; align-items: baseline; }
+  .doc h2 .no { font-family: var(--f-mono); font-size: 0.9rem; color: var(--accent-ink); font-weight: 500; }
+  .doc p, .doc li { max-width: 72ch; }
+  .doc ul, .doc ol { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+  .abstract { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; display: grid; gap: 10px; }
+  .abstract .eyebrow { color: var(--muted); }
+  .back { font-size: 0.88rem; text-decoration: none; }
+  .gate td:first-child { white-space: nowrap; font-family: var(--f-mono); font-size: 0.8rem; }
+  .refs { font-size: 0.86rem; color: var(--ink-2); }
+  .refs li { max-width: none; }
+  .formula { font-family: var(--f-mono); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; overflow-x: auto; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<article class="doc">
+  <header>
+    <a class="back" href="index.html">← Project overview</a>
+    <span class="eyebrow">Research proposal · draft for advisor review</span>
+    <h1 style="font-size:clamp(2rem,4.4vw,2.9rem)">Which blade damage can the images actually support? Evidence-bounded 3D damage estimation from sparse views and healthy CAD</h1>
+    <dl class="meta">
+      <dt>Target</dt><dd>Top-tier vision conference, main track (registration 10 Nov 2026, paper 16 Nov 2026 AoE)</dd>
+      <dt>Fallback</dt><dd>A workshop track or a later conference (deadlines to be confirmed when announced)</dd>
+      <dt>Project</dt><dd>InspectVLM → ClosureGuard → Main Jet</dd>
+      <dt>Date</dt><dd>5 October 2026 · gates updated 6 October</dd>
+      <dt>Status</dt><dd><span class="chip partial">not yet submission-ready; go / no-go on 1 Nov 2026</span></dd>
+    </dl>
+  </header>
+
+  <section aria-labelledby="p-abs">
+    <div class="abstract">
+      <span class="eyebrow" id="p-abs">Abstract</span>
+      <p>Visual inspection of aero-engine blades must decide whether a change seen in an image is physical damage, and if so where it is on the part and how deep it goes. Current methods either flag anomalies in 2D, output 3D boxes or voxels, or require a measured 3D scan. None reports whether the available views are sufficient to support a claimed shape change. We propose a task and benchmark for <b>CAD-conditioned sparse-view 3D damage estimation with explicit evidence bounds</b>: given a healthy blade mesh and a few calibrated inspection images, output a damaged mesh where the evidence supports one, and abstain where camera error, lighting, or surface colour could explain the images equally well.</p>
+      <p>Preliminary controlled experiments on public Rotor37 blade geometry show the problem is real and measurable. A render-and-compare fit produced false dents on 14 of 14 healthy or colour-only blades under a 1° camera error. On unfamiliar dents, the best image match chose a worse 3D shape in 8 of 12 depth sweeps. An image-guided proposal method we developed then recovered 12 of 12 fresh dent locations exactly and kept 18 of 18 dents exact, with 0 of 14 false dents, under the same 1° error. The proposal defines what must be added before submission: continuous or learned estimation, sealed test geometries, strong baselines, and at least one real measured capture.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="p1">
+    <h2 id="p1"><span class="no">1</span>Problem and motivation</h2>
+    <p>Blade damage such as dents, nicks, scratches and corrosion is often a few pixels across in inspection imagery. Our first project phase showed that an open vision-language model (Qwen2-VL-7B) named the defect correctly in only 2% of dented and 5% of nicked synthetic blades. A multi-agent checker grounded in a YOLOv8 detector raised this to 100% and 99% and caught 96–98% of planted report errors, including on 125 held-out images. But that work operates on independent 2D images: it can say "a dent near the centre of the frame", not "a 0.1 mm-deep dent at this point on the pressure side".</p>
+    <p>Maintenance decisions depend on the physical change. A dark patch in a photo can be a dent, a stain, a reflection, a lighting change, or a misregistered camera. Inspection AI should therefore answer two questions: <i>what physical change best explains these images</i>, and <i>do the images contain enough evidence to distinguish it from non-damage explanations</i>.</p>
+  </section>
+
+  <section aria-labelledby="p2">
+    <h2 id="p2"><span class="no">2</span>What we surveyed</h2>
+    <p>We conducted a targeted critical survey of 19 directly relevant works (17 September 2026, updated with September 2026 preprints), using primary papers, proceedings and author pages. It is not a systematic review; failed searches are not treated as evidence of novelty.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Group</th><th>Representative works</th><th>Rules out as a novelty claim</th></tr></thead>
+        <tbody>
+          <tr><td>RGB damage detection</td><td>BladeSynth (Sci. Data 2025), DefectSynth (2026), Looking 3D (CVPR 2024), PIAD (CVPR 2025), CMDIAD (Inf. Fusion 2026), RADAR (ACM MM 2025), When Depth Hurts (2026)</td><td>Synthetic blade datasets; image vs. reference CAD comparison; 3D used only at training time</td></tr>
+          <tr><td>3D inspection and reconstruction</td><td>CADSplat (2026), CAD-NeRF (2024), SiM3D (ICCV 2025), ModMap (CVPR Findings 2026), PASDF (ICCV 2025), Hybrid CNN 3D localisation (Sensors 2025)</td><td>CAD-prior deformation fields; multi-view 3D anomaly volumes; 3D localisation of defects</td></tr>
+          <tr><td>Shape/material separation and uncertainty</td><td>IRON (CVPR 2022), NeRO (SIGGRAPH 2023), Bayes' Rays (CVPR 2024), OCSplats (ICCV 2025), M²AD (2025), NFAD (2026)</td><td>Inverse rendering; generic radiance-field uncertainty; 2D nuisance suppression</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>The closest work is <b>CADSplat</b>, which fits a shared deformation field from sparse posed RGB and a CAD prior, and explicitly leaves measurement-quality deformed surfaces for future work. <b>Looking 3D</b> compares a photo with reference CAD but outputs boxes. <b>PASDF</b> repairs shape but needs a point cloud. Commercial tools (Waygate Real3D, Evident 3DAssist, GE Aerospace's blade inspection tool) already measure defects with dedicated 3D hardware, so the contribution must be scientific, not a product claim.</p>
+  </section>
+
+  <section aria-labelledby="p3">
+    <h2 id="p3"><span class="no">3</span>Research gaps</h2>
+    <ol>
+      <li><b>Physical change from sparse RGB + CAD.</b> No surveyed method outputs a validated damaged surface from a few images and a healthy design.</li>
+      <li><b>Damage versus look-alikes.</b> No method states whether the views can distinguish a physical change from camera, lighting, appearance or reference mismatch. Our data shows this failure directly (Section 6).</li>
+      <li><b>No paired benchmark.</b> No public set combines blade images, healthy CAD, exact damaged meshes, healthy and colour-only negatives, and controlled capture perturbations.</li>
+      <li><b>Synthetic-to-real collapse.</b> Our synthetic-trained detector fell from 0.986 to 0.606 image AUROC and from 0.744 to 0.040 mask IoU on real AeBAD-S photographs.</li>
+      <li><b>No real 3D validation data.</b> No public dataset pairs real blade photographs with measured damage geometry.</li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="p4">
+    <h2 id="p4"><span class="no">4</span>Proposed contribution</h2>
+    <p>We propose three linked contributions. Each has a test that would falsify it.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Contribution</th><th>What is new</th><th>Falsified if</th></tr></thead>
+        <tbody>
+          <tr><td><b>C1 · Task and benchmark</b></td><td>Sparse-view, CAD-conditioned 3D damage estimation with three outputs: damaged mesh, location, and "supported / not supported". Rotor37-based cases with dents, colour-only changes, mixtures, healthy controls and capture perturbations; held-out blade shapes sealed until the method is frozen.</td><td>Simple shortcut controls (text, colour statistics, image-difference magnitude alone) solve it.</td></tr>
+          <tr><td><b>C2 · Evidence-bounded estimator</b></td><td>Image-guided location proposals, continuous render-and-compare refinement of a local displacement field, a separate appearance variable, and an evidence test that compares the best "no damage" explanation against the best damage explanation, calibrated on healthy captures.</td><td>It does not beat a plain fit, a pose ensemble, and a CADSplat-style deformation fit at matched false-deformation rate.</td></tr>
+          <tr><td><b>C3 · Findings</b></td><td>Quantified failure modes: image agreement versus 3D accuracy, false dents from sub-degree camera error, and the gap between locating damage and recovering its depth.</td><td>The effects vanish on sealed shapes or on the real capture.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>The evidence test is the core idea. With <span class="mono">d</span> the local deformation and <span class="mono">η</span> the nuisance variables (camera, illumination, surface appearance, reference mismatch):</p>
+    <p class="formula">fit_gain = min<sub>η</sub> L(d = 0, η) − min<sub>d, η</sub> L(d, η)</p>
+    <p>A damage claim is reported only when the fit gain exceeds a threshold set on healthy and colour-only calibration captures. Otherwise the output is "not supported by these views". Hypothesis testing, inverse rendering and uncertainty are each established tools; the claim is only new if this combination demonstrably lowers false physical-change claims at equal damage recall, against strong matched baselines.</p>
+  </section>
+
+  <section aria-labelledby="p5">
+    <h2 id="p5"><span class="no">5</span>Data and evaluation plan</h2>
+    <h3>Data</h3>
+    <ul>
+      <li><b>Development:</b> public PLAID Rotor37 shapes 9–12 (CC BY-SA 4.0), already exposed. Synthetic dents, colour patches and mixtures rendered in Blender at known cameras and lighting.</li>
+      <li><b>Sealed test:</b> at least 6 further Rotor37 shapes opened only once the method is frozen, with fresh damage locations, depths between candidate values, and new capture perturbations.</li>
+      <li><b>Real validation (required):</b> a 3D-printed Rotor37 blade with a controlled indentation; calibrated photos (ChArUco board); a structured-light or photogrammetry scan as ground truth. Even 3–5 measured cases would close the most serious reviewer objection.</li>
+      <li><b>Context:</b> BladeSynth, AeBAD and AEBIS results reported for the 2D synthetic-to-real gap.</li>
+    </ul>
+    <h3>Metrics</h3>
+    <ul>
+      <li>Local and whole-blade 3D RMS error versus unchanged CAD; damage-centre surface distance; depth error.</li>
+      <li>False physical-change rate on healthy and colour-only negatives; risk–coverage curves for the "supported" decision.</li>
+      <li>Grouped 95% bootstrap intervals by blade shape; paired tests; every case retained, including failures.</li>
+    </ul>
+    <h3>Baselines and ablations</h3>
+    <ul>
+      <li>Unchanged CAD; shape-only fit; fixed normal-projection rule; our earlier learned shape-change model.</li>
+      <li>CADSplat-style deformation fitting and CAD-NeRF where code is available; 2D detector (AEBIS model) lifted onto the mesh.</li>
+      <li>Ablations: no appearance variable, no image-guided proposals, no evidence test, camera jitter on/off, two vs. more views.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="p6">
+    <h2 id="p6"><span class="no">6</span>Preliminary results</h2>
+    <p>All results below are on two exposed Rotor37 shapes with a prescribed damage family, independently verified, with predictions frozen before evaluation.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Date</th><th>Experiment</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">22 Sep</td><td>Learned shape-change model vs. fixed rule, 18 dents</td><td class="n">3/18 vs. 4/18 pass all checks</td></tr>
+          <tr><td class="mono">24 Sep</td><td>Fine depth search, 54 damaged cases on new shapes 11/12</td><td class="n">98.4% lower local error; 13/14 negatives exact</td></tr>
+          <tr><td class="mono">28 Sep</td><td>Capture stress, older fitter: negatives with false 3D movement</td><td class="n">2, 10, 5, 9, 14 of 14<span class="sub">nominal, light ±10%, camera ±1°</span></td></tr>
+          <tr><td class="mono">29 Sep</td><td>Image score vs. 3D accuracy on unfamiliar dents</td><td class="n">worse shape preferred in 8/12 sweeps</td></tr>
+          <tr><td class="mono">29 Sep</td><td>Image-guided proposals on previously missed dents</td><td class="n">5/5 exact</td></tr>
+          <tr><td class="mono">30 Sep</td><td>Fresh locations, sealed in advance</td><td class="n">12/12 exact; 0/14 false dents</td></tr>
+          <tr><td class="mono">1 Oct</td><td>Same method, real cameras shifted +1°</td><td class="n">18/18 exact; 0/14 false dents</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Limits a reviewer will raise immediately: the estimator is a discrete, nonlearned search; the true dents belong to its candidate family; only two shapes were tested at a time; there is no real measured case. Sections 7–8 address each.</p>
+  </section>
+
+  <section aria-labelledby="p7">
+    <h2 id="p7"><span class="no">7</span>Conference strategy</h2>
+    <p><b>Why this venue.</b> The closest prior work (Looking 3D, PIAD, Bayes' Rays, ModMap) appears at the same top vision venue, and the industrial anomaly and 3D reconstruction communities review there. The paper fits the "3D from multi-view and sensors" and "vision applications" areas.</p>
+    <p><b>Submission gates on 1 November.</b> We submit to the main track only if all of these hold:</p>
+    <div class="tablewrap">
+      <table class="gate">
+        <thead><tr><th>Gate</th><th>Required evidence</th><th>Now</th></tr></thead>
+        <tbody>
+          <tr><td>G-1 method</td><td>Continuous or learned estimator recovers off-grid depths and locations</td><td><span class="chip partial">built; dev only</span></td></tr>
+          <tr><td>G-2 sealed</td><td>Advantage holds on ≥6 sealed Rotor37 shapes with grouped CIs</td><td><span class="chip partial">30 blades sealed; not run</span></td></tr>
+          <tr><td>G-3 baselines</td><td>Beats CADSplat-style fit and pose ensemble at matched false-change rate</td><td><span class="chip partial">ahead on dev (AUROC 0.855 vs 0.600)</span></td></tr>
+          <tr><td>G-4 evidence test</td><td>Fit-gain abstention lowers false changes without losing damage recall</td><td><span class="chip partial">implemented; calibration running</span></td></tr>
+          <tr><td>G-5 real</td><td>≥3 measured real cases (3D-printed blade + scan)</td><td><span class="chip no">needs hardware</span></td></tr>
+          <tr><td>G-6 controls</td><td>Shortcut controls at chance on the benchmark</td><td><span class="chip partial">passed in Phase 2 design</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><b>If gates fail:</b> submit the benchmark and findings (C1, C3) to a workshop on anomaly detection or 3D inspection, and take the full method with real validation to a later conference. Both deadlines are expected in early 2027 and must be confirmed once announced. A rushed main-track submission that reviewers reject on "synthetic only, nonlearned" grounds costs more than a strong later submission.</p>
+  </section>
+
+  <section aria-labelledby="p8">
+    <h2 id="p8"><span class="no">8</span>Six-week plan</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Week</th><th>Work</th><th>Output</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">Oct 5–11</td><td>Depth-between-candidates test; freeze benchmark v1 spec; order or print the physical blade</td><td>Benchmark spec; print in progress</td></tr>
+          <tr><td class="mono">Oct 12–18</td><td>Continuous refinement (differentiable rendering) of location, depth and radius; fit-gain test with calibration split</td><td>Method v1, development results</td></tr>
+          <tr><td class="mono">Oct 19–25</td><td>Baselines; real capture: indent, photograph, scan</td><td>Baseline table; 3–5 real cases</td></tr>
+          <tr><td class="mono">Oct 26–31</td><td>Open sealed shapes once; full evaluation, ablations, failure gallery</td><td>Final numbers</td></tr>
+          <tr><td class="mono">Nov 1</td><td>Go / no-go against Section 7 gates</td><td>Decision record</td></tr>
+          <tr><td class="mono">Nov 2–16</td><td>Writing, figures, internal review; register by Nov 10, submit by Nov 16</td><td>Paper</td></tr>
+          <tr><td class="mono">Nov 17–23</td><td>Supplementary material, code and benchmark release package</td><td>Supplement</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="p9">
+    <h2 id="p9"><span class="no">9</span>Risks and resources</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Risk</th><th>Mitigation</th></tr></thead>
+        <tbody>
+          <tr><td>Reviewers see the work as an incremental application of CADSplat or inverse rendering</td><td>Lead with the evidence test and the false-change results; head-to-head comparison at matched sensitivity</td></tr>
+          <tr><td>Continuous refinement reintroduces false dents</td><td>Fit-gain abstention calibrated on negatives; report risk–coverage, not a single threshold</td></tr>
+          <tr><td>No physical blade or scanner in time</td><td>3D print from public Rotor37 geometry; phone photogrammetry as a fallback ground truth; otherwise drop to the workshop route</td></tr>
+          <tr><td>Rendering throughput on one 12 GB GPU</td><td>Cache renders, reduce candidate count via image-guided proposals, request a 24 GB+ GPU</td></tr>
+          <tr><td>BladeSynth asset licence unclear</td><td>Use Rotor37 (CC BY-SA 4.0) for all 3D work; report BladeSynth results only as 2D context</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><b>Resources needed:</b> access to a 3D printer and a structured-light scanner or photogrammetry setup; one 24 GB+ GPU for the final evaluation; advisor review of the contribution claim by 25 October; a co-author or labeller for the real captures.</p>
+  </section>
+
+  <section aria-labelledby="p10">
+    <h2 id="p10"><span class="no">10</span>References</h2>
+    <ol class="refs">
+      <li>BladeSynth: synthetic aero-engine blade defect dataset. <i>Scientific Data</i>, 2025.</li>
+      <li>Beyond Cracks / DefectSynth. Preprint, 2026.</li>
+      <li>Looking 3D: anomaly detection with 2D-3D alignment. <i>CVPR</i>, 2024.</li>
+      <li>PIAD: pose- and illumination-agnostic anomaly detection. <i>CVPR</i>, 2025.</li>
+      <li>CMDIAD: cross-modal distillation for industrial anomaly detection. <i>Information Fusion</i> 126, 2026.</li>
+      <li>RADAR. <i>ACM Multimedia</i>, 2025.</li>
+      <li>When Depth Hurts. Preprint, September 2026.</li>
+      <li>CADSplat. Preprint, September 2026.</li>
+      <li>CAD-NeRF. Preprint, 2024.</li>
+      <li>SiM3D. <i>ICCV</i>, 2025.</li>
+      <li>ModMap. <i>CVPR Findings</i>, 2026.</li>
+      <li>PASDF. <i>ICCV</i>, 2025.</li>
+      <li>Hybrid CNN pipeline for 3D defect localisation. <i>Sensors</i> 25(24), 7613, 2025.</li>
+      <li>IRON: inverse rendering by optimizing neural SDFs and materials. <i>CVPR</i>, 2022.</li>
+      <li>NeRO: neural geometry and BRDF reconstruction of reflective objects. <i>SIGGRAPH</i>, 2023.</li>
+      <li>Bayes' Rays: uncertainty quantification for neural radiance fields. <i>CVPR</i>, 2024.</li>
+      <li>OCSplats. <i>ICCV</i>, 2025.</li>
+      <li>M²AD. Preprint, 2025. · NFAD. Preprint, August 2026.</li>
+      <li>K. Roth et al. Towards Total Recall in Industrial Anomaly Detection (PatchCore). <i>CVPR</i>, 2022.</li>
+      <li>PLAID Rotor37 dataset, Hugging Face, CC BY-SA 4.0.</li>
+    </ol>
+    <p class="small">Full citations with authors are in the project survey file <span class="mono">BLADE_RESEARCH_SURVEY_20260917.md</span> and must be checked before submission.</p>
+  </section>
+</article>
+</body>
+</html>
