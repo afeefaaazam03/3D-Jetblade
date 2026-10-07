@@ -54,8 +54,48 @@
 
     <!-- LATEST UPDATES -->
     <section id="latest" aria-labelledby="h-latest">
-      <span class="eyebrow">Latest updates · 7 October 2026, morning</span>
-      <h2 id="h-latest">What happened overnight</h2>
+      <span class="eyebrow">Latest updates · 7 October 2026, afternoon</span>
+      <h2 id="h-latest">Latest results, in pictures</h2>
+      <div class="stats">
+        <div class="stat"><span class="big">213 / 240</span><span class="lbl">sealed-test cases done (27 never-seen blades); numbers below are preliminary</span></div>
+        <div class="stat"><span class="big">0.81</span><span class="lbl">separation of visible dents from healthy/stained blades (was 0.89 at 80 cases)</span></div>
+        <div class="stat"><span class="big">53%</span><span class="lbl">of visible dents found (17 of 32), every one in the right place (target 70%)</span></div>
+        <div class="stat"><span class="big">11%</span><span class="lbl">false alarms (9 of 81); 8 of them are stains. Target was 5%: the main problem</span></div>
+      </div>
+      <div class="charts">
+        <div class="chart" id="ch-latest-ablation"></div>
+        <div class="chart" id="ch-latest-test"></div>
+      </div>
+      <h3 style="margin-top:18px">Examples from the sealed test</h3>
+      <p>Each picture shows three things side by side: <b>left</b>, the photo the method gets, with the <span style="color:#ff8c28;font-weight:600">true dent in orange</span> and <span style="color:#2878e6;font-weight:600">what the method reports in blue</span>; <b>middle</b>, the same blade when healthy; <b>right</b>, how different the two photos are (brighter = more different). The bright outline is just the blade edge, which the method deliberately ignores. A 0.1 mm dent changes the picture by only a few grey levels, which is why it is hard.</p>
+      <div style="display:grid;gap:22px;margin-top:10px">
+        <figure>
+          <img src="img/latest/test_0062_4.jpg" alt="Found and measured: photo with marks, healthy reference, difference map" loading="lazy">
+          <figcaption><b>Found and measured.</b> A 0.14 mm dent, with the camera nudged up to 1.5°. Found in the right place, depth within 3%, shape error 8% of "assume nothing changed". Score 31.6 (threshold 1.52).</figcaption>
+        </figure>
+        <figure>
+          <img src="img/latest/test_0054_3.jpg" alt="Found: photo with marks, healthy reference, difference map" loading="lazy">
+          <figcaption><b>Found.</b> A dent on a never-seen blade: located at the right spot and reported.</figcaption>
+        </figure>
+        <figure>
+          <img src="img/latest/test_0039_2.jpg" alt="Stain, correctly not called a dent: photo with marks, healthy reference, difference map" loading="lazy">
+          <figcaption><b>Stain, correctly not called a dent.</b> Only the colour changed. The method explains it as a stain and reports no shape change.</figcaption>
+        </figure>
+        <figure>
+          <img src="img/latest/test_0053_5.jpg" alt="Correctly says "not supported": photo with marks, healthy reference, difference map" loading="lazy">
+          <figcaption><b>Correctly says "not supported".</b> There is a 0.44 mm dent, but it is on the side these two cameras cannot see. The method declines to report anything instead of guessing. No orange dots: the dent is hidden in this view.</figcaption>
+        </figure>
+        <figure>
+          <img src="img/latest/test_0050_3.jpg" alt="Missed: photo with marks, healthy reference, difference map" loading="lazy">
+          <figcaption><b>Missed.</b> A very shallow dent (0.07 mm). The evidence stays below the threshold, so nothing is reported. Honest miss.</figcaption>
+        </figure>
+        <figure>
+          <img src="img/latest/test_0042_0.jpg" alt="False alarm: photo with marks, healthy reference, difference map" loading="lazy">
+          <figcaption><b>False alarm.</b> A healthy blade with the camera slightly moved. The method reports a dent that is not there (score 5.6). This is the kind of error we still need to reduce.</figcaption>
+        </figure>
+      </div>
+      <div class="note"><strong>What the pictures say</strong><p>When the camera can see a dent, the method usually finds it and puts it in the right place. When it cannot see the dent, it mostly says so (85 of 100 hidden dents). The weak point is stains: a dark patch is sometimes mistaken for a dent, so false alarms are above target. Fixing that is the next job.</p></div>
+      <h3 style="margin-top:22px">Earlier · 7 October, morning</h3>
       <div class="stats">
         <div class="stat"><span class="big">Locked</span><span class="lbl">method and thresholds fingerprinted at 03:46 UTC, before any test result existed</span></div>
         <div class="stat"><span class="big">0.885</span><span class="lbl">sealed-test separation so far (80 of 240 cases, 10 new blades): preliminary</span></div>
@@ -690,6 +730,29 @@ Verdict: FAIL</pre><span class="verdict">Caught: YOLO found corrosion at 0.55 co
   var d2 = function (v) { return v === 0 ? '0' : v === 1 ? '1' : v.toFixed(2); };
   var d3 = function (v) { return v === 0 ? '0' : v === 1 ? '1' : v.toFixed(3).replace(/0$/, ''); };
 
+  bars('ch-latest-ablation', {
+    title: 'Remove one part, see what breaks',
+    sub: 'Separation score on practice blades (1 = perfect, 0.5 = coin flip)',
+    max: 1, fmt: d2, ticks: [0, 0.5, 1],
+    series: [{ name: 'Separation', cls: 'c-ours' }],
+    groups: [
+      { label: 'Full method', values: [0.855] }, { label: 'No brightness field', values: [0.846] },
+      { label: 'No stain model', values: [0.753] }, { label: 'Whole image', values: [0.685] },
+      { label: 'No camera fix', values: [0.679] }, { label: 'No smart search', values: [0.420] }
+    ]
+  });
+  bars('ch-latest-test', {
+    title: 'Calibration blades vs. sealed test so far',
+    sub: 'Same locked method and threshold; test is 213 of 240 cases',
+    max: 100, fmt: pc, ticks: [0, 50, 100],
+    series: [{ name: 'Calibration (12 blades)', cls: 'c-base' }, { name: 'Sealed test (27 blades)', cls: 'c-ours' }],
+    groups: [
+      { label: 'Visible dents found', values: [69, 53.1] },
+      { label: 'Found ones placed right', values: [100, 100] },
+      { label: 'Hidden dents: says "not supported"', values: [null, 85] },
+      { label: 'False alarms', small: 'lower is better', values: [3, 11.1] }
+    ]
+  });
   bars('ch-class', {
     title: 'Defect named correctly, by class',
     sub: 'Track 2, 500 real AI-written reports (100 per class)',
@@ -804,6 +867,5 @@ Verdict: FAIL</pre><span class="verdict">Caught: YOLO found corrosion at 0.55 co
   ], 'bad');
 })();
 </script>
-
 </body>
 </html>
