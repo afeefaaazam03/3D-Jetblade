@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="styles.css">
 <style>main.res{max-width:1100px;margin:0 auto;padding:32px 16px 64px;display:grid;gap:18px} main.res small{color:var(--muted)}</style>
 </head><body><main class="res">
-<span class="eyebrow">BladeDelta results · 07 Oct 2026, 23:38 UTC</span>
+<span class="eyebrow">BladeDelta results · 07 Oct 2026, 23:53 UTC</span>
 <h1>Sealed-test results <span class="chip partial">updating automatically</span></h1>
 <p>This page is rebuilt automatically from the experiment outputs. The test set is 240 cases on 30 blade shapes never used
 for development; the method and its threshold were locked before any test image existed. Brackets are 95% intervals,
@@ -23,12 +23,19 @@ resampling whole blades. <a href="index.html">← Back to the main page</a></p>
 15%. Recall on visible dents drops from 84% to
 54%. Detected dents: median depth error 0.030 mm,
 centre error 0.13 mm.</p></div>
-<h2>Where each phase is</h2><div class="tablewrap"><table><thead><tr><th>Phase</th><th>Status</th></tr></thead><tbody><tr><td>Rotor37 sealed test: ours + 3 baselines</td><td><span class="chip done">done</span></td></tr><tr><td>View study: 4 and 7 cameras</td><td><span class="chip partial">running</span></td></tr><tr><td>Final report, tables, paper PDF</td><td><span class="chip paused">queued</span></td></tr><tr><td>Baseline: 2D detector lifted to 3D</td><td><span class="chip done">done</span></td></tr><tr><td>Baseline: MLP deformation field</td><td><span class="chip paused">queued</span></td></tr><tr><td>Ablation: fixed grid of starts (4 and 16)</td><td><span class="chip paused">queued</span></td></tr><tr><td>CAD6: render 456 cases on your 6 blades</td><td><span class="chip done">done</span></td></tr><tr><td>CAD6: ours + all baselines</td><td><span class="chip partial">running</span></td></tr><tr><td>CAD6: ablations (48 cases)</td><td><span class="chip paused">queued</span></td></tr><tr><td>Method v2: select on dev, calibrate, freeze</td><td><span class="chip paused">queued</span></td></tr><tr><td>Method v2 vs v1 on second sealed test (blades 67-96)</td><td><span class="chip paused">queued</span></td></tr><tr><td>Physical capture (2x print of CAD6 blade 4/5)</td><td><span class="chip paused">when available</span></td></tr></tbody></table></div>
+<h2>Where each phase is</h2><div class="tablewrap"><table><thead><tr><th>Phase</th><th>Status</th></tr></thead><tbody><tr><td>Rotor37 sealed test: ours + 3 baselines</td><td><span class="chip done">done</span></td></tr><tr><td>View study: 4 and 7 cameras</td><td><span class="chip done">done</span></td></tr><tr><td>Final report, tables, paper PDF</td><td><span class="chip done">done</span></td></tr><tr><td>Baseline: 2D detector lifted to 3D</td><td><span class="chip done">done</span></td></tr><tr><td>Baseline: MLP deformation field</td><td><span class="chip paused">queued</span></td></tr><tr><td>Ablation: fixed grid of starts (4 and 16)</td><td><span class="chip paused">queued</span></td></tr><tr><td>CAD6: render 456 cases on your 6 blades</td><td><span class="chip done">done</span></td></tr><tr><td>CAD6: ours + all baselines</td><td><span class="chip partial">running</span></td></tr><tr><td>CAD6: ablations (48 cases)</td><td><span class="chip paused">queued</span></td></tr><tr><td>Method v2: select on dev, calibrate, freeze</td><td><span class="chip paused">queued</span></td></tr><tr><td>Method v2 vs v1 on second sealed test (blades 67-96)</td><td><span class="chip paused">queued</span></td></tr><tr><td>Physical capture (2x print of CAD6 blade 4/5)</td><td><span class="chip paused">when available</span></td></tr></tbody></table></div>
 <h2>Results at a glance</h2><figure><img src="img/results/dashboard.png" alt="Results dashboard"><figcaption>A: every method on the sealed test. B: the same fits with and without the evidence test. C: risk vs. coverage. D: ablations. E: our method under each capture condition.</figcaption></figure>
 <h2>All methods on the sealed test</h2>
 <div class="tablewrap"><table><thead><tr><th>Method</th><th>Separation (AUROC)</th><th>Visible dents found</th><th>…in the right place</th><th>False alarms</th><th>Hidden dents: abstains</th></tr></thead><tbody><tr><td><b>Ours (evidence-bounded)</b></td><td>0.82 <small>[0.71–0.90]</small></td><td>54% <small>[39–68]</small></td><td>54% <small>[39–68]</small></td><td>10% <small>[4–17]</small></td><td>85% <small>[77–91]</small></td></tr><tr><td><b>Ours without the evidence test</b></td><td>0.82 <small>[0.71–0.90]</small></td><td>84% <small>[68–95]</small></td><td>70% <small>[56–84]</small></td><td>32% <small>[21–43]</small></td><td>45% <small>[36–54]</small></td></tr><tr><td><b>2D detector lifted to 3D</b></td><td>0.71 <small>[0.63–0.80]</small></td><td>24% <small>[12–40]</small></td><td>16% <small>[5–30]</small></td><td>4% <small>[1–9]</small></td><td>96% <small>[93–99]</small></td></tr><tr><td><b>Free-form field (per vertex)</b></td><td>0.63 <small>[0.54–0.70]</small></td><td>14% <small>[4–24]</small></td><td>11% <small>[3–20]</small></td><td>4% <small>[1–9]</small></td><td>99% <small>[97–100]</small></td></tr><tr><td><b>Discrete search (earlier method)</b></td><td>0.53 <small>[0.43–0.65]</small></td><td>5% <small>[0–13]</small></td><td>5% <small>[0–13]</small></td><td>6% <small>[1–10]</small></td><td>98% <small>[95–100]</small></td></tr><tr><td><b>Unchanged CAD (never reports)</b></td><td>0.50 <small>[0.50–0.50]</small></td><td>0% <small>[0–0]</small></td><td>0% <small>[0–0]</small></td><td>0% <small>[0–0]</small></td><td>100% <small>[100–100]</small></td></tr></tbody></table></div>
 <h3>Ours, by capture condition</h3><div class="tablewrap"><table><thead><tr><th>Capture</th><th>Visible dents found</th><th>False alarms</th></tr></thead><tbody><tr><td>nominal</td><td>33%</td><td>10%</td></tr><tr><td>camera</td><td>60%</td><td>14%</td></tr><tr><td>light</td><td>78%</td><td>0%</td></tr><tr><td>both</td><td>44%</td><td>15%</td></tr></tbody></table></div>
-<h2>Next: your six real blade CAD models (456 cases, queued)</h2><figure><img src="img/results/cad6_blades.png" alt="Six CAD blades"><figcaption>Imported from your STEP files and put in the same frame as Rotor37. Results appear here as they finish.</figcaption></figure>
+<figure><img src="img/results/cad6_blades.png" alt="Six CAD blades"></figure>
+<h2>New blades: your six real blade CAD models (2 of 456 cases so far)</h2>
+<p>Six real blade designs with platforms and dovetail roots (33–88 mm), imported from STEP. Dents use real sizes
+(0.1–1.0 mm deep, 1–5 mm radius). Nothing was retrained or re-tuned: the method, its appearance model (trained only on
+Rotor37) and its threshold are the frozen ones, so this measures how well it transfers to new blade designs.</p>
+<div class="tablewrap"><table><thead><tr><th>Method</th><th>Separation (AUROC)</th><th>Visible dents found</th><th>…in the right place</th><th>False alarms</th><th>Hidden dents: abstains</th></tr></thead><tbody><tr><td><b>Ours (evidence-bounded)</b></td><td>–</td><td>100% <small>[100–100]</small></td><td>100% <small>[100–100]</small></td><td>–</td><td>–</td></tr><tr><td><b>Ours without the evidence test</b></td><td>–</td><td>100% <small>[100–100]</small></td><td>100% <small>[100–100]</small></td><td>–</td><td>–</td></tr></tbody></table></div>
+<h3>Does it depend on blade size?</h3><ul><li>Separation (AUROC): -- on CAD6 vs 0.82 on the Rotor37 sealed test (transfer gap --).</li><li>Visible dents found 100%, false alarms –, hidden dents abstained –.</li><li>Best blade 1 (24 mm), worst blade 1 (24 mm).</li><li>Blade size vs. dents found, across 6 blades: Spearman ρ = -- (p = --; only 6 blades, so weak evidence).</li><li>Smaller blades (≤ median span) found 100% vs larger –. The same dent in mm is relatively larger on a small blade, so we also check depth relative to the blade: ρ(found, relative depth) = --, ρ(found, depth in mm) = --.</li><li>Found rate by relative-depth tertile (shallow → deep): 100%, –, 100%.</li><li>With a threshold recalibrated leave-one-blade-out on CAD6 negatives: found –, false alarms –.</li><li>Recommended blade for the physical capture: blade 5 (better transfer of blades 4 and 5).</li></ul>
+<div class="tablewrap"><table><thead><tr><th>Blade</th><th>Airfoil span</th><th>Cases</th><th>Visible dents</th><th>AUROC</th><th>Found</th><th>False alarms</th></tr></thead><tbody><tr><td>1</td><td>24 mm</td><td>2</td><td>2</td><td>--</td><td>100%</td><td>–</td></tr></tbody></table></div>
 <h2>Risk vs. coverage</h2><figure><img src="img/results/risk_coverage.png" alt="Risk-coverage curves" style="max-width:560px">
 <figcaption>Sweeping the evidence threshold: how many cases get a damage claim (coverage) and what fraction of those claims are wrong (risk). Lower and further right is better.</figcaption></figure>
 <h2>Ablations (36 development cases)</h2><div class="tablewrap"><table><thead><tr><th>Variant</th><th>Separation</th><th>Visible found</th><th>False alarms</th></tr></thead><tbody><tr><td>Full method</td><td>0.85 <small>[0.77–0.96]</small></td><td>67% <small>[41–88]</small></td><td>0% <small>[0–0]</small></td></tr><tr><td>No camera correction</td><td>0.68 <small>[0.49–0.84]</small></td><td>89% <small>[72–100]</small></td><td>39% <small>[21–56]</small></td></tr><tr><td>No stain model</td><td>0.75 <small>[0.56–0.90]</small></td><td>89% <small>[77–100]</small></td><td>50% <small>[33–69]</small></td></tr><tr><td>Random starts instead of smart proposals</td><td>0.42 <small>[0.23–0.62]</small></td><td>6% <small>[0–20]</small></td><td>0% <small>[0–0]</small></td></tr><tr><td>Fixed grid of 4 starts</td><td>–</td><td>0% <small>[0–0]</small></td><td>–</td></tr><tr><td>Whole image, not reliable pixels</td><td>0.69 <small>[0.49–0.85]</small></td><td>78% <small>[53–95]</small></td><td>6% <small>[0–20]</small></td></tr><tr><td>No brightness field</td><td>0.85 <small>[0.72–0.95]</small></td><td>94% <small>[80–100]</small></td><td>33% <small>[11–59]</small></td></tr><tr><td>4 views</td><td>0.83 <small>[0.71–0.95]</small></td><td>78% <small>[61–94]</small></td><td>6% <small>[0–19]</small></td></tr><tr><td>7 views</td><td>0.85 <small>[0.69–0.98]</small></td><td>78% <small>[61–94]</small></td><td>11% <small>[0–29]</small></td></tr></tbody></table></div>
@@ -40,4 +47,92 @@ centre error 0.13 mm.</p></div>
 <figure><img src="img/latest/test_0053_5.jpg" alt="Correctly says &quot;not supported&quot;" loading="lazy"><figcaption><b>Correctly says &quot;not supported&quot;.</b> dent · capture: nominal · true depth 0.44 mm, 0% visible · evidence score 0.0 (threshold 1.52) <small>(test_0053_5)</small></figcaption></figure>
 <figure><img src="img/latest/test_0038_1.jpg" alt="Stain, correctly not a dent" loading="lazy"><figcaption><b>Stain, correctly not a dent.</b> stain only · capture: nominal · evidence score 0.0 (threshold 1.52) <small>(test_0038_1)</small></figcaption></figure>
 <figure><img src="img/latest/test_0042_0.jpg" alt="False alarm" loading="lazy"><figcaption><b>False alarm.</b> healthy · capture: camera · evidence score 5.6 (threshold 1.52) <small>(test_0042_0)</small></figcaption></figure>
+<h2>Full auto-generated report</h2><details><summary>Show</summary><pre style="white-space:pre-wrap;font-size:.85rem"># Final report (auto-generated)
+
+## Sealed test (240 cases, 30 unseen blades)
+
+| Method | Rel. local error (observable) | Detection % | False change % | Abstain on unobservable % |
+|---|---|---|---|---|
+| BladeDelta (ours) | 0.69 [0.59, 0.79] | 54 [39, 68] | 10 [4, 17] | 85 [77, 91] |
+| Free-form field | 1.00 [1.00, 1.00] | 14 [4, 24] | 4 [1, 9] | 99 [97, 100] |
+| Discrete search | 1.00 [0.99, 1.00] | 5 [0, 13] | 6 [1, 10] | 98 [95, 100] |
+| Unchanged CAD | 1.00 [1.00, 1.00] | 0 [0, 0] | 0 [0, 0] | 100 [100, 100] |
+
+## How many views are needed (test subset, 120 cases)
+
+| Views | Observable dents | AUROC | Located % | Median rel. local error |
+|---|---|---|---|---|
+| 2 views | 10/60 | 0.847 | 60 | 0.43 |
+| 4 views | 17/60 | 0.777 | 41 | 1.0 |
+| 7 views | 29/60 | 0.857 | 62 | 0.47 |
+
+## Ablations (dev subset)
+
+```
+ours: n_neg=36 n_obs=18
+  AUROC(gain: observable dents vs negatives) = 0.853
+  AUROC(gain: correctly-located dents vs negatives) = 0.991
+  located within 0.1: 72%   median rel_local (obs): 0.22
+  at neg-FPR 0% (tau=2.46): detect 67%, detect AND located 61%
+  at neg-FPR 10% (tau=1.31): detect 78%, detect AND located 72%
+  at neg-FPR 20% (tau=0.54): detect 83%, detect AND located 72%
+ours_abl_nopose: n_neg=18 n_obs=18
+  AUROC(gain: observable dents vs negatives) = 0.679
+  AUROC(gain: correctly-located dents vs negatives) = 0.654
+  located within 0.1: 72%   median rel_local (obs): 0.27
+  at neg-FPR 0% (tau=106.02): detect 11%, detect AND located 6%
+  at neg-FPR 10% (tau=78.87): detect 17%, detect AND located 6%
+  at neg-FPR 20% (tau=68.53): detect 17%, detect AND located 6%
+ours_abl_nocolour: n_neg=18 n_obs=18
+  AUROC(gain: observable dents vs negatives) = 0.753
+  AUROC(gain: correctly-located dents vs negatives) = 0.833
+  located within 0.1: 83%   median rel_local (obs): 0.21
+  at neg-FPR 0% (tau=22.36): detect 28%, detect AND located 28%
+  at neg-FPR 10% (tau=19.59): detect 28%, detect AND located 28%
+  at neg-FPR 20% (tau=7.56): detect 50%, detect AND located 50%
+ours_abl_noproposals: n_neg=18 n_obs=18
+  AUROC(gain: observable dents vs negatives) = 0.420
+  AUROC(gain: correctly-located dents vs negatives) = 0.167
+  located within 0.1: 6%   median rel_local (obs): 1.00
+  at neg-FPR 0% (tau=1.34): detect 6%, detect AND located 0%
+  at neg-FPR 10% (tau=0.47): detect 6%, detect AND located 0%
+  at neg-FPR 20% (tau=0.31): detect 11%, detect AND located 0%
+ours_abl_fullimage: n_neg=18 n_obs=18
+  AUROC(gain: observable dents vs negatives) = 0.685
+  AUROC(gain: correctly-located dents vs negatives) = 0.798
+  located within 0.1: 61%   median rel_local (obs): 0.64
+  at neg-FPR 0% (tau=66.82): detect 11%, detect AND located 11%
+  at neg-FPR 10% (tau=29.93): detect 22%, detect AND located 22%
+  at neg-FPR 20% (tau=19.92): detect 39%, detect AND located 33%
+ours_abl_nofield: n_neg=18 n_obs=18
+  AUROC(gain: observable dents vs negatives) = 0.846
+  AUROC(gain: correctly-located dents vs negatives) = 0.876
+  located within 0.1: 72%   median rel_local (obs): 0.25
+  at neg-FPR 0% (tau=11.32): detect 28%, detect AND located 22%
+  at neg-FPR 10% (tau=6.20): detect 50%, detect AND located 33%
+  at neg-FPR 20% (tau=2.78): detect 78%, detect AND located 56%
+ours_abl_views4: n_neg=18 n_obs=18
+  AUROC(gain: observable dents vs negatives) = 0.833
+  AUROC(gain: correctly-located dents vs negatives) = 0.979
+  located within 0.1: 72%   median rel_local (obs): 0.21
+  at neg-FPR 0% (tau=4.11): detect 44%, detect AND located 44%
+  at neg-FPR 10% (tau=1.19): detect 78%, detect AND located 72%
+  at neg-FPR 20% (tau=0.47): detect 83%, detect AND located 72%
+ours_abl_views7: n_neg=18 n_obs=18
+  AUROC(gain: observable dents vs negatives) = 0.852
+  AUROC(gain: correctly-located dents vs negatives) = 0.953
+  located within 0.1: 72%   median rel_local (obs): 0.22
+  at neg-FPR 0% (tau=6.92): detect 39%, detect AND located 39%
+  at neg-FPR 10% (tau=2.20): detect 72%, detect AND located 72%
+  at neg-FPR 20% (tau=0.64): detect 83%, detect AND located 72%
+```
+
+## Real data (SiM3D wooden stools, industrial scans)
+
+- Objects: 6; real defects: 22; undamaged negative crops: 31
+- AUROC (fit gain, defect vs undamaged): 0.54
+- Detected at leave-one-object-out threshold: 0/22; of those located within 15 mm: 0
+- False alarms on undamaged crops (leave-one-object-out): 1/31
+
+</pre></details>
 </main></body></html>
