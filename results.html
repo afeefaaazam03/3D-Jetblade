@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="styles.css">
 <style>main.res{max-width:1100px;margin:0 auto;padding:32px 16px 64px;display:grid;gap:18px} main.res small{color:var(--muted)}</style>
 </head><body><main class="res">
-<span class="eyebrow">BladeDelta results · 08 Oct 2026, 14:33 UTC</span>
+<span class="eyebrow">BladeDelta results · 08 Oct 2026, 14:37 UTC</span>
 <h1>Sealed-test results <span class="chip partial">updating automatically</span></h1>
 <p>This page is rebuilt automatically from the experiment outputs. The test set is 240 cases on 30 blade shapes never used
 for development; the method and its threshold were locked before any test image existed. Brackets are 95% intervals,
@@ -31,6 +31,18 @@ fall to 5%. <b>B.</b> Misses are almost all dents shallower than 0.2&nbsp;mm. <b
 a false alarm on every case. Cause found: the camera check, which matches outlines, nudges a correct camera by about 0.3&deg; and a fake
 dent absorbs the misalignment. Fix (v1.1): correct the outline the same way the method already corrects brightness. It is developed on
 blades 1&ndash;2 and will be reported on blades 3&ndash;6, next to the frozen result.</figcaption></figure>
+<h2>Visual examples</h2><p>Each picture: <b>left</b> the photo with the <b style="color:#ff8c28">true dent in orange</b> and <b style="color:#2878e6">what the method reports in blue</b>; <b>middle</b> the healthy blade; <b>right</b> the difference.</p>
+<h3>More cameras find what two cannot</h3>
+<figure><img src="img/latest/test_0061_3.jpg" alt="2 cameras: missed" loading="lazy"><figcaption><b>2 cameras: missed.</b> The dent (orange) sits where the two input cameras see the blade edge-on, so there is almost no evidence and nothing is reported.</figcaption></figure>
+<figure><img src="img/latest/test_0061_3_ours_views7.jpg" alt="7 cameras: found" loading="lazy"><figcaption><b>7 cameras: found.</b> Same blade and dent, shown from one of the extra cameras that sees it face-on. The method locates it exactly (blue on orange).</figcaption></figure>
+<h3>Smart search vs. a fixed grid (same compute)</h3>
+<figure><img src="img/latest/dev_0016_3.jpg" alt="Smart proposals: found" loading="lazy"><figcaption><b>Smart proposals: found.</b> The method&rsquo;s score-test proposals start the search on the dent, which is located exactly.</figcaption></figure>
+<figure><img src="img/latest/dev_0016_3_ours_abl_grid.jpg" alt="Fixed grid of starts: missed" loading="lazy"><figcaption><b>Fixed grid of starts: missed.</b> Starting from a fixed grid, the fit never reaches the dent, even though the difference map (right) shows it clearly.</figcaption></figure>
+<h3>Your blades where the frozen method works (blades 5 and 6)</h3>
+<figure><img src="img/latest/cad6_1005_00.jpg" alt="Blade 5: dent found" loading="lazy"><figcaption><b>Blade 5: dent found.</b> A real dent, found and located.</figcaption></figure>
+<figure><img src="img/latest/cad6_1005_70.jpg" alt="Blade 5: camera moved, healthy: correctly silent" loading="lazy"><figcaption><b>Blade 5: camera moved, healthy: correctly silent.</b> The camera moved 1&deg; and nothing changed on the blade; no dent is reported.</figcaption></figure>
+<figure><img src="img/latest/cad6_1005_49.jpg" alt="Blade 5: stain only: correctly silent" loading="lazy"><figcaption><b>Blade 5: stain only: correctly silent.</b> A stain changes the colour but not the shape; no dent is reported.</figcaption></figure>
+<figure><img src="img/latest/cad6_1006_01.jpg" alt="Blade 6: dent found" loading="lazy"><figcaption><b>Blade 6: dent found.</b> A real dent on the largest blade, found and located.</figcaption></figure>
 <h2>Your six blades: frozen v1 in detail</h2><figure><img src="img/results/cad6_scores.png" alt="CAD6 scores">
 <figcaption>Each dot is one case. Red: healthy or stained blades, which should score below the dashed line. Blue: dents the cameras can
 see, which should score above it. Dents score high everywhere. On blades 1&ndash;3 (and partly 4) healthy blades score high too, so the frozen threshold
