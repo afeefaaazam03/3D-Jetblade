@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="styles.css">
 <style>main.res{max-width:1100px;margin:0 auto;padding:32px 16px 64px;display:grid;gap:18px} main.res small{color:var(--muted)}</style>
 </head><body><main class="res">
-<span class="eyebrow">BladeDelta results · 09 Oct 2026, 10:09 UTC</span>
+<span class="eyebrow">BladeDelta results · 09 Oct 2026, 10:35 UTC</span>
 <h1>Sealed-test results <span class="chip partial">updating automatically</span></h1>
 <p>This page is rebuilt automatically from the experiment outputs. The test set is 240 cases on 30 blade shapes never used
 for development; the method and its threshold were locked before any test image existed. Brackets are 95% intervals,
@@ -54,6 +54,23 @@ blades 1&ndash;2 and will be reported on blades 3&ndash;6, next to the frozen re
 <figcaption>Each dot is one case. Red: healthy or stained blades, which should score below the dashed line. Blue: dents the cameras can
 see, which should score above it. Dents score high everywhere. On blades 1&ndash;3 (and partly 4) healthy blades score high too, so the frozen threshold
 cannot separate them; on blade 5 it mostly works. The false-alarm rate per blade is in the title.</figcaption></figure>
+<h3>Every method on your held-out blades 3&ndash;6</h3><figure><img src="img/results/cad6_methods.png" alt="Methods on CAD6">
+<figcaption>Same 304 cases, each method at its own frozen threshold. The transfer failure is shared: the CADSplat-style free-form field also
+raises many false alarms and rarely places dents correctly, and discrete search keeps false alarms low only by almost never reporting.
+v1.1 is best on separation, location, false alarms and hidden-dent abstention. The 2D detector and the MLP field are added when their runs finish.</figcaption></figure>
+<h3>Same case, every method (blade 3, held out)</h3><p>Orange rings: the true dent. Blue dots: what each method reports.</p>
+<h4 style="margin-top:8px">Real dent (0.37&nbsp;mm), camera moved</h4><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:14px">
+<figure><img src="img/latest/cad6_1003_01.jpg" alt="v1 (frozen)" loading="lazy"><figcaption><b>v1 (frozen)</b></figcaption></figure>
+<figure><img src="img/latest/cad6_1003_01_freeform.jpg" alt="Free-form field (CADSplat-style)" loading="lazy"><figcaption><b>Free-form field (CADSplat-style)</b></figcaption></figure>
+<figure><img src="img/latest/cad6_1003_01_discrete.jpg" alt="Discrete search" loading="lazy"><figcaption><b>Discrete search</b></figcaption></figure>
+<figure><img src="img/latest/cad6_1003_01_v11.jpg" alt="v1.1" loading="lazy"><figcaption><b>v1.1</b></figcaption></figure>
+</div>
+<h4 style="margin-top:8px">Healthy blade, camera and lighting changed</h4><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:14px">
+<figure><img src="img/latest/cad6_1003_35.jpg" alt="v1 (frozen)" loading="lazy"><figcaption><b>v1 (frozen)</b></figcaption></figure>
+<figure><img src="img/latest/cad6_1003_35_freeform.jpg" alt="Free-form field (CADSplat-style)" loading="lazy"><figcaption><b>Free-form field (CADSplat-style)</b></figcaption></figure>
+<figure><img src="img/latest/cad6_1003_35_discrete.jpg" alt="Discrete search" loading="lazy"><figcaption><b>Discrete search</b></figcaption></figure>
+<figure><img src="img/latest/cad6_1003_35_v11.jpg" alt="v1.1" loading="lazy"><figcaption><b>v1.1</b></figcaption></figure>
+</div>
 <figure><img src="img/results/cad6_size.png" alt="CAD6 by blade size" style="max-width:760px"><figcaption>The frozen method works on the two largest blades (5 and 6) and fails on the small ones. Re-tuning one threshold on these blades does not help (4% false alarms, but only 13% of dents found), so the fix has to be in the method: v1.1.</figcaption></figure>
 <h3>Examples on your blades (left: photo with true dent orange and reported dent blue; middle: healthy reference; right: difference)</h3>
 <figure><img src="img/latest/cad6_1001_00.jpg" alt="Frozen v1 finds a real dent" loading="lazy"><figcaption><b>Frozen v1 finds a real dent.</b> Blade 1, no camera change: the dent (orange) is found exactly (blue).</figcaption></figure>
