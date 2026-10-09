@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="styles.css">
 <style>main.res{max-width:1100px;margin:0 auto;padding:32px 16px 64px;display:grid;gap:18px} main.res small{color:var(--muted)}</style>
 </head><body><main class="res">
-<span class="eyebrow">BladeDelta results · 09 Oct 2026, 05:42 UTC</span>
+<span class="eyebrow">BladeDelta results · 09 Oct 2026, 05:43 UTC</span>
 <h1>Sealed-test results <span class="chip partial">updating automatically</span></h1>
 <p>This page is rebuilt automatically from the experiment outputs. The test set is 240 cases on 30 blade shapes never used
 for development; the method and its threshold were locked before any test image existed. Brackets are 95% intervals,
@@ -38,6 +38,13 @@ blades 1&ndash;2 and will be reported on blades 3&ndash;6, next to the frozen re
 <h3>Smart search vs. a fixed grid (same compute)</h3>
 <figure><img src="img/latest/dev_0016_3.jpg" alt="Smart proposals: found" loading="lazy"><figcaption><b>Smart proposals: found.</b> The method&rsquo;s score-test proposals start the search on the dent, which is located exactly.</figcaption></figure>
 <figure><img src="img/latest/dev_0016_3_ours_abl_grid.jpg" alt="Fixed grid of starts: missed" loading="lazy"><figcaption><b>Fixed grid of starts: missed.</b> Starting from a fixed grid, the fit never reaches the dent, even though the difference map (right) shows it clearly.</figcaption></figure>
+<h3>v1.1 on your held-out blades 3&ndash;6 (never used to develop it): same case, frozen v1 then v1.1</h3>
+<figure><img src="img/latest/cad6_1003_73.jpg" alt="Blade 3, healthy, camera moved &mdash; frozen v1: false alarm" loading="lazy"><figcaption><b>Blade 3, healthy, camera moved &mdash; frozen v1: false alarm.</b> Nothing changed on the blade, but v1 reports a dent near the root.</figcaption></figure>
+<figure><img src="img/latest/cad6_1003_73_v11.jpg" alt="Same case &mdash; v1.1: correctly silent" loading="lazy"><figcaption><b>Same case &mdash; v1.1: correctly silent.</b> With the camera-check and brightness-correction fixes, nothing is reported.</figcaption></figure>
+<figure><img src="img/latest/cad6_1004_49.jpg" alt="Blade 4, stain only &mdash; frozen v1: false alarm" loading="lazy"><figcaption><b>Blade 4, stain only &mdash; frozen v1: false alarm.</b> A colour change near the root is reported as a large dent.</figcaption></figure>
+<figure><img src="img/latest/cad6_1004_49_v11.jpg" alt="Same case &mdash; v1.1: correctly silent" loading="lazy"><figcaption><b>Same case &mdash; v1.1: correctly silent.</b> The stain is explained as a colour change; no shape change is reported.</figcaption></figure>
+<figure><img src="img/latest/cad6_1006_15.jpg" alt="Blade 6, real dent &mdash; frozen v1: wrong place" loading="lazy"><figcaption><b>Blade 6, real dent &mdash; frozen v1: wrong place.</b> v1 reports a dent at the root, far from the real one (orange, mid-blade).</figcaption></figure>
+<figure><img src="img/latest/cad6_1006_15_v11.jpg" alt="Same case &mdash; v1.1: found exactly" loading="lazy"><figcaption><b>Same case &mdash; v1.1: found exactly.</b> v1.1 places the dent on the true location.</figcaption></figure>
 <h3>Your blades where the frozen method works (blades 5 and 6)</h3>
 <figure><img src="img/latest/cad6_1005_00.jpg" alt="Blade 5: dent found" loading="lazy"><figcaption><b>Blade 5: dent found.</b> A real dent, found and located.</figcaption></figure>
 <figure><img src="img/latest/cad6_1005_70.jpg" alt="Blade 5: camera moved, healthy: correctly silent" loading="lazy"><figcaption><b>Blade 5: camera moved, healthy: correctly silent.</b> The camera moved 1&deg; and nothing changed on the blade; no dent is reported.</figcaption></figure>
