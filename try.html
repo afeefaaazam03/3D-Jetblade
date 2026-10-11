@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BladeDelta Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,600..800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>
+:root{--ok:#1a7f37;--no:#9a6700;--card:var(--surface)}
+main.try{max-width:1120px;margin:0 auto;padding:28px 16px 64px;display:grid;gap:22px}
+.hero h1{font-size:clamp(1.6rem,4vw,2.4rem);line-height:1.1}
+.hero p{max-width:70ch;color:var(--ink-2)}
+.cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.cta a{padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);text-decoration:none;font-weight:600}
+.cta a.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button,.seg button{font:inherit;padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.chips button[aria-pressed=true],.seg button[aria-pressed=true]{background:var(--ink);color:var(--bg,#fff);border-color:var(--ink)}
+.seg{display:inline-flex;gap:6px}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:18px}
+@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:12px;min-width:0}
+.verdict{font-family:Archivo,sans-serif;font-size:1.5rem;font-weight:800}
+.verdict.ok{color:var(--ok)} .verdict.no{color:var(--no)}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.kpi{border:1px solid var(--line);border-radius:10px;padding:10px}
+.kpi b{display:block;font-size:1.25rem}
+.kpi span{font-size:.8rem;color:var(--muted)}
+.bar{height:10px;border-radius:6px;background:var(--line);position:relative;overflow:hidden}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--accent)}
+.bar em{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink)}
+.slider{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--line);aspect-ratio:1/1;max-width:520px;user-select:none}
+.slider img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.slider .top{clip-path:inset(0 0 0 50%)}
+.slider input{position:absolute;inset:auto 8px 8px 8px;width:calc(100% - 16px)}
+.slider .lab{position:absolute;top:8px;padding:2px 8px;border-radius:6px;background:rgba(0,0,0,.55);color:#fff;font-size:.78rem}
+img.panel{width:100%;border-radius:10px;border:1px solid var(--line)}
+.muted{color:var(--muted);font-size:.9rem}
+</style></head><body><main class="try">
+<section class="hero">
+  <span class="eyebrow">BladeDelta · interactive demo</span>
+  <h1>Does the photograph support a dent?</h1>
+  <p>Pick a blade. The method compares two photographs with the healthy CAD model and reports a dent, with its depth, only
+  when the images support it better than camera error, lighting or a stain. Otherwise it says <b>not supported</b>.
+  These are the frozen model's real outputs on sealed-test blades it never saw during development.</p>
+  <div class="cta"><a class="primary" href="#demo">Try it</a><a href="results.html">All results</a>
+  <a href="https://github.com/afeefaaazam03/3D-Jetblade/tree/main/code">Code</a><a href="paper/BladeDelta_draft.pdf">Paper (PDF)</a></div>
+</section>
+
+<section id="demo" class="card">
+  <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
+    <div class="chips" id="chips" role="group" aria-label="Example"></div>
+    <div class="seg" role="group" aria-label="Model"><button data-v="v1.1" aria-pressed="true">v1.1 (recommended)</button><button data-v="v1" aria-pressed="false">v1 (frozen)</button></div>
+  </div>
+  <div class="grid">
+    <div class="card" style="padding:12px">
+      <div class="slider" id="slider"><img id="imgBase" alt="Healthy CAD render"><img id="imgTop" class="top" alt="Input photograph">
+        <span class="lab" style="left:8px">Healthy CAD</span><span class="lab" style="right:8px">Photograph</span>
+        <input type="range" min="0" max="100" value="50" id="range" aria-label="Compare healthy CAD and photograph"></div>
+      <p class="muted">Drag to compare the healthy CAD render with the photograph. A 0.1&nbsp;mm dent changes the picture by only a few grey levels.</p>
+    </div>
+    <div class="card">
+      <div class="verdict" id="verdict"></div>
+      <div class="kpis">
+        <div class="kpi"><b id="depth"></b><span>reported depth</span></div>
+        <div class="kpi"><b id="gain"></b><span>evidence score</span></div>
+        <div class="kpi"><b id="tau"></b><span>threshold</span></div>
+      </div>
+      <div><div class="bar" aria-hidden="true"><i id="fill"></i><em id="mark"></em></div>
+      <p class="muted" id="conf"></p></div>
+      <p><b>Ground truth:</b> <span id="truth"></span></p>
+    </div>
+  </div>
+  <img class="panel" id="panel" alt="Result: photograph with true dent (orange rings) and reported dent (blue), healthy reference, difference">
+  <p class="muted">Result picture: <b style="color:#ff8c28">orange rings</b> mark the true dent, <b style="color:#2878e6">blue dots</b> what the method reports; middle: healthy reference; right: the difference, amplified.</p>
+</section>
+
+<section class="card">
+  <h2>Depth, colour-coded</h2>
+  <img class="panel" src="img/try/depth_01.png" alt="True and reported dent depth, colour-coded">
+  <p class="muted">The visible-dent example: true depth (left) and the depth v1.1 reports (right) on the same colour scale. Peak 0.359&nbsp;mm true, 0.352&nbsp;mm reported.</p>
+</section>
+
+<section class="card">
+  <h2>Run it yourself</h2>
+  <p>The full interactive app (Gradio) runs the method live on a GPU, including on your own photographs and CAD mesh:</p>
+  <pre style="white-space:pre-wrap;font-size:.85rem">git clone https://github.com/afeefaaazam03/3D-Jetblade && cd 3D-Jetblade/code
+pip install -r requirements.txt gradio && pip install git+https://github.com/NVlabs/nvdiffrast.git --no-build-isolation
+python demo/app.py</pre>
+  <p class="muted">Or open the Colab notebook in <code>code/notebooks/</code>. Inputs must come from the BladeDelta camera rig; real photographs are pending physical validation.</p>
+</section>
+</main>
+<script>
+var D = null, cur = '01_dent_found', ver = 'v1.1';
+function fmt(x, d) { return (Math.round(x * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d); }
+function render() {
+  var e = D[cur], o = e.out[ver], ok = o.decision === 'dent supported';
+  var p = 'img/try/' + cur + '_';
+  document.getElementById('imgBase').src = p + 'healthy_v005.png';
+  document.getElementById('imgTop').src = p + 'observed_v005.png';
+  document.getElementById('panel').src = p + 'panel_' + ver + '.jpg';
+  var v = document.getElementById('verdict');
+  v.textContent = ok ? 'Dent found, ' + fmt(o.depth_mm, 2) + ' mm deep' : 'Not supported: no dent reported';
+  v.className = 'verdict ' + (ok ? 'ok' : 'no');
+  document.getElementById('depth').textContent = ok ? fmt(o.depth_mm, 2) + ' mm' : '—';
+  document.getElementById('gain').textContent = fmt(o.fit_gain, 2);
+  document.getElementById('tau').textContent = fmt(o.threshold, 2);
+  var scale = Math.log10(1 + o.fit_gain) / Math.log10(1 + 100), tsc = Math.log10(1 + o.threshold) / Math.log10(1 + 100);
+  document.getElementById('fill').style.width = Math.min(100, scale * 100) + '%';
+  document.getElementById('mark').style.left = (tsc * 100) + '%';
+  document.getElementById('conf').textContent = 'Evidence ' + fmt(o.fit_gain, 2) + ' vs threshold ' + fmt(o.threshold, 2) +
+    ' (log scale; the line marks the threshold). The threshold is calibrated so that about 5% of healthy or stained blades exceed it.';
+  var t = e.truth.dent;
+  document.getElementById('truth').textContent = e.why + (t ? ' True dent: ' + fmt(t.depth_mm, 2) + ' mm deep, radius ' + fmt(t.radius_mm, 1) + ' mm.' : '');
+  document.querySelectorAll('#chips button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.k === cur); });
+  document.querySelectorAll('.seg button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.v === ver); });
+}
+fetch('try_data.json').then(function (r) { return r.json(); }).then(function (d) {
+  D = d; var c = document.getElementById('chips');
+  Object.keys(d).forEach(function (k) { var b = document.createElement('button'); b.textContent = d[k].title; b.dataset.k = k;
+    b.onclick = function () { cur = k; render(); }; c.appendChild(b); });
+  render();
+});
+document.querySelectorAll('.seg button').forEach(function (b) { b.onclick = function () { ver = b.dataset.v; render(); }; });
+document.getElementById('range').oninput = function (e) { document.getElementById('imgTop').style.clipPath = 'inset(0 0 0 ' + e.target.value + '%)'; };
+</script>
+</body></html>

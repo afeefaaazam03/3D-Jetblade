@@ -1,0 +1,170 @@
+{
+ "01_dent_found": {
+  "title": "Visible dent",
+  "why": "A real dent the two cameras can see.",
+  "truth": {
+   "case_id": "test2_0083_3",
+   "source": 83,
+   "kind": "dent",
+   "capture": "nominal",
+   "views": [
+    "v004",
+    "v005"
+   ],
+   "dent": {
+    "depth_mm": 0.35943960826329785,
+    "radius_mm": 7.632568905593693,
+    "family": "gaussian"
+   },
+   "stain": false
+  },
+  "out": {
+   "v1": {
+    "decision": "dent supported",
+    "fit_gain": 69.51172256469727,
+    "threshold": 1.52313232421875,
+    "depth_mm": 0.35291793942451477,
+    "radius_mm": 6.677363708615303
+   },
+   "v1.1": {
+    "decision": "dent supported",
+    "fit_gain": 69.39546966552734,
+    "threshold": 1.0226287841796875,
+    "depth_mm": 0.3523901663720608,
+    "radius_mm": 6.725031718611717
+   }
+  }
+ },
+ "02_hidden_dent": {
+  "title": "Hidden dent",
+  "why": "A real dent on the far side: neither camera sees it.",
+  "truth": {
+   "case_id": "test2_0068_5",
+   "source": 68,
+   "kind": "dent",
+   "capture": "nominal",
+   "views": [
+    "v004",
+    "v005"
+   ],
+   "dent": {
+    "depth_mm": 0.4081871222291949,
+    "radius_mm": 6.012876658362376,
+    "family": "cubic_rim"
+   },
+   "stain": false
+  },
+  "out": {
+   "v1": {
+    "decision": "not supported",
+    "fit_gain": 0.003679513931274414,
+    "threshold": 1.52313232421875,
+    "depth_mm": 0,
+    "radius_mm": 3.9396324530243874
+   },
+   "v1.1": {
+    "decision": "not supported",
+    "fit_gain": 5.6512653827667236e-05,
+    "threshold": 1.0226287841796875,
+    "depth_mm": 0,
+    "radius_mm": 3.9396332800388336
+   }
+  }
+ },
+ "03_stain_only": {
+  "title": "Stain only",
+  "why": "A colour change, no shape change.",
+  "truth": {
+   "case_id": "test2_0069_2",
+   "source": 69,
+   "kind": "colour",
+   "capture": "nominal",
+   "views": [
+    "v004",
+    "v005"
+   ],
+   "dent": null,
+   "stain": true
+  },
+  "out": {
+   "v1": {
+    "decision": "not supported",
+    "fit_gain": 0.028409957885742188,
+    "threshold": 1.52313232421875,
+    "depth_mm": 0,
+    "radius_mm": 3.9396613985300064
+   },
+   "v1.1": {
+    "decision": "not supported",
+    "fit_gain": 0.009719312191009521,
+    "threshold": 1.0226287841796875,
+    "depth_mm": 0,
+    "radius_mm": 5.003918170928955
+   }
+  }
+ },
+ "04_healthy": {
+  "title": "Healthy blade",
+  "why": "Nothing changed on the blade.",
+  "truth": {
+   "case_id": "test2_0070_0",
+   "source": 70,
+   "kind": "healthy",
+   "capture": "nominal",
+   "views": [
+    "v004",
+    "v005"
+   ],
+   "dent": null,
+   "stain": false
+  },
+  "out": {
+   "v1": {
+    "decision": "not supported",
+    "fit_gain": 0.012510418891906738,
+    "threshold": 1.52313232421875,
+    "depth_mm": 0.00370000017574057,
+    "radius_mm": 4.4399999007582664
+   },
+   "v1.1": {
+    "decision": "not supported",
+    "fit_gain": 0.00023816153407096863,
+    "threshold": 1.0226287841796875,
+    "depth_mm": 0,
+    "radius_mm": 5.003917068243027
+   }
+  }
+ },
+ "05_camera_error": {
+  "title": "Camera moved",
+  "why": "Nothing changed, but the cameras moved by up to 1.5\u00b0.",
+  "truth": {
+   "case_id": "test2_0067_0",
+   "source": 67,
+   "kind": "healthy",
+   "capture": "camera",
+   "views": [
+    "v004",
+    "v005"
+   ],
+   "dent": null,
+   "stain": false
+  },
+  "out": {
+   "v1": {
+    "decision": "not supported",
+    "fit_gain": 0.204681396484375,
+    "threshold": 1.52313232421875,
+    "depth_mm": 0,
+    "radius_mm": 5.003919824957848
+   },
+   "v1.1": {
+    "decision": "not supported",
+    "fit_gain": 0.02691650390625,
+    "threshold": 1.0226287841796875,
+    "depth_mm": 0.00370000017574057,
+    "radius_mm": 4.4399999007582664
+   }
+  }
+ }
+}
