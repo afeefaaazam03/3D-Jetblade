@@ -1,0 +1,19 @@
+{
+ "fit_gain": 5.6512653827667236e-05,
+ "depth": 0.0,
+ "radius": 0.053238287568092346,
+ "centre": [
+  -0.21521537005901337,
+  0.2979232966899872,
+  0.31050294637680054
+ ],
+ "pred_changed_vertices": 0,
+ "visible_fraction": 0.0,
+ "centre_err": null,
+ "rel_local": 1.0,
+ "seconds": 89.40229439735413,
+ "threshold": 1.0226287841796875,
+ "decision": "not supported",
+ "depth_mm": 0,
+ "radius_mm": 3.9396332800388336
+}

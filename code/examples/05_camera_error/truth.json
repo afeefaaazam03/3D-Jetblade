@@ -1,0 +1,12 @@
+{
+ "case_id": "test2_0067_0",
+ "source": 67,
+ "kind": "healthy",
+ "capture": "camera",
+ "views": [
+  "v004",
+  "v005"
+ ],
+ "dent": null,
+ "stain": false
+}
