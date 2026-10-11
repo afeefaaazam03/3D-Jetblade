@@ -1,0 +1,12 @@
+{
+ "case_id": "test2_0069_2",
+ "source": 69,
+ "kind": "colour",
+ "capture": "nominal",
+ "views": [
+  "v004",
+  "v005"
+ ],
+ "dent": null,
+ "stain": true
+}

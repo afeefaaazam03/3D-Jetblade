@@ -1,0 +1,6 @@
+{
+ "v1": 1.52313232421875,
+ "v1.1": 1.0226287841796875,
+ "alpha": 0.05,
+ "note": "split-conformal 95% quantile of fit gains on 60 healthy/stain-only calibration cases (Rotor37 blades 25-36)"
+}

@@ -1,0 +1,16 @@
+{
+ "case_id": "test2_0068_5",
+ "source": 68,
+ "kind": "dent",
+ "capture": "nominal",
+ "views": [
+  "v004",
+  "v005"
+ ],
+ "dent": {
+  "depth_mm": 0.4081871222291949,
+  "radius_mm": 6.012876658362376,
+  "family": "cubic_rim"
+ },
+ "stain": false
+}
