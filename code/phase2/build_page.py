@@ -76,8 +76,11 @@ def map_figure():
         cb = fig.colorbar(sc, ax=ax, fraction=.046); cb.set_label('smallest detectable dent depth (mm)')
         ax.axis('off'); ax.set_title(f'{cid}: radius {float(z["radius"]) * 74:.1f} mm dents', fontsize=9)
         name = f'map_{f.stem}.png'; fig.savefig(IMG / name, dpi=110, bbox_inches='tight'); plt.close(fig)
-        fin = np.isfinite(z['h_min_mm'])
-        out.append((name, cid, float(np.median(z['h_min_mm'][fin])) if fin.any() else None, int(fin.sum()), len(fin)))
+        from bladedelta.cases import visible_vertices
+        from bladedelta.cameras import FIT_VIEWS
+        face = visible_vertices(sid, FIT_VIEWS)[z['centres']]
+        hv = z['h_min_mm'][face]
+        out.append((name, cid, float(np.median(hv)) if len(hv) else None, int((hv < .1).sum()), int(face.sum())))
     return out
 
 
@@ -114,10 +117,10 @@ the frozen method actually did. Nothing in the method was changed or re-tuned. <
                               f'prediction says "not detectable".</figcaption></figure>' for f, l in figs) + '</div>')
     if maps:
         body.append('<h2>Detection-limit maps</h2><p>The smallest dent depth these two photographs could reveal, at each point of the blade '
-                    '(yellow: tiny dents are detectable; dark: only deep dents, or none). Computed for a healthy capture, before any search.</p>'
+                    '(yellow: tiny dents are detectable; dark: only deep dents, or none). Computed for a healthy capture, before any search. The limit depends on the capture: camera and lighting error raise it, which is why the per-dent prediction above (made on the actual captures) is the one validated against reality.</p>'
                     '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:14px">'
-                    + ''.join(f'<figure><img src="img/phase2/{n}" alt="map {c}"><figcaption>{c}: median limit {m:.2f} mm; '
-                              f'{k} of {t} points detectable at all.</figcaption></figure>' for n, c, m, k, t in maps if m is not None) + '</div>')
+                    + ''.join(f'<figure><img src="img/phase2/{n}" alt="map {c}"><figcaption>{c}: on the {t} surface points facing an input camera, median limit {m:.3f} mm; '
+                              f'{k} of {t} can reveal dents under 0.1 mm. Points facing away cannot reveal any dent.</figcaption></figure>' for n, c, m, k, t in maps if m is not None) + '</div>')
     body.append('<h2>Progress</h2><pre style="white-space:pre-wrap;font-size:.85rem">' + '\n'.join(status) + '</pre>')
     page = f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
