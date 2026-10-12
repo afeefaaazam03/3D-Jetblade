@@ -40,7 +40,6 @@ def nuisance_block(pb, cfg, sel):
     return cols, lam
 
 
-@torch.no_grad()
 def map_case(split, cid, radius=.08, step=.03, cfg=Config(), shader=None):
     shader = shader or load_shader()
     c = next(x for x in json.loads((B / split / 'cases.json').read_text()) if x['case_id'] == cid)
@@ -48,6 +47,11 @@ def map_case(split, cid, radius=.08, step=.03, cfg=Config(), shader=None):
     imgs = [rgb(B / split / 'renders' / cid / f'{v}.png') for v in cfg.views]
     refs = [rgb(B / split / 'refs' / f'ref_{sid:04d}' / f'{v}.png') for v in cfg.views]
     pb = h0_state(sid, imgs, refs, shader, cfg)
+    return _map(pb, sid, cid, radius, step, cfg)
+
+
+@torch.no_grad()
+def _map(pb, sid, cid, radius, step, cfg):
     tau = json.loads((ROOT / 'METHOD_FREEZE.json').read_text())['thresholds']['ours']['tau_alpha05']
     m = pb.mask > 0
     sel = lambda img: img[m].reshape(-1)
