@@ -21,11 +21,20 @@ label{font-size:.85rem;color:var(--muted)}input[type=range]{width:100%}
 .legend{height:12px;border-radius:6px;background:linear-gradient(90deg,#c9ced6,#fde725,#f98e09,#bc3754,#57106e)}
 .hud{position:absolute;left:14px;top:12px;background:rgba(15,22,38,.75);padding:8px 12px;border-radius:10px;font-size:.95rem;pointer-events:none;max-width:70%}
 .hud b{color:var(--accent)}a{color:var(--blue)}
+.strip{position:absolute;left:12px;right:12px;bottom:12px;display:grid;grid-template-columns:1fr 1fr 2.4fr;gap:10px;background:rgba(15,22,38,.82);padding:10px;border-radius:12px;border:1px solid var(--line)}
+.strip figure{margin:0;display:grid;gap:4px}.strip img{width:100%;height:150px;object-fit:contain;background:#0b1120;border-radius:8px}
+.strip figcaption{font-size:.78rem;color:var(--muted)}.gh{font-size:.78rem;color:var(--muted);width:100%;margin-top:4px}
+@media (max-width:900px){.strip{position:static;grid-template-columns:1fr 1fr}.strip figure:last-child{grid-column:span 2}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 </head><body>
 <div class="app">
-  <div id="view"><div class="hud" id="hud">Loading…</div></div>
+  <div id="view"><div class="hud" id="hud">Loading…</div>
+  <div class="strip" id="strip">
+    <figure><img id="ph4" alt="Input photo, camera 1"><figcaption>Original photo, camera 1</figcaption></figure>
+    <figure><img id="ph5" alt="Input photo, camera 2"><figcaption>Original photo, camera 2</figcaption></figure>
+    <figure><img id="pan" alt="Result: true dent orange rings, model prediction blue"><figcaption>Result on the photo: <b style="color:#ff8c28">orange rings</b> = actual damage, <b style="color:#4f8cff">blue</b> = model prediction · healthy reference · difference</figcaption></figure>
+  </div></div>
   <div class="side">
     <div><h1>BladeDelta: 3D damage viewer</h1>
     <p class="muted">Drag to rotate, scroll to zoom. Compare the healthy blade, the actual damage, and what the model predicted. Dents are 0.03–1 mm, so they are exaggerated to be visible.</p></div>
@@ -34,7 +43,7 @@ label{font-size:.85rem;color:var(--muted)}input[type=range]{width:100%}
       <button data-m="healthy">Healthy</button><button data-m="true">Actual damage</button>
       <button data-m="v11">Model prediction (v1.1)</button><button data-m="v1">Old model (v1)</button></div></div>
     <div><label>Exaggerate dents: <span id="exv">×20</span></label><input id="ex" type="range" min="1" max="60" value="20"></div>
-    <div class="grp"><button id="spin" aria-pressed="true">Rotate 360°</button><button id="cmp">Side by side: actual vs model</button></div>
+    <div class="grp"><button id="spin" aria-pressed="true">Rotate 360°</button><button id="cmp">Side by side: actual vs model</button><button id="photos" aria-pressed="true">Show photos</button></div>
     <div class="card" id="info"></div>
     <div><label>Depth colour (mm)</label><div class="legend"></div><div class="row muted"><span>0</span><span id="lmax">0.4</span></div></div>
     <p class="muted">Rendered blades from the BladeDelta benchmark: three public Rotor37 blades and three industrial blade designs (held-out where noted). Results are the model's real sealed-test outputs. <a href="try.html">2D demo</a> · <a href="results.html">all results</a></p>
@@ -70,7 +79,7 @@ function build(c, field, offsetX) {
   let vmax = Math.max(0.05, c.true_depth_mm);
   for (let i = 0; i < n; i++) {
     const s = F ? F[i] : 0;
-    for (let k = 0; k < 3; k++) p[3 * i + k] = D.pos[3 * i + k] + D.nrm[3 * i + k] * s * ex + (k === 0 ? offsetX : 0);
+    for (let k = 0; k < 3; k++) p[3 * i + k] = D.pos[3 * i + k] + D.nrm[3 * i + k] * s * ex * (c.span_mm / 74) + (k === 0 ? offsetX : 0);
     const cc = F ? ramp(Math.abs(s) / vmax) : [0.79, 0.81, 0.84]; col.set(cc, 3 * i);
   }
   g.setAttribute('position', new THREE.BufferAttribute(p, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
@@ -95,6 +104,8 @@ async function show() {
   if (R.v11 && R.v11.centre_err_mm != null) h += row('Location error', R.v11.centre_err_mm.toFixed(1) + ' mm');
   if (R.v1) h += row('Old model v1', dec(R.v1) + (R.v1.centre_err_mm != null ? ` (${R.v1.centre_err_mm.toFixed(1)} mm off)` : ''));
   document.getElementById('info').innerHTML = h;
+  document.getElementById('ph4').src = 'demo3d/' + c.id + '_v004.png'; document.getElementById('ph5').src = 'demo3d/' + c.id + '_v005.png';
+  document.getElementById('pan').src = 'demo3d/' + c.id + '_panel.jpg';
   document.getElementById('hud').innerHTML = sideBySide ? `<b>Left:</b> actual damage &nbsp; <b>Right:</b> model v1.1 &nbsp; (×${ex})` : `<b>${label(c, mode)}</b> &nbsp; dents ×${ex}`;
   document.querySelectorAll('#modes button').forEach(b => b.setAttribute('aria-pressed', !sideBySide && b.dataset.m === mode));
   document.querySelectorAll('#cases button').forEach(b => b.setAttribute('aria-pressed', b.dataset.id === c.id));
@@ -108,7 +119,11 @@ function resize() { const w = view.clientWidth, h = view.clientHeight || 500; re
 addEventListener('resize', resize);
 CASES = await (await fetch('demo3d/cases.json')).json();
 const cb = document.getElementById('cases');
-CASES.forEach(c => { const b = document.createElement('button'); b.textContent = c.title.split(':')[0] + ': ' + c.title.split(':')[1].trim(); b.dataset.id = c.id; b.onclick = () => { cur = c; frame(); show(); }; cb.appendChild(b); });
+['Rotor37', 'Industrial'].forEach(gname => {
+  const hd = document.createElement('div'); hd.className = 'gh'; hd.textContent = gname === 'Rotor37' ? 'Public Rotor37 blades' : 'Your industrial blade designs'; cb.appendChild(hd);
+  CASES.filter(c => (c.group || 'Rotor37') === gname).forEach(c => { const b = document.createElement('button'); b.textContent = c.title.split(':')[1].trim().replace(/^./, x => x.toUpperCase()) + (gname === 'Industrial' ? ' (' + c.title.split(':')[0].replace('Industrial ', '') + ')' : ''); b.dataset.id = c.id; b.onclick = () => { cur = c; frame(); show(); }; cb.appendChild(b); });
+});
+document.getElementById('photos').onclick = e => { const st = document.getElementById('strip'); const on = st.style.display === 'none'; st.style.display = on ? '' : 'none'; e.target.setAttribute('aria-pressed', on); };
 document.querySelectorAll('#modes button').forEach(b => b.onclick = () => { mode = b.dataset.m; sideBySide = false; frame(); show(); });
 document.getElementById('ex').oninput = e => { ex = +e.target.value; document.getElementById('exv').textContent = '×' + ex; show(); };
 document.getElementById('spin').onclick = e => { controls.autoRotate = !controls.autoRotate; e.target.setAttribute('aria-pressed', controls.autoRotate); };

@@ -1,6 +1,7 @@
 [
  {
   "id": "test2_0083_3",
+  "group": "Rotor37",
   "title": "Rotor37 blade: visible dent",
   "why": "A real 0.36 mm dent the two cameras can see.",
   "nv": 29989,
@@ -28,6 +29,7 @@
  },
  {
   "id": "test2_0069_2",
+  "group": "Rotor37",
   "title": "Rotor37 blade: stain only",
   "why": "Only the colour changed; no shape change.",
   "nv": 29989,
@@ -55,6 +57,7 @@
  },
  {
   "id": "test2_0068_5",
+  "group": "Rotor37",
   "title": "Rotor37 blade: hidden dent",
   "why": "A real dent on the side neither camera sees.",
   "nv": 29989,
@@ -82,6 +85,7 @@
  },
  {
   "id": "cad6_1005_14",
+  "group": "Industrial",
   "title": "Industrial blade 5: dent, well measured",
   "why": "Held-out industrial design: found in the right place and measured well (0.29 vs 0.30 mm).",
   "nv": 17844,
@@ -109,6 +113,7 @@
  },
  {
   "id": "cad6_1003_73",
+  "group": "Industrial",
   "title": "Industrial blade 3: healthy, camera moved",
   "why": "Held-out industrial design. Old model v1 invented a dent; v1.1 correctly reports nothing.",
   "nv": 12016,
@@ -135,7 +140,260 @@
   }
  },
  {
+  "id": "test2_0080_4",
+  "group": "Rotor37",
+  "title": "Rotor37 blade: dent, camera moved",
+  "why": "A 0.23 mm dent with the cameras off by up to 1.5 degrees: still found and measured (0.20 mm).",
+  "nv": 29989,
+  "nf": 59974,
+  "span_mm": 74.0,
+  "true_depth_mm": 0.22669887075433626,
+  "kind": "dent",
+  "capture": "camera",
+  "results": {
+   "v11": {
+    "reported": true,
+    "evidence": 13.193557739257812,
+    "threshold": 1.0226287841796875,
+    "depth_mm": 0.202207547120724,
+    "centre_err_mm": 0.0
+   },
+   "v1": {
+    "reported": true,
+    "evidence": 13.208854675292969,
+    "threshold": 1.52313232421875,
+    "depth_mm": 0.20152712183572097,
+    "centre_err_mm": 0.0
+   }
+  }
+ },
+ {
+  "id": "test2_0095_5",
+  "group": "Rotor37",
+  "title": "Rotor37 blade: dent, lighting changed",
+  "why": "A 0.10 mm dent under changed lighting: found (0.12 mm).",
+  "nv": 29989,
+  "nf": 59974,
+  "span_mm": 74.0,
+  "true_depth_mm": 0.10307842067255607,
+  "kind": "dent",
+  "capture": "light",
+  "results": {
+   "v11": {
+    "reported": true,
+    "evidence": 10.673465728759766,
+    "threshold": 1.0226287841796875,
+    "depth_mm": 0.11753951002119785,
+    "centre_err_mm": 0.0
+   },
+   "v1": {
+    "reported": true,
+    "evidence": 10.972965240478516,
+    "threshold": 1.52313232421875,
+    "depth_mm": 0.11615353151717384,
+    "centre_err_mm": 0.0
+   }
+  }
+ },
+ {
+  "id": "test2_0081_6",
+  "group": "Rotor37",
+  "title": "Rotor37 blade: dent + stain",
+  "why": "A dent with a stain on top: the stain is explained as colour and the dent is found.",
+  "nv": 29989,
+  "nf": 59974,
+  "span_mm": 74.0,
+  "true_depth_mm": 0.36236879357227314,
+  "kind": "mixed",
+  "capture": "light",
+  "results": {
+   "v11": {
+    "reported": true,
+    "evidence": 21.70895004272461,
+    "threshold": 1.0226287841796875,
+    "depth_mm": 0.2787672029190986,
+    "centre_err_mm": 0.0
+   },
+   "v1": {
+    "reported": true,
+    "evidence": 28.891483306884766,
+    "threshold": 1.52313232421875,
+    "depth_mm": 0.28430586473196373,
+    "centre_err_mm": 0.0
+   }
+  }
+ },
+ {
+  "id": "test2_0091_4",
+  "group": "Rotor37",
+  "title": "Rotor37 blade: too shallow (miss)",
+  "why": "A 0.04 mm dent: below what two photos can show, so nothing is reported. An honest miss.",
+  "nv": 29989,
+  "nf": 59974,
+  "span_mm": 74.0,
+  "true_depth_mm": 0.03719989992532517,
+  "kind": "dent",
+  "capture": "both",
+  "results": {
+   "v11": {
+    "reported": false,
+    "evidence": 0.3328704833984375,
+    "threshold": 1.0226287841796875,
+    "depth_mm": 0.0,
+    "centre_err_mm": null
+   },
+   "v1": {
+    "reported": false,
+    "evidence": 0.36618804931640625,
+    "threshold": 1.52313232421875,
+    "depth_mm": 0.0,
+    "centre_err_mm": null
+   }
+  }
+ },
+ {
+  "id": "test2_0074_1",
+  "group": "Rotor37",
+  "title": "Rotor37 blade: false alarm",
+  "why": "A stain with the camera moved: a tiny dent is wrongly reported. One of the method's remaining errors.",
+  "nv": 29989,
+  "nf": 59974,
+  "span_mm": 74.0,
+  "true_depth_mm": 0.0,
+  "kind": "colour",
+  "capture": "camera",
+  "results": {
+   "v11": {
+    "reported": true,
+    "evidence": 1.0595855712890625,
+    "threshold": 1.0226287841796875,
+    "depth_mm": 0.019318044703478,
+    "centre_err_mm": null
+   },
+   "v1": {
+    "reported": false,
+    "evidence": 1.192138671875,
+    "threshold": 1.52313232421875,
+    "depth_mm": 0.0,
+    "centre_err_mm": null
+   }
+  }
+ },
+ {
+  "id": "cad6_1001_02",
+  "group": "Industrial",
+  "title": "Industrial blade 1: dent",
+  "why": "Industrial design (used to develop v1.1): 0.20 mm dent found and measured (0.19 mm).",
+  "nv": 31378,
+  "nf": 62752,
+  "span_mm": 24.41080670491994,
+  "true_depth_mm": 0.20035908921821297,
+  "kind": "dent",
+  "capture": "light",
+  "results": {
+   "v11": {
+    "reported": true,
+    "evidence": 68.12711334228516,
+    "threshold": 1.0226287841796875,
+    "depth_mm": 0.18789619570737912,
+    "centre_err_mm": 0.0
+   },
+   "v1": {
+    "reported": true,
+    "evidence": 67.12268829345703,
+    "threshold": 1.52313232421875,
+    "depth_mm": 0.1849344555310444,
+    "centre_err_mm": 0.0
+   }
+  }
+ },
+ {
+  "id": "cad6_1002_00",
+  "group": "Industrial",
+  "title": "Industrial blade 2: dent",
+  "why": "Industrial design (used to develop v1.1): 0.20 mm dent found and measured (0.20 mm).",
+  "nv": 27294,
+  "nf": 54584,
+  "span_mm": 25.9173650013891,
+  "true_depth_mm": 0.20279535209883542,
+  "kind": "dent",
+  "capture": "nominal",
+  "results": {
+   "v11": {
+    "reported": true,
+    "evidence": 342.1932096481323,
+    "threshold": 1.0226287841796875,
+    "depth_mm": 0.19688158383159965,
+    "centre_err_mm": 0.0
+   },
+   "v1": {
+    "reported": true,
+    "evidence": 347.53620529174805,
+    "threshold": 1.52313232421875,
+    "depth_mm": 0.19574724282225814,
+    "centre_err_mm": 0.0
+   }
+  }
+ },
+ {
+  "id": "cad6_1004_21",
+  "group": "Industrial",
+  "title": "Industrial blade 4: dent, camera moved",
+  "why": "Held-out design: 0.47 mm dent found with the camera moved (measured 0.36 mm).",
+  "nv": 26534,
+  "nf": 53064,
+  "span_mm": 39.72683152872102,
+  "true_depth_mm": 0.46788215647155457,
+  "kind": "dent",
+  "capture": "camera",
+  "results": {
+   "v11": {
+    "reported": true,
+    "evidence": 104.66576385498047,
+    "threshold": 1.0226287841796875,
+    "depth_mm": 0.3613715570181873,
+    "centre_err_mm": 0.35114522646164525
+   },
+   "v1": {
+    "reported": true,
+    "evidence": 172.69241333007812,
+    "threshold": 1.52313232421875,
+    "depth_mm": 0.3646843983583666,
+    "centre_err_mm": 0.0
+   }
+  }
+ },
+ {
+  "id": "cad6_1004_55",
+  "group": "Industrial",
+  "title": "Industrial blade 4: stain only",
+  "why": "Held-out design, stain with camera and lighting changed: correctly nothing reported.",
+  "nv": 26534,
+  "nf": 53064,
+  "span_mm": 39.72683152872102,
+  "true_depth_mm": 0.0,
+  "kind": "colour",
+  "capture": "both",
+  "results": {
+   "v11": {
+    "reported": false,
+    "evidence": 0.43776702880859375,
+    "threshold": 1.0226287841796875,
+    "depth_mm": 0.0,
+    "centre_err_mm": null
+   },
+   "v1": {
+    "reported": true,
+    "evidence": 118.869140625,
+    "threshold": 1.52313232421875,
+    "depth_mm": 0.34346403493905264,
+    "centre_err_mm": null
+   }
+  }
+ },
+ {
   "id": "cad6_1006_15",
+  "group": "Industrial",
   "title": "Industrial blade 6: dent, depth underestimated",
   "why": "Held-out design. v1.1 finds the right place (v1 was 37 mm off) but measures 0.03 mm for a 0.25 mm dent: on new designs depth is still underestimated (median 60% of true).",
   "nv": 25962,
