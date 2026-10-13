@@ -121,6 +121,13 @@ the frozen method actually did. Nothing in the method was changed or re-tuned. <
                     '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:14px">'
                     + ''.join(f'<figure><img src="img/phase2/{n}" alt="map {c}"><figcaption>{c}: on the {t} surface points facing an input camera, median limit {m:.3f} mm; '
                               f'{k} of {t} can reveal dents under 0.1 mm. Points facing away cannot reveal any dent.</figcaption></figure>' for n, c, m, k, t in maps if m is not None) + '</div>')
+    body.append('''<h2>Why not a standard statistical test?</h2><div class="tablewrap"><table><thead><tr><th>Decision rule</th><th>Target false alarms</th><th>Actual false alarms</th><th>Visible dents found</th></tr></thead><tbody>
+<tr><td><b>Ours: threshold calibrated on 60 real negatives</b></td><td>5%</td><td><b>10%</b></td><td>54%</td></tr>
+<tr><td><b>Ours: calibrated on 360 negatives</b></td><td>2%</td><td><b>4%</b></td><td>46%</td></tr>
+<tr><td>Textbook &chi;&sup2; likelihood-ratio threshold</td><td>1% (or 5%)</td><td>32%</td><td>70%</td></tr>
+<tr><td>A-contrario detector</td><td>&asymp;0</td><td>96%</td><td>100%</td></tr></tbody></table></div>
+<p class="muted">Textbook rules assume ideal image noise; the real mismatch after the best nuisance fit is far larger, so they cannot control false alarms. Calibration is required, not cosmetic.</p>
+<h2>Do the maps match the observed misses?</h2><p>Only for deep dents. At real dent sizes (3 and 4.4&nbsp;mm radius) the maps imply 49&ndash;66% recall below 0.1&nbsp;mm and 93% at 0.1&ndash;0.2&nbsp;mm, where the method actually finds 10% and 50% (92% vs 95% above 0.2&nbsp;mm). The maps assume the search reaches the right spot and use a local approximation, so they are an upper bound. The per-dent prediction on the actual captures (AUROC 0.90&ndash;0.95) is the validated result.</p>''')
     body.append('<h2>Progress</h2><pre style="white-space:pre-wrap;font-size:.85rem">' + '\n'.join(status) + '</pre>')
     page = f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
