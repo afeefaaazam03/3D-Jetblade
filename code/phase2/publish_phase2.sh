@@ -17,7 +17,7 @@ S=""
 while true; do
   N=$(snap)
   if [ "$N" != "$S" ]; then S=$N; push "$(tail -n 1 results/phase2/STATUS.txt 2>/dev/null | cut -c22-)"; fi
-  grep -q PHASE2_DONE results/phase2/STATUS.txt 2>/dev/null && [ -f results/phase2/FINAL_PUSHED ] && exit 0
-  grep -q PHASE2_DONE results/phase2/STATUS.txt 2>/dev/null && touch results/phase2/FINAL_PUSHED
+  grep -q PHASE2B_DONE results/phase2/STATUS.txt 2>/dev/null && [ -f results/phase2/FINAL_PUSHED ] && exit 0
+  grep -q PHASE2B_DONE results/phase2/STATUS.txt 2>/dev/null && touch results/phase2/FINAL_PUSHED
   sleep 120
 done
