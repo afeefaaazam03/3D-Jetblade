@@ -21,20 +21,16 @@ label{font-size:.85rem;color:var(--muted)}input[type=range]{width:100%}
 .legend{height:12px;border-radius:6px;background:linear-gradient(90deg,#c9ced6,#fde725,#f98e09,#bc3754,#57106e)}
 .hud{position:absolute;left:14px;top:12px;background:rgba(15,22,38,.75);padding:8px 12px;border-radius:10px;font-size:.95rem;pointer-events:none;max-width:70%}
 .hud b{color:var(--accent)}a{color:var(--blue)}
-.strip{position:absolute;left:12px;right:12px;bottom:12px;display:grid;grid-template-columns:1fr 1fr 2.4fr;gap:10px;background:rgba(15,22,38,.82);padding:10px;border-radius:12px;border:1px solid var(--line)}
-.strip figure{margin:0;display:grid;gap:4px}.strip img{width:100%;height:150px;object-fit:contain;background:#0b1120;border-radius:8px}
-.strip figcaption{font-size:.78rem;color:var(--muted)}.gh{font-size:.78rem;color:var(--muted);width:100%;margin-top:4px}
-@media (max-width:900px){.strip{position:static;grid-template-columns:1fr 1fr}.strip figure:last-child{grid-column:span 2}}
+.photos{display:grid;grid-template-columns:1fr 1fr;gap:8px}.photos figure:last-child{grid-column:span 2}
+.photos figure{margin:0;display:grid;gap:4px}.photos img{width:100%;height:140px;object-fit:contain;background:#0b1120;border-radius:8px}.photos figure:last-child img{height:120px}
+.photos figcaption{font-size:.76rem;color:var(--muted)}.gh{font-size:.78rem;color:var(--muted);width:100%;margin-top:4px}
+
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 </head><body>
 <div class="app">
   <div id="view"><div class="hud" id="hud">Loading…</div>
-  <div class="strip" id="strip">
-    <figure><img id="ph4" alt="Input photo, camera 1"><figcaption>Original photo, camera 1</figcaption></figure>
-    <figure><img id="ph5" alt="Input photo, camera 2"><figcaption>Original photo, camera 2</figcaption></figure>
-    <figure><img id="pan" alt="Result: true dent orange rings, model prediction blue"><figcaption>Result on the photo: <b style="color:#ff8c28">orange rings</b> = actual damage, <b style="color:#4f8cff">blue</b> = model prediction · healthy reference · difference</figcaption></figure>
-  </div></div>
+</div>
   <div class="side">
     <div><h1>BladeDelta: 3D damage viewer</h1>
     <p class="muted">Drag to rotate, scroll to zoom. Compare the healthy blade, the actual damage, and what the model predicted. Dents are 0.03–1 mm, so they are exaggerated to be visible.</p></div>
@@ -43,10 +39,15 @@ label{font-size:.85rem;color:var(--muted)}input[type=range]{width:100%}
       <button data-m="healthy">Healthy</button><button data-m="true">Actual damage</button>
       <button data-m="v11">Model prediction (v1.1)</button><button data-m="v1">Old model (v1)</button></div></div>
     <div><label>Exaggerate dents: <span id="exv">×20</span></label><input id="ex" type="range" min="1" max="60" value="20"></div>
-    <div class="grp"><button id="spin" aria-pressed="true">Rotate 360°</button><button id="cmp">Side by side: actual vs model</button><button id="photos" aria-pressed="true">Show photos</button></div>
+    <div class="grp"><button id="spin" aria-pressed="true">Rotate 360°</button><button id="cmp">Side by side: actual vs model</button><button id="photos" aria-pressed="false">Show original photos</button></div>
     <div class="card" id="info"></div>
+  <div class="photos" id="strip" style="display:none">
+    <figure><img id="ph4" alt="Input photo, camera 1"><figcaption>Original photo, camera 1</figcaption></figure>
+    <figure><img id="ph5" alt="Input photo, camera 2"><figcaption>Original photo, camera 2</figcaption></figure>
+    <figure><img id="pan" alt="Result: true dent orange rings, model prediction blue"><figcaption>Result on the photo: <b style="color:#ff8c28">orange rings</b> = actual damage, <b style="color:#4f8cff">blue</b> = model prediction · healthy reference · difference</figcaption></figure>
+  </div>
     <div><label>Depth colour (mm)</label><div class="legend"></div><div class="row muted"><span>0</span><span id="lmax">0.4</span></div></div>
-    <p class="muted">Rendered blades from the BladeDelta benchmark: three public Rotor37 blades and three industrial blade designs (held-out where noted). Results are the model's real sealed-test outputs. <a href="try.html">2D demo</a> · <a href="results.html">all results</a></p>
+    <p class="muted">Rendered blades from the BladeDelta benchmark: Rotor37 blades from the second sealed test, and all six of your industrial blade designs (held-out where noted). Results are the model's real sealed-test outputs. <a href="try.html">2D demo</a> · <a href="results.html">all results</a></p>
   </div>
 </div>
 <script type="module">
@@ -65,13 +66,19 @@ const group = new THREE.Group(); scene.add(group);
 let CASES = [], cur = null, mode = "v11", ex = 20, sideBySide = false, meshes = [];
 const stops = [[0, [0.79, 0.81, 0.84]], [0.15, [0.99, 0.91, 0.15]], [0.45, [0.98, 0.56, 0.04]], [0.75, [0.74, 0.22, 0.33]], [1, [0.34, 0.06, 0.43]]];
 function ramp(t) { t = Math.max(0, Math.min(1, t)); for (let i = 1; i < stops.length; i++) if (t <= stops[i][0]) { const [a, ca] = stops[i - 1], [b, cb] = stops[i], u = (t - a) / (b - a); return ca.map((x, k) => x + u * (cb[k] - x)); } return stops[stops.length - 1][1]; }
+const MESH = {};
 async function load(c) {
   if (c.data) return c.data;
-  const buf = await (await fetch('demo3d/' + c.id + '.bin')).arrayBuffer(); let o = 0;
-  const f32 = n => { const a = new Float32Array(buf, o, n); o += n * 4; return a; };
-  const pos = f32(c.nv * 3); const tri = new Uint32Array(buf, o, c.nf * 3); o += c.nf * 12;
-  const nrm = f32(c.nv * 3), tru = f32(c.nv), v11 = f32(c.nv), v1 = f32(c.nv);
-  c.data = { pos, tri, nrm, fields: { healthy: null, true: tru, v11, v1 } }; return c.data;
+  if (!MESH[c.mesh]) {
+    const buf = await (await fetch('demo3d/mesh_' + c.mesh + '.bin')).arrayBuffer();
+    MESH[c.mesh] = { pos: new Float32Array(buf, 0, c.nv * 3), tri: new Uint32Array(buf, c.nv * 12, c.nf * 3), nrm: new Float32Array(buf, c.nv * 12 + c.nf * 12, c.nv * 3) };
+  }
+  const fb = await (await fetch('demo3d/case_' + c.id + '.bin')).arrayBuffer();
+  const M = MESH[c.mesh];
+  if (!M.radius) { let r = 0; for (let i = 0; i < M.pos.length; i += 3) r = Math.max(r, Math.hypot(M.pos[i], M.pos[i + 1], M.pos[i + 2])); M.radius = r; }
+  c.radius = M.radius;
+  c.data = { pos: M.pos, tri: M.tri, nrm: M.nrm, fields: { healthy: null, true: new Float32Array(fb, 0, c.nv), v11: new Float32Array(fb, c.nv * 4, c.nv), v1: new Float32Array(fb, c.nv * 8, c.nv) } };
+  return c.data;
 }
 function build(c, field, offsetX) {
   const D = c.data, n = c.nv, g = new THREE.BufferGeometry();
@@ -97,7 +104,7 @@ async function show() {
   document.getElementById('lmax').textContent = Math.max(0.05, c.true_depth_mm).toFixed(2);
   const R = c.results || {}, row = (k, v, cls) => `<div class="row"><span>${k}</span><b class="${cls || ''}">${v}</b></div>`;
   const dec = r => !r ? '—' : (r.reported ? `Dent: ${r.depth_mm.toFixed(2)} mm` : 'Not supported');
-  let h = `<div style="font-weight:600">${c.title}</div><div class="muted">${c.why}</div>`;
+  let h = `<div style="font-weight:600">${c.group}: ${c.title}</div><div class="muted">${c.why}</div>`;
   h += row('Actual damage', c.true_depth_mm > 0 ? c.true_depth_mm.toFixed(2) + ' mm deep' : 'none (healthy)');
   if (R.v11) h += row('Model v1.1', dec(R.v11));
   if (R.v11) h += row('Evidence vs threshold', R.v11.evidence.toFixed(2) + ' vs ' + R.v11.threshold.toFixed(2));
@@ -112,28 +119,28 @@ async function show() {
   document.getElementById('cmp').setAttribute('aria-pressed', sideBySide);
 }
 function frame() {
-  const span = cur.span_mm * (sideBySide ? 2.4 : 1.4);
+  const span = (cur.radius || cur.span_mm) * (sideBySide ? 3.4 : 2.2);
   camera.position.set(span * 0.2, -span * 1.35, span * 0.35); camera.up.set(0, 0, 1); controls.target.set(0, 0, 0); controls.update();
 }
 function resize() { const w = view.clientWidth, h = view.clientHeight || 500; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
 addEventListener('resize', resize);
 CASES = await (await fetch('demo3d/cases.json')).json();
 const cb = document.getElementById('cases');
-['Rotor37', 'Industrial'].forEach(gname => {
-  const hd = document.createElement('div'); hd.className = 'gh'; hd.textContent = gname === 'Rotor37' ? 'Public Rotor37 blades' : 'Your industrial blade designs'; cb.appendChild(hd);
-  CASES.filter(c => (c.group || 'Rotor37') === gname).forEach(c => { const b = document.createElement('button'); b.textContent = c.title.split(':')[1].trim().replace(/^./, x => x.toUpperCase()) + (gname === 'Industrial' ? ' (' + c.title.split(':')[0].replace('Industrial ', '') + ')' : ''); b.dataset.id = c.id; b.onclick = () => { cur = c; frame(); show(); }; cb.appendChild(b); });
+[...new Set(CASES.map(c => c.group))].forEach(gname => {
+  const hd = document.createElement('div'); hd.className = 'gh'; hd.textContent = gname === 'Rotor37' ? 'Public Rotor37 blades (second sealed test)' : 'Your ' + gname.toLowerCase(); cb.appendChild(hd);
+  CASES.filter(c => c.group === gname).forEach(c => { const b = document.createElement('button'); const o = (c.results.v11 || {}).outcome || ''; const tag = {'found': '✓ found', 'wrong place': '✗ wrong place', 'missed': '✗ missed', 'correctly declined (hidden)': '✓ declined (hidden)', 'false alarm': '✗ false alarm', 'correctly nothing reported': '✓ nothing reported'}[o] || ''; b.textContent = c.title + '  ·  ' + tag; b.title = c.why; b.dataset.id = c.id; b.onclick = async () => { cur = c; await show(); frame(); }; cb.appendChild(b); });
 });
-document.getElementById('photos').onclick = e => { const st = document.getElementById('strip'); const on = st.style.display === 'none'; st.style.display = on ? '' : 'none'; e.target.setAttribute('aria-pressed', on); };
-document.querySelectorAll('#modes button').forEach(b => b.onclick = () => { mode = b.dataset.m; sideBySide = false; frame(); show(); });
+document.getElementById('photos').onclick = e => { const st = document.getElementById('strip'); const on = st.style.display === 'none'; st.style.display = on ? '' : 'none'; e.target.setAttribute('aria-pressed', on); e.target.textContent = on ? 'Hide original photos' : 'Show original photos'; };
+document.querySelectorAll('#modes button').forEach(b => b.onclick = async () => { mode = b.dataset.m; sideBySide = false; await show(); frame(); });
 document.getElementById('ex').oninput = e => { ex = +e.target.value; document.getElementById('exv').textContent = '×' + ex; show(); };
 document.getElementById('spin').onclick = e => { controls.autoRotate = !controls.autoRotate; e.target.setAttribute('aria-pressed', controls.autoRotate); };
-document.getElementById('cmp').onclick = () => { sideBySide = !sideBySide; frame(); show(); };
+document.getElementById('cmp').onclick = async () => { sideBySide = !sideBySide; await show(); frame(); };
 const Q = new URLSearchParams(location.search);
 cur = CASES.find(c => c.id === Q.get('case')) || CASES[0];
 if (Q.get('mode')) mode = Q.get('mode');
 if (Q.get('sbs') === '1') sideBySide = true;
 if (Q.get('spin') === '0') { controls.autoRotate = false; document.getElementById('spin').setAttribute('aria-pressed', false); }
-resize(); frame(); await show();
+resize(); await show(); frame();
 renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
 </script>
 </body></html>
