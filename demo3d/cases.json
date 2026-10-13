@@ -1,0 +1,164 @@
+[
+ {
+  "id": "test2_0083_3",
+  "title": "Rotor37 blade: visible dent",
+  "why": "A real 0.36 mm dent the two cameras can see.",
+  "nv": 29989,
+  "nf": 59974,
+  "span_mm": 74.0,
+  "true_depth_mm": 0.3594396053897751,
+  "kind": "dent",
+  "capture": "nominal",
+  "results": {
+   "v11": {
+    "reported": true,
+    "evidence": 69.39546966552734,
+    "threshold": 1.0226287841796875,
+    "depth_mm": 0.3519143851457131,
+    "centre_err_mm": 0.0
+   },
+   "v1": {
+    "reported": true,
+    "evidence": 69.51172256469727,
+    "threshold": 1.52313232421875,
+    "depth_mm": 0.3521245071923327,
+    "centre_err_mm": 0.0
+   }
+  }
+ },
+ {
+  "id": "test2_0069_2",
+  "title": "Rotor37 blade: stain only",
+  "why": "Only the colour changed; no shape change.",
+  "nv": 29989,
+  "nf": 59974,
+  "span_mm": 74.0,
+  "true_depth_mm": 0.0,
+  "kind": "colour",
+  "capture": "nominal",
+  "results": {
+   "v11": {
+    "reported": false,
+    "evidence": 0.009719312191009521,
+    "threshold": 1.0226287841796875,
+    "depth_mm": 0.0,
+    "centre_err_mm": null
+   },
+   "v1": {
+    "reported": false,
+    "evidence": 0.028409957885742188,
+    "threshold": 1.52313232421875,
+    "depth_mm": 0.0,
+    "centre_err_mm": null
+   }
+  }
+ },
+ {
+  "id": "test2_0068_5",
+  "title": "Rotor37 blade: hidden dent",
+  "why": "A real dent on the side neither camera sees.",
+  "nv": 29989,
+  "nf": 59974,
+  "span_mm": 74.0,
+  "true_depth_mm": 0.4081871113023969,
+  "kind": "dent",
+  "capture": "nominal",
+  "results": {
+   "v11": {
+    "reported": false,
+    "evidence": 5.6512653827667236e-05,
+    "threshold": 1.0226287841796875,
+    "depth_mm": 0.0,
+    "centre_err_mm": null
+   },
+   "v1": {
+    "reported": false,
+    "evidence": 0.003679513931274414,
+    "threshold": 1.52313232421875,
+    "depth_mm": 0.0,
+    "centre_err_mm": null
+   }
+  }
+ },
+ {
+  "id": "cad6_1005_14",
+  "title": "Industrial blade 5: dent, well measured",
+  "why": "Held-out industrial design: found in the right place and measured well (0.29 vs 0.30 mm).",
+  "nv": 17844,
+  "nf": 35684,
+  "span_mm": 52.14207550471464,
+  "true_depth_mm": 0.29555434266114083,
+  "kind": "dent",
+  "capture": "light",
+  "results": {
+   "v11": {
+    "reported": true,
+    "evidence": 31.627601623535156,
+    "threshold": 1.0226287841796875,
+    "depth_mm": 0.291713892776669,
+    "centre_err_mm": 0.0
+   },
+   "v1": {
+    "reported": true,
+    "evidence": 33.51276397705078,
+    "threshold": 1.52313232421875,
+    "depth_mm": 0.2754575409521997,
+    "centre_err_mm": 0.0
+   }
+  }
+ },
+ {
+  "id": "cad6_1003_73",
+  "title": "Industrial blade 3: healthy, camera moved",
+  "why": "Held-out industrial design. Old model v1 invented a dent; v1.1 correctly reports nothing.",
+  "nv": 12016,
+  "nf": 24028,
+  "span_mm": 30.657941608429688,
+  "true_depth_mm": 0.0,
+  "kind": "healthy",
+  "capture": "camera",
+  "results": {
+   "v11": {
+    "reported": false,
+    "evidence": 0.1693267822265625,
+    "threshold": 1.0226287841796875,
+    "depth_mm": 0.0,
+    "centre_err_mm": null
+   },
+   "v1": {
+    "reported": true,
+    "evidence": 76.54397583007812,
+    "threshold": 1.52313232421875,
+    "depth_mm": 0.09454626483731181,
+    "centre_err_mm": null
+   }
+  }
+ },
+ {
+  "id": "cad6_1006_15",
+  "title": "Industrial blade 6: dent, depth underestimated",
+  "why": "Held-out design. v1.1 finds the right place (v1 was 37 mm off) but measures 0.03 mm for a 0.25 mm dent: on new designs depth is still underestimated (median 60% of true).",
+  "nv": 25962,
+  "nf": 51920,
+  "span_mm": 69.84894636594551,
+  "true_depth_mm": 0.25376574019963144,
+  "kind": "dent",
+  "capture": "both",
+  "results": {
+   "v11": {
+    "reported": true,
+    "evidence": 2.924346923828125,
+    "threshold": 1.0226287841796875,
+    "depth_mm": 0.03296628818714047,
+    "centre_err_mm": 0.381984085089922
+   },
+   "v1": {
+    "reported": true,
+    "evidence": 3.22784423828125,
+    "threshold": 1.52313232421875,
+    "depth_mm": 0.07729673743481054,
+    "centre_err_mm": 36.7883475850692
+   }
+  }
+ }
+]
