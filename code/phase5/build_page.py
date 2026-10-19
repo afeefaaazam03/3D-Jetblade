@@ -80,7 +80,7 @@ def weighted():
 
 
 def gallery():
-    names = {'dent': 'Dent', 'nick': 'Nick (edge chip)', 'crack': 'Crack', 'stain': 'Stain (not damage)', 'healthy': 'Healthy'}
+    names = {'dent': 'Dent', 'nick': 'Edge dent', 'crack': 'Groove (scratch-like)', 'stain': 'Stain (not damage)', 'healthy': 'Healthy'}
     cards = ''.join(f'<figure><img src="img/latest/{d}_photo.png" alt="{names[d]} photo" loading="lazy"><img src="img/latest/{d}_diff.png" alt="{names[d]} change" loading="lazy"><figcaption>{names[d]}</figcaption></figure>' for d in names)
     return f'<div class="gal">{cards}</div><p class="m">Top: the photo the method sees. Bottom: how much the photo differs from the healthy blade (brighter = bigger change).</p>'
 
@@ -108,9 +108,9 @@ table.conf td:not(:first-child),table.conf th:not(:first-child){{text-align:cent
 .hm{{display:inline-block;min-width:34px;padding:4px 6px;border-radius:6px;font-weight:600}}.kpis span{{color:var(--m);font-size:13px}}ul{{margin:6px 0;padding-left:20px}}
 </style></head><body><main>
 <h1>BladeDelta: latest results</h1><p class="sub">Finding 3D damage on turbine blades from a CAD model and a few photos, and saying when the photos are not enough. All results on computer-rendered blades. Author: Afeefa Azam.</p>
-<section><h2>The four defect types</h2>{gallery()}</section>
+<section><h2>The four defect types</h2>{gallery()}<p class="m"><b>Note:</b> the simulated "nicks" are rounded dents on the blade edge and the "cracks" are long, shallow grooves (0.4&nbsp;mm wide), closer to scratches. They are simplified stand-ins, not realistic sharp nicks or hairline cracks. Below, "nick" and "crack" refer to these stand-ins; realistic versions are being built and tested next.</p></section>
 <section><h2>1. Damage-type specialists + judge</h2>
-<p>Four specialists (dent, nick, crack, stain) each try to explain the photos; a judge picks the clear winner, says <i>type uncertain</i> when two fit about equally well, and calls it a stain or nothing when no physical damage is detected. Detection is the unchanged frozen method, so false alarms do not change. 136 cases on four held-out industrial blade designs.</p><div class="ch"><canvas id="cs"></canvas></div>{spec}</section>
+<p>Four specialists (dent, nick = edge dent, crack = groove, stain) each try to explain the photos; a judge picks the clear winner, says <i>type uncertain</i> when two fit about equally well, and calls it a stain or nothing when no physical damage is detected. Detection is the unchanged frozen method, so false alarms do not change. 136 cases on four held-out industrial blade designs.</p><div class="ch"><canvas id="cs"></canvas></div>{spec}</section>
 <section><h2>2. Four defect types: detection</h2><p>Frozen method, 2 photos, no retuning. Stains and healthy blades should not be reported.</p><div class="ch"><canvas id="c4"></canvas></div>{four}
 <p class="m">False alarms 6 of 48 (12.5%) are above the 5% target set on Rotor37 blades; recalibrating on these designs is the next step.</p></section>
 <section><h2>3. Safety-weighted recall</h2><p>Deeper defects count more (weight = true depth in mm; cracks count double). Critical = deeper than 0.2&nbsp;mm, or any crack.</p><div class="ch"><canvas id="cw"></canvas></div>{weighted()}
@@ -127,7 +127,7 @@ const D={charts};
 const css=getComputedStyle(document.documentElement),fg=css.getPropertyValue('--fg').trim()||'#1f2937',m=css.getPropertyValue('--m').trim()||'#5a6577',line=css.getPropertyValue('--line').trim()||'#e3e7ef';
 Chart.defaults.color=m;Chart.defaults.borderColor=line;Chart.defaults.font.family='system-ui,sans-serif';
 const pc={{scales:{{y:{{beginAtZero:true,max:100,ticks:{{callback:v=>v+'%'}}}}}},plugins:{{legend:{{position:'bottom'}}}},maintainAspectRatio:false}};
-const T=['dent','nick','crack','stain','healthy'],L=['Dent','Nick','Crack','Stain (should be 0)','Healthy (should be 0)'];
+const T=['dent','nick','crack','stain','healthy'],L=['Dent','Edge dent','Groove','Stain (should be 0)','Healthy (should be 0)'];
 new Chart(document.getElementById('c4'),{{type:'bar',data:{{labels:L,datasets:[{{label:'Ours',data:T.map(t=>D.four[t][0]),backgroundColor:'#0047bb'}},{{label:'SIFT',data:T.map(t=>D.four[t][1]),backgroundColor:'#e8833a'}}]}},options:pc}});
 new Chart(document.getElementById('cw'),{{type:'bar',data:{{labels:D.w.map(x=>x[0]),datasets:[{{label:'Standard recall',data:D.w.map(x=>x[1]),backgroundColor:'#9aa3af'}},{{label:'Safety-weighted',data:D.w.map(x=>x[2]),backgroundColor:'#0047bb'}},{{label:'Critical',data:D.w.map(x=>x[3]),backgroundColor:'#1a7f37'}}]}},options:pc}});
 const SL=['dent','nick','crack','uncertain','stain','nothing'],SC=['#0047bb','#7c3aed','#e8833a','#9aa3af','#c62828','#1a7f37'];
