@@ -20,6 +20,10 @@ def pct(a, b):
     return f'{a}/{b} <span class="m">({100 * a / b:.0f}%)</span>' if b else '–'
 
 
+FOUR = {}
+SPEC_CHART = {}
+
+
 def four_defects():
     C = {c['case_id']: c for c in json.loads((ROOT / 'data/benchmark/cad6dmg/cases.json').read_text())}
     S = {json.loads(l)['case_id']: json.loads(l) for l in (R / 'phase4/sift.jsonl').read_text().splitlines()}
@@ -33,6 +37,7 @@ def four_defects():
     for d in TYPES:
         n, rep, loc, s = a[d]
         neg = d in ('stain', 'healthy')
+        FOUR[d] = (round(100 * (rep if neg else loc) / n), round(100 * s / n))
         rows.append([d.capitalize() + (' <span class="m">(should be 0)</span>' if neg else ''),
                      n, pct(rep, n) if neg else pct(loc, n), pct(s, n)])
     return table(['Defect', 'Cases', 'Ours: located (damage) / reported (negatives)', 'SIFT: reported'], rows)
@@ -47,7 +52,11 @@ def specialists():
     M = {t: collections.Counter() for t in TYPES}
     for x in X:
         M[x['defect']][x['label']] += 1
-    rows = [[t.capitalize(), sum(M[t].values())] + [f'<b>{M[t][l]}</b>' if (l == t or (t == 'healthy' and l == 'nothing')) and M[t][l] else (M[t][l] or '') for l in labels] for t in TYPES]
+    def cell(t, l):
+        n = sum(M[t].values()) or 1; v = M[t][l]; ok = l == t or (t == 'healthy' and l == 'nothing')
+        col = '26,127,55' if ok else '198,40,40'
+        return f'<span class="hm" style="background:rgba({col},{0.12 + 0.75 * v / n if v else 0})">{v or ""}</span>'
+    rows = [[t.capitalize(), sum(M[t].values())] + [cell(t, l) for l in labels] for t in TYPES]
     dmg = [x for x in X if x['defect'] in ('dent', 'nick', 'crack') and x.get('reported') and x.get('centre_err_frozen') is not None and x['centre_err_frozen'] < .1]
     typed = [x for x in dmg if x['label'] != 'uncertain']
     corr = sum(x['label'] == x['defect'] for x in typed)
@@ -59,7 +68,9 @@ def specialists():
             f'<div><b>{pct(loc_ok, len(dmg))}</b><span>winning specialist still in the right place</span></div>'
             f'<div><b>{pct(neg_ok, len(neg))}</b><span>stains / healthy labelled correctly</span></div></div>')
     note = f'<p class="m">{len(X)} of 136 cases processed{" (still running; refresh later)" if len(X) < 136 else ""}. Type accuracy is over damage the frozen detector located.</p>'
-    return note + summ + table(['True type', 'n'] + [l.capitalize() for l in labels], rows, 'conf'), len(X)
+    global SPEC_CHART
+    SPEC_CHART = {t: [M[t][l] for l in labels] for t in TYPES}
+    return note + summ + '<p class="m">Green = correct label, red = wrong; darker = more cases.</p>' + table(['True type', 'n'] + [l.capitalize() for l in labels], rows, 'conf'), len(X)
 
 
 def weighted():
@@ -68,8 +79,16 @@ def weighted():
                  [[w['set'], w['n'], f"{100 * w['recall']:.0f}%", f"<b>{100 * w['weighted']:.0f}%</b>", f"{100 * w['critical']:.0f}% <span class='m'>(n={w['n_critical']})</span>"] for w in W])
 
 
+def gallery():
+    names = {'dent': 'Dent', 'nick': 'Nick (edge chip)', 'crack': 'Crack', 'stain': 'Stain (not damage)', 'healthy': 'Healthy'}
+    cards = ''.join(f'<figure><img src="img/latest/{d}_photo.png" alt="{names[d]} photo" loading="lazy"><img src="img/latest/{d}_diff.png" alt="{names[d]} change" loading="lazy"><figcaption>{names[d]}</figcaption></figure>' for d in names)
+    return f'<div class="gal">{cards}</div><p class="m">Top: the photo the method sees. Bottom: how much the photo differs from the healthy blade (brighter = bigger change).</p>'
+
+
 def main():
     spec, n = specialists()
+    four = four_defects(); W = json.loads((R / 'phase5/weighted_recall.json').read_text())
+    charts = json.dumps(dict(four=FOUR, spec=SPEC_CHART, w=[[x['set'], round(100 * x['recall']), round(100 * x['weighted']), round(100 * x['critical'])] for x in W]))
     html = f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>BladeDelta Latest Results</title><style>
 :root{{--bg:#f7f8fb;--card:#fff;--fg:#1f2937;--m:#5a6577;--ac:#0047bb;--line:#e3e7ef;--hl:#e8f0fe}}
@@ -83,21 +102,37 @@ section{{background:var(--card);border:1px solid var(--line);border-radius:12px;
 th,td{{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}}th{{color:var(--m);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.03em}}
 table.conf td:not(:first-child),table.conf th:not(:first-child){{text-align:center}}table.conf b{{background:var(--hl);padding:2px 8px;border-radius:6px}}
 .kpis{{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:10px 0}}.kpis div{{background:var(--hl);border-radius:10px;padding:10px 12px}}
-.kpis b{{display:block;font-size:20px}}.kpis span{{color:var(--m);font-size:13px}}ul{{margin:6px 0;padding-left:20px}}
+.kpis b{{display:block;font-size:20px}}.ch{{position:relative;height:280px;margin:10px 0}}
+.gal{{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}}.gal figure{{margin:0;background:#000;border-radius:10px;overflow:hidden}}
+.gal img{{display:block;width:100%;aspect-ratio:1}}.gal figcaption{{background:var(--card);padding:6px 8px;font-weight:600;font-size:14px}}
+.hm{{display:inline-block;min-width:34px;padding:4px 6px;border-radius:6px;font-weight:600}}.kpis span{{color:var(--m);font-size:13px}}ul{{margin:6px 0;padding-left:20px}}
 </style></head><body><main>
 <h1>BladeDelta: latest results</h1><p class="sub">Finding 3D damage on turbine blades from a CAD model and a few photos, and saying when the photos are not enough. All results on computer-rendered blades. Author: Afeefa Azam.</p>
+<section><h2>The four defect types</h2>{gallery()}</section>
 <section><h2>1. Damage-type specialists + judge</h2>
-<p>Four specialists (dent, nick, crack, stain) each try to explain the photos; a judge picks the clear winner, says <i>type uncertain</i> when two fit about equally well, and calls it a stain or nothing when no physical damage is detected. Detection is the unchanged frozen method, so false alarms do not change. 136 cases on four held-out industrial blade designs.</p>{spec}</section>
-<section><h2>2. Four defect types: detection</h2><p>Frozen method, 2 photos, no retuning. Stains and healthy blades should not be reported.</p>{four_defects()}
+<p>Four specialists (dent, nick, crack, stain) each try to explain the photos; a judge picks the clear winner, says <i>type uncertain</i> when two fit about equally well, and calls it a stain or nothing when no physical damage is detected. Detection is the unchanged frozen method, so false alarms do not change. 136 cases on four held-out industrial blade designs.</p><div class="ch"><canvas id="cs"></canvas></div>{spec}</section>
+<section><h2>2. Four defect types: detection</h2><p>Frozen method, 2 photos, no retuning. Stains and healthy blades should not be reported.</p><div class="ch"><canvas id="c4"></canvas></div>{four}
 <p class="m">False alarms 6 of 48 (12.5%) are above the 5% target set on Rotor37 blades; recalibrating on these designs is the next step.</p></section>
-<section><h2>3. Safety-weighted recall</h2><p>Deeper defects count more (weight = true depth in mm; cracks count double). Critical = deeper than 0.2&nbsp;mm, or any crack.</p>{weighted()}
+<section><h2>3. Safety-weighted recall</h2><p>Deeper defects count more (weight = true depth in mm; cracks count double). Critical = deeper than 0.2&nbsp;mm, or any crack.</p><div class="ch"><canvas id="cw"></canvas></div>{weighted()}
 <p class="m">On Rotor37 most misses are tiny dents: plain recall 54%, but 92% of dangerous dents are found.</p></section>
 <section><h2>4. What we learned about depth</h2><ul>
 <li>Location works across blade designs; depth does not: found dents are measured at a median 60% of their true depth on new designs (89% on Rotor37).</li>
 <li>Four photos instead of two find more dents (45 vs 36 of 60) but do not improve depth.</li>
 <li>Depth ranges do not help: they contained the true depth in only 36 of 109 cases, so the error is a systematic bias, not ambiguity.</li>
 <li>Next: low-angle (grazing) light and an appearance model trained on industrial blades.</li></ul></section>
-<p class="m">Built from the result files; refresh after new runs finish.</p></main></body></html>"""
+<p class="m">Built from the result files; refresh after new runs finish.</p></main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const D={charts};
+const css=getComputedStyle(document.documentElement),fg=css.getPropertyValue('--fg').trim()||'#1f2937',m=css.getPropertyValue('--m').trim()||'#5a6577',line=css.getPropertyValue('--line').trim()||'#e3e7ef';
+Chart.defaults.color=m;Chart.defaults.borderColor=line;Chart.defaults.font.family='system-ui,sans-serif';
+const pc={{scales:{{y:{{beginAtZero:true,max:100,ticks:{{callback:v=>v+'%'}}}}}},plugins:{{legend:{{position:'bottom'}}}},maintainAspectRatio:false}};
+const T=['dent','nick','crack','stain','healthy'],L=['Dent','Nick','Crack','Stain (should be 0)','Healthy (should be 0)'];
+new Chart(document.getElementById('c4'),{{type:'bar',data:{{labels:L,datasets:[{{label:'Ours',data:T.map(t=>D.four[t][0]),backgroundColor:'#0047bb'}},{{label:'SIFT',data:T.map(t=>D.four[t][1]),backgroundColor:'#e8833a'}}]}},options:pc}});
+new Chart(document.getElementById('cw'),{{type:'bar',data:{{labels:D.w.map(x=>x[0]),datasets:[{{label:'Standard recall',data:D.w.map(x=>x[1]),backgroundColor:'#9aa3af'}},{{label:'Safety-weighted',data:D.w.map(x=>x[2]),backgroundColor:'#0047bb'}},{{label:'Critical',data:D.w.map(x=>x[3]),backgroundColor:'#1a7f37'}}]}},options:pc}});
+const SL=['dent','nick','crack','uncertain','stain','nothing'],SC=['#0047bb','#7c3aed','#e8833a','#9aa3af','#c62828','#1a7f37'];
+new Chart(document.getElementById('cs'),{{type:'bar',data:{{labels:T.map(t=>t[0].toUpperCase()+t.slice(1)),datasets:SL.map((l,i)=>({{label:'judged: '+l,data:T.map(t=>(D.spec[t]||[])[i]||0),backgroundColor:SC[i]}}))}},options:{{indexAxis:'y',maintainAspectRatio:false,plugins:{{legend:{{position:'bottom'}}}},scales:{{x:{{stacked:true,title:{{display:true,text:'cases'}}}},y:{{stacked:true}}}}}}}});
+</script></body></html>"""
     out = ROOT / 'site/results_latest.html'; out.write_text(html); print('written', out, 'specialist cases', n)
 
 
