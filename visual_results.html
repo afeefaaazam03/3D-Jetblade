@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Evidence-Bounded 3D Defect Estimation</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  .card{background:#fff;border:1px solid #e5e7eb;border-radius:1rem;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  .tag{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:.2rem .55rem;border-radius:999px}
+  img{display:block}
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+<!-- 1. Header -->
+<header class="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-800 text-white">
+  <div class="max-w-6xl mx-auto px-4 py-12 sm:py-16">
+    <span class="tag bg-white/15 text-blue-100">Research summary · computer-rendered blades</span>
+    <h1 class="mt-4 text-3xl sm:text-5xl font-extrabold tracking-tight">Evidence-Bounded 3D Defect Estimation</h1>
+    <p class="mt-3 text-lg sm:text-xl text-blue-100">Visual Summary of Final Synthetic Results</p>
+    <p class="mt-6 max-w-3xl text-blue-100/90">From a healthy CAD model and a few calibrated photos of an aero-engine blade, find physical damage in 3D, but only when the photos can prove it. Otherwise, say “not enough evidence”.</p>
+    <p class="mt-4 text-sm text-blue-200">Afeefa Azam · Khalifa University</p>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-4 -mt-8 pb-16 space-y-8">
+
+<!-- KPI strip -->
+<section class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+  <div class="card p-5"><div class="text-3xl font-extrabold text-emerald-600">51%</div><div class="text-sm text-slate-500 mt-1">visible dents located at 5% false alarms (others ≤ 19%)</div></div>
+  <div class="card p-5"><div class="text-3xl font-extrabold text-emerald-600">12 / 13</div><div class="text-sm text-slate-500 mt-1">dents deeper than 0.2 mm found</div></div>
+  <div class="card p-5"><div class="text-3xl font-extrabold text-emerald-600">51% → 4%</div><div class="text-sm text-slate-500 mt-1">false alarms on unseen blade designs, after one fix</div></div>
+  <div class="card p-5"><div class="text-3xl font-extrabold text-emerald-600">22 / 22</div><div class="text-sm text-slate-500 mt-1">hairline cracks recognised as cracks</div></div>
+</section>
+
+<!-- 2. Core problem -->
+<section class="card p-6 sm:p-8">
+  <span class="tag bg-blue-50 text-blue-700">1 · The core problem</span>
+  <h2 class="mt-3 text-2xl font-bold">One dark spot, four possible causes</h2>
+  <img src="img/vr/causes.png" alt="Cross-sections: a dent changes the shape, a stain only the colour, a lamp brightens, the camera view shifts" class="mt-5 w-full rounded-xl border border-slate-100">
+  <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+    <div class="rounded-lg bg-rose-50 p-3"><b class="text-rose-700">Dent</b><div class="text-slate-600">the shape changes: real damage</div></div>
+    <div class="rounded-lg bg-amber-50 p-3"><b class="text-amber-700">Stain</b><div class="text-slate-600">only the colour changes</div></div>
+    <div class="rounded-lg bg-amber-50 p-3"><b class="text-amber-700">Lighting</b><div class="text-slate-600">a lamp is brighter or dimmer</div></div>
+    <div class="rounded-lg bg-amber-50 p-3"><b class="text-amber-700">Camera error</b><div class="text-slate-600">the view shifts by about 1°</div></div>
+  </div>
+  <p class="mt-5 text-lg text-slate-700">In a single photo, all four can look almost the same. Our method uses the CAD model and a few calibrated photos to tell them apart, or <b>abstains</b> when the photos are not enough.</p>
+  <div class="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <figure><img src="img/vr/zdent.png" alt="dent" class="rounded-lg w-full aspect-square object-cover"><figcaption class="text-xs text-center mt-1 text-slate-500">Dent</figcaption></figure>
+    <figure><img src="img/vr/rnick_photo.png" alt="sharp nick" class="rounded-lg w-full aspect-square object-cover"><figcaption class="text-xs text-center mt-1 text-slate-500">Sharp nick (edge)</figcaption></figure>
+    <figure><img src="img/vr/rcrack_photo.png" alt="hairline crack" class="rounded-lg w-full aspect-square object-cover"><figcaption class="text-xs text-center mt-1 text-slate-500">Hairline crack</figcaption></figure>
+    <figure><img src="img/vr/zstain.png" alt="stain" class="rounded-lg w-full aspect-square object-cover"><figcaption class="text-xs text-center mt-1 text-slate-500">Stain (not damage)</figcaption></figure>
+  </div>
+</section>
+
+<!-- How it works -->
+<section class="card p-6 sm:p-8">
+  <span class="tag bg-blue-50 text-blue-700">2 · How it works: render and compare</span>
+  <div class="mt-5 grid grid-cols-2 md:grid-cols-4 gap-3">
+    <figure><img src="img/vr/s8_photo.png" alt="photo" class="rounded-lg w-full aspect-square object-cover bg-slate-800"><figcaption class="text-sm text-center mt-2"><b>1.</b> Photo</figcaption></figure>
+    <figure><img src="img/vr/s8_healthy.png" alt="healthy rendering" class="rounded-lg w-full aspect-square object-cover bg-slate-800"><figcaption class="text-sm text-center mt-2"><b>2.</b> Healthy blade, drawn from CAD</figcaption></figure>
+    <figure><img src="img/vr/s8_residual.png" alt="difference" class="rounded-lg w-full aspect-square object-cover bg-black"><figcaption class="text-sm text-center mt-2"><b>3.</b> Difference (where to look)</figcaption></figure>
+    <figure><img src="img/vr/depth_01.png" alt="dent in 3D" class="rounded-lg w-full aspect-square object-contain bg-white border"><figcaption class="text-sm text-center mt-2"><b>4.</b> Dent in 3D: 0.35 mm (true 0.36)</figcaption></figure>
+  </div>
+  <div class="mt-5 grid sm:grid-cols-3 gap-3 text-sm">
+    <div class="rounded-lg bg-slate-100 p-3"><b>Explain without damage:</b> fit camera, lighting and stains.</div>
+    <div class="rounded-lg bg-blue-50 p-3"><b>Explain with damage:</b> add a dent, nick or crack and fit its 3D shape.</div>
+    <div class="rounded-lg bg-emerald-50 p-3"><b>Decide:</b> report only if it fits <i>clearly</i> better (threshold set on healthy and stained blades), otherwise abstain.</div>
+  </div>
+</section>
+
+<!-- 3. Main results -->
+<section class="card p-6 sm:p-8">
+  <span class="tag bg-blue-50 text-blue-700">3 · Main results · sealed test, 240 cases, 30 unseen blades</span>
+  <h2 class="mt-3 text-2xl font-bold">Ours vs. baselines</h2>
+  <div class="mt-5 overflow-x-auto">
+    <table class="w-full text-left text-sm sm:text-base">
+      <thead><tr class="text-slate-500 text-xs uppercase tracking-wider border-b">
+        <th class="py-3 pr-4">Method</th><th class="py-3 px-3">AUROC</th><th class="py-3 px-3">Visible dents found</th><th class="py-3 px-3">…in the right place</th><th class="py-3 px-3">False alarms</th><th class="py-3 px-3">Found at equal 5% false alarms</th></tr></thead>
+      <tbody class="divide-y">
+        <tr class="bg-emerald-50 font-semibold text-emerald-900"><td class="py-3 pr-4">Ours</td><td class="px-3">0.82</td><td class="px-3">54%</td><td class="px-3">54%</td><td class="px-3">10%</td><td class="px-3">51%</td></tr>
+        <tr><td class="py-3 pr-4">MLP deformation field*</td><td class="px-3">0.74</td><td class="px-3">16%</td><td class="px-3">11%</td><td class="px-3">6%</td><td class="px-3">8%</td></tr>
+        <tr><td class="py-3 pr-4">2D detector (U-Net, lifted to 3D)</td><td class="px-3">0.72</td><td class="px-3">24%</td><td class="px-3">16%</td><td class="px-3">4%</td><td class="px-3">16%</td></tr>
+        <tr><td class="py-3 pr-4">Free-form deformation field*</td><td class="px-3">0.63</td><td class="px-3">14%</td><td class="px-3">11%</td><td class="px-3">4%</td><td class="px-3">19%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="mt-4 text-slate-700">Ours achieves the best separation and localisation: at the <b>same</b> false-alarm rate it finds more than twice as many dents as any baseline. Its own threshold allows 10% false alarms; textbook statistical tests would allow 32–96%.</p>
+  <p class="mt-2 text-xs text-slate-500">*Our re-implementations of the CADSplat idea (CAD-prior deformation field). Each method's own threshold is set on healthy and stained blades.</p>
+  <div class="mt-6 h-64"><canvas id="cMain" aria-label="Dents found at equal 5% false alarms"></canvas></div>
+</section>
+
+<!-- 4. Specialists -->
+<section class="card p-6 sm:p-8">
+  <span class="tag bg-violet-50 text-violet-700">4 · Multi-class specialists + judge (inspired by MedGuards)</span>
+  <h2 class="mt-3 text-2xl font-bold">Which kind of damage is it?</h2>
+  <p class="mt-2 text-slate-600">Four specialists (dent, nick, crack, stain) each try to explain the photos. The judge picks the one that fits clearly best, or says <b>“type uncertain”</b> when two fit about equally well.</p>
+  <div class="mt-6 grid sm:grid-cols-3 gap-4">
+    <div class="rounded-xl bg-emerald-50 p-5"><div class="text-4xl font-extrabold text-emerald-700">100%</div><div class="font-semibold mt-1">Crack recognition</div><div class="text-sm text-slate-600">22 / 22 located hairline cracks</div></div>
+    <div class="rounded-xl bg-blue-50 p-5"><div class="text-4xl font-extrabold text-blue-700">60%</div><div class="font-semibold mt-1">Nick recognition</div><div class="text-sm text-slate-600">9 / 15, plus 6 honestly “uncertain”</div></div>
+    <div class="rounded-xl bg-slate-100 p-5"><div class="text-4xl font-extrabold text-slate-700">42 / 43</div><div class="font-semibold mt-1">Location kept</div><div class="text-sm text-slate-600">winning specialist in the right place</div></div>
+  </div>
+  <div class="mt-6 h-72"><canvas id="cJudge" aria-label="What the judge said for each true damage type"></canvas></div>
+  <p class="mt-3 text-xs text-slate-500">Each bar: what the judge said for each true type. Nick and crack: 32 realistic cases each (round 2, improved specialists). Dent, stain, healthy: 24 cases each. “Stain/nothing” on real damage means the detector did not report it (a miss, not a typing error). Round 1 recognised only 2/32 nicks.</p>
+</section>
+
+<!-- 5. Identifiability -->
+<section class="card p-6 sm:p-8">
+  <span class="tag bg-amber-50 text-amber-700">5 · Identifiability finding</span>
+  <h2 class="mt-3 text-2xl font-bold">Why depth is the hard part</h2>
+  <div class="mt-6 grid md:grid-cols-2 gap-6 items-center">
+    <div class="grid grid-cols-2 gap-4">
+      <div class="rounded-xl border p-4 text-center">
+        <svg viewBox="0 0 200 90" class="w-full" role="img" aria-label="shallow dent cross-section"><rect x="0" y="45" width="200" height="45" fill="#cbd5e1"/><path d="M0 45 C70 45 85 49 100 49 C115 49 130 45 200 45" fill="none" stroke="#334155" stroke-width="3"/></svg>
+        <div class="text-2xl font-extrabold mt-2">0.06 mm</div><div class="text-sm text-slate-500">what the method measured</div>
+      </div>
+      <div class="rounded-xl border p-4 text-center">
+        <svg viewBox="0 0 200 90" class="w-full" role="img" aria-label="deep dent cross-section"><rect x="0" y="45" width="200" height="45" fill="#cbd5e1"/><path d="M0 45 C75 45 85 80 100 80 C115 80 125 45 200 45" fill="none" stroke="#334155" stroke-width="3"/></svg>
+        <div class="text-2xl font-extrabold mt-2">0.64 mm</div><div class="text-sm text-slate-500">the true depth</div>
+      </div>
+    </div>
+    <div class="space-y-3 text-slate-700">
+      <p>A real example on an industrial blade: the dent was found <b>in the right place</b>, but measured 10× too shallow. In two ordinary photos, a small, sharp 0.06 mm dent and a 0.6 mm dent can produce nearly identical pixels.</p>
+      <p>Our experiments show depth is <b>not reliably identifiable</b> from two photos: on new designs found dents are measured at a median 60% of their true depth. Better search, more starting points and four cameras instead of two did not fix it, and depth ranges contained the true value only 36 of 109 times.</p>
+      <p class="rounded-lg bg-amber-50 p-3 text-sm"><b>So:</b> <i>where</i> the damage is, is reliable; <i>how deep</i> needs more information, most likely low-angle (grazing) lighting. This is the next experiment.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Localisation -->
+<section class="card p-6 sm:p-8 grid md:grid-cols-3 gap-6 items-center">
+  <div class="md:col-span-1 text-center">
+    <span class="tag bg-emerald-50 text-emerald-700">6 · 3D localisation</span>
+    <div class="mt-3 text-6xl font-black text-emerald-600">0.7 mm</div>
+    <div class="text-slate-500 mt-1">median 3D centre error</div>
+  </div>
+  <div class="md:col-span-2 text-slate-700">
+    <p class="text-lg">We know <b>where</b> the damage is on the blade: on the sealed Rotor37 test, located dents are found a median <b>0.7 mm</b> (mean 0.8 mm) from their true centre, on blades about 74 mm long.</p>
+    <p class="mt-2 text-sm text-slate-500">Other test sets: unseen industrial designs mean 0.6 mm; realistic nicks and cracks mean 1.9 mm (long cracks make “centre” less precise).</p>
+  </div>
+</section>
+
+<!-- 7. Links -->
+<section class="card p-6 sm:p-8">
+  <span class="tag bg-blue-50 text-blue-700">7 · Explore</span>
+  <div class="mt-5 flex flex-wrap gap-3">
+    <a href="https://github.com/afeefaaazam03/3D-Jetblade" class="inline-flex items-center gap-2 rounded-xl bg-slate-900 text-white px-5 py-3 font-semibold hover:bg-slate-700">GitHub repository</a>
+    <a href="viewer3d.html" class="inline-flex items-center gap-2 rounded-xl bg-blue-700 text-white px-5 py-3 font-semibold hover:bg-blue-600">3D demo</a>
+    <a href="paper/BladeDelta_draft.pdf" class="inline-flex items-center gap-2 rounded-xl bg-emerald-700 text-white px-5 py-3 font-semibold hover:bg-emerald-600">Full paper draft (PDF)</a>
+    <a href="results_latest.html" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-5 py-3 font-semibold hover:bg-slate-100">Detailed results</a>
+  </div>
+  <p class="mt-5 text-xs text-slate-500">All results are on computer-rendered blades (public aero-engine compressor blades, NASA Rotor 37, and six industrial aero-engine blade designs). Validation on real 3D-printed, damaged and scanned blades is the next step.</p>
+</section>
+</main>
+
+<script>
+Chart.defaults.font.family='Inter,system-ui,sans-serif';Chart.defaults.color='#475569';
+new Chart(document.getElementById('cMain'),{type:'bar',
+  data:{labels:['Ours','Free-form field*','2D detector','MLP field*'],datasets:[{label:'Visible dents found at equal 5% false alarms (%)',data:[51,19,16,8],backgroundColor:['#059669','#cbd5e1','#cbd5e1','#cbd5e1'],borderRadius:8}]},
+  options:{maintainAspectRatio:false,plugins:{legend:{display:false},title:{display:true,text:'Visible dents found at the same 5% false-alarm rate'}},scales:{y:{beginAtZero:true,max:60,ticks:{callback:v=>v+'%'}},x:{grid:{display:false}}}}});
+const J={"dent":[14,4,4,0,2,0],"nick":[3,9,3,5,6,6],"crack":[0,0,29,2,1,0],"stain":[1,0,0,20,3,0],"healthy":[0,0,0,3,2,19]};
+const T=['dent','nick','crack','stain','healthy'],TL=['Dent','Nick','Crack','Stain','Healthy'];
+const LBL=['dent','nick','crack','stain','uncertain','nothing'],COL=['#1d4ed8','#7c3aed','#ea580c','#b45309','#94a3b8','#059669'];
+new Chart(document.getElementById('cJudge'),{type:'bar',
+  data:{labels:TL.map(x=>'True: '+x),datasets:LBL.map((l,i)=>({label:'judged '+l,data:T.map(t=>J[t][i]),backgroundColor:COL[i]}))},
+  options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{x:{stacked:true,title:{display:true,text:'cases'}},y:{stacked:true,grid:{display:false}}}}});
+</script>
+</body>
+</html>
