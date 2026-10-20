@@ -40,20 +40,14 @@
 <section class="card p-6 sm:p-8">
   <span class="tag bg-blue-50 text-blue-700">1 · The core problem</span>
   <h2 class="mt-3 text-2xl font-bold">One dark spot, four possible causes</h2>
-  <img src="img/vr/causes.png" alt="Cross-sections: a dent changes the shape, a stain only the colour, a lamp brightens, the camera view shifts" class="mt-5 w-full rounded-xl border border-slate-100">
-  <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-    <div class="rounded-lg bg-rose-50 p-3"><b class="text-rose-700">Dent</b><div class="text-slate-600">the shape changes: real damage</div></div>
-    <div class="rounded-lg bg-amber-50 p-3"><b class="text-amber-700">Stain</b><div class="text-slate-600">only the colour changes</div></div>
-    <div class="rounded-lg bg-amber-50 p-3"><b class="text-amber-700">Lighting</b><div class="text-slate-600">a lamp is brighter or dimmer</div></div>
-    <div class="rounded-lg bg-amber-50 p-3"><b class="text-amber-700">Camera error</b><div class="text-slate-600">the view shifts by about 1°</div></div>
+  <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <figure><img src="img/vr/zdent.png" alt="dent" class="rounded-lg w-full aspect-square object-cover"><figcaption class="text-xs text-center mt-1"><b class="text-rose-700">Dent</b> (real damage)</figcaption></figure>
+    <figure><img src="img/vr/zstain.png" alt="stain" class="rounded-lg w-full aspect-square object-cover"><figcaption class="text-xs text-center mt-1"><b class="text-amber-700">Stain</b> (colour only)</figcaption></figure>
+    <figure><img src="img/vr/rnick_photo.png" alt="nick" class="rounded-lg w-full aspect-square object-cover"><figcaption class="text-xs text-center mt-1"><b class="text-rose-700">Nick</b> (edge chip)</figcaption></figure>
+    <figure><img src="img/vr/rcrack_photo.png" alt="crack" class="rounded-lg w-full aspect-square object-cover"><figcaption class="text-xs text-center mt-1"><b class="text-rose-700">Hairline crack</b></figcaption></figure>
   </div>
+  <p class="mt-3 text-sm text-slate-600">Close-ups from the test photos. Lighting changes and a camera moved by about 1° also change the image, without any damage.</p>
   <p class="mt-5 text-lg text-slate-700">In a single photo, all four can look almost the same. Our method uses the CAD model and a few calibrated photos to tell them apart, or <b>abstains</b> when the photos are not enough.</p>
-  <div class="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
-    <figure><img src="img/vr/zdent.png" alt="dent" class="rounded-lg w-full aspect-square object-cover"><figcaption class="text-xs text-center mt-1 text-slate-500">Dent</figcaption></figure>
-    <figure><img src="img/vr/rnick_photo.png" alt="sharp nick" class="rounded-lg w-full aspect-square object-cover"><figcaption class="text-xs text-center mt-1 text-slate-500">Sharp nick (edge)</figcaption></figure>
-    <figure><img src="img/vr/rcrack_photo.png" alt="hairline crack" class="rounded-lg w-full aspect-square object-cover"><figcaption class="text-xs text-center mt-1 text-slate-500">Hairline crack</figcaption></figure>
-    <figure><img src="img/vr/zstain.png" alt="stain" class="rounded-lg w-full aspect-square object-cover"><figcaption class="text-xs text-center mt-1 text-slate-500">Stain (not damage)</figcaption></figure>
-  </div>
 </section>
 
 <!-- How it works -->
@@ -70,6 +64,33 @@
     <div class="rounded-lg bg-blue-50 p-3"><b>Explain with damage:</b> add a dent, nick or crack and fit its 3D shape.</div>
     <div class="rounded-lg bg-emerald-50 p-3"><b>Decide:</b> report only if it fits <i>clearly</i> better (threshold set on healthy and stained blades), otherwise abstain.</div>
   </div>
+</section>
+
+
+<!-- Live 3D demo -->
+<section class="card p-6 sm:p-8">
+  <span class="tag bg-blue-50 text-blue-700">Live 3D demo</span>
+  <h2 class="mt-3 text-2xl font-bold">The actual damage vs. what the method found, in 3D</h2>
+  <p class="mt-2 text-slate-600">Rotating automatically. <b>Left:</b> the true dent. <b>Right:</b> the method's 3D result. Dents are exaggerated so they are visible. Drag to rotate, scroll to zoom, or pick another case.</p>
+  <div class="mt-4 flex flex-wrap gap-2 text-sm" id="demoCases">
+    <button data-c="cad6_1005_21" class="rounded-lg px-3 py-1.5 bg-blue-700 text-white">Industrial blade 5: dent found</button>
+    <button data-c="test2_0083_3" class="rounded-lg px-3 py-1.5 bg-slate-200">Rotor37: dent found (0.35 vs 0.36 mm)</button>
+    <button data-c="cad6_1006_67" class="rounded-lg px-3 py-1.5 bg-slate-200">Industrial blade 6: depth underestimated</button>
+    <button data-c="test2_0067_1" class="rounded-lg px-3 py-1.5 bg-slate-200">Stain: correctly nothing</button>
+  </div>
+  <div class="mt-3 rounded-xl overflow-hidden border border-slate-200 bg-slate-900" style="height:min(70vh,560px)">
+    <iframe id="demoFrame" src="viewer3d.html?case=cad6_1005_21&sbs=1" title="3D demo: actual damage vs method result" class="w-full h-full" loading="lazy"></iframe>
+  </div>
+  <a href="viewer3d.html" class="inline-block mt-3 text-sm font-semibold text-blue-700 hover:underline">Open the full 3D demo (33 cases) →</a>
+</section>
+
+<!-- Real results gallery -->
+<section class="card p-6 sm:p-8">
+  <span class="tag bg-blue-50 text-blue-700">Real outputs</span>
+  <h2 class="mt-3 text-2xl font-bold">What the method actually reports</h2>
+  <p class="mt-3 text-sm text-slate-600">Each picture is the method's real output: <b>left</b> the photo it was given, with <b class="text-orange-500">orange = the true damage</b> and <b class="text-blue-600">blue = what the method found</b>; <b>middle</b> the healthy blade rendered from CAD; <b>right</b> the difference between them.</p>
+  <div class="mt-5 grid sm:grid-cols-2 lg:grid-cols-3 gap-4"><figure class="rounded-xl border border-slate-200 overflow-hidden bg-white"><img src="img/vr/res/test2_0083_3.jpg" alt="Dent, Rotor37" loading="lazy" class="w-full bg-slate-700"><figcaption class="p-3"><div class="flex items-center justify-between gap-2"><b class="text-sm">Dent, Rotor37</b><span class="tag bg-emerald-100 text-emerald-800">found</span></div><div class="text-xs text-slate-500 mt-1">True 0.36 mm, measured 0.35 mm, right place.</div></figcaption></figure><figure class="rounded-xl border border-slate-200 overflow-hidden bg-white"><img src="img/vr/res/test2_0080_4.jpg" alt="Dent, camera moved" loading="lazy" class="w-full bg-slate-700"><figcaption class="p-3"><div class="flex items-center justify-between gap-2"><b class="text-sm">Dent, camera moved</b><span class="tag bg-emerald-100 text-emerald-800">found</span></div><div class="text-xs text-slate-500 mt-1">True 0.23 mm, measured 0.20 mm despite camera error.</div></figcaption></figure><figure class="rounded-xl border border-slate-200 overflow-hidden bg-white"><img src="img/vr/res/test2_0096_3.jpg" alt="Dent, lighting changed" loading="lazy" class="w-full bg-slate-700"><figcaption class="p-3"><div class="flex items-center justify-between gap-2"><b class="text-sm">Dent, lighting changed</b><span class="tag bg-emerald-100 text-emerald-800">found</span></div><div class="text-xs text-slate-500 mt-1">True 0.19 mm, measured 0.12 mm.</div></figcaption></figure><figure class="rounded-xl border border-slate-200 overflow-hidden bg-white"><img src="img/vr/res/cad6_1005_21.jpg" alt="Dent, unseen industrial blade" loading="lazy" class="w-full bg-slate-700"><figcaption class="p-3"><div class="flex items-center justify-between gap-2"><b class="text-sm">Dent, unseen industrial blade</b><span class="tag bg-emerald-100 text-emerald-800">found</span></div><div class="text-xs text-slate-500 mt-1">Right place; measured 0.43 mm for a 0.95 mm dent (depth too shallow).</div></figcaption></figure><figure class="rounded-xl border border-slate-200 overflow-hidden bg-white"><img src="img/vr/res/test2_0067_1.jpg" alt="Stain only, camera + light changed" loading="lazy" class="w-full bg-slate-700"><figcaption class="p-3"><div class="flex items-center justify-between gap-2"><b class="text-sm">Stain only, camera + light changed</b><span class="tag bg-emerald-100 text-emerald-800">nothing reported</span></div><div class="text-xs text-slate-500 mt-1">Correct: a stain is not damage.</div></figcaption></figure><figure class="rounded-xl border border-slate-200 overflow-hidden bg-white"><img src="img/vr/res/cad6_1003_35.jpg" alt="Healthy, camera + light changed" loading="lazy" class="w-full bg-slate-700"><figcaption class="p-3"><div class="flex items-center justify-between gap-2"><b class="text-sm">Healthy, camera + light changed</b><span class="tag bg-emerald-100 text-emerald-800">nothing reported</span></div><div class="text-xs text-slate-500 mt-1">Correct: no false alarm.</div></figcaption></figure><figure class="rounded-xl border border-slate-200 overflow-hidden bg-white"><img src="img/vr/res/test2_0092_5.jpg" alt="Dent the cameras cannot see" loading="lazy" class="w-full bg-slate-700"><figcaption class="p-3"><div class="flex items-center justify-between gap-2"><b class="text-sm">Dent the cameras cannot see</b><span class="tag bg-slate-200 text-slate-700">abstained</span></div><div class="text-xs text-slate-500 mt-1">Correct: the photos cannot show it, so no claim.</div></figcaption></figure><figure class="rounded-xl border border-slate-200 overflow-hidden bg-white"><img src="img/vr/res/test2_0075_5.jpg" alt="Dent, lighting changed" loading="lazy" class="w-full bg-slate-700"><figcaption class="p-3"><div class="flex items-center justify-between gap-2"><b class="text-sm">Dent, lighting changed</b><span class="tag bg-rose-100 text-rose-800">missed</span></div><div class="text-xs text-slate-500 mt-1">0.26 mm dent not reported: an honest miss.</div></figcaption></figure><figure class="rounded-xl border border-slate-200 overflow-hidden bg-white"><img src="img/vr/res/test2_0074_1.jpg" alt="Stain only, camera moved" loading="lazy" class="w-full bg-slate-700"><figcaption class="p-3"><div class="flex items-center justify-between gap-2"><b class="text-sm">Stain only, camera moved</b><span class="tag bg-rose-100 text-rose-800">false alarm</span></div><div class="text-xs text-slate-500 mt-1">A tiny dent wrongly reported: a remaining error.</div></figcaption></figure></div>
+  <p class="mt-3 text-xs text-slate-500">Successes and failures are both shown. All from the sealed tests or unseen industrial designs.</p>
 </section>
 
 <!-- 3. Main results -->
@@ -103,6 +124,7 @@
     <div class="rounded-xl bg-blue-50 p-5"><div class="text-4xl font-extrabold text-blue-700">60%</div><div class="font-semibold mt-1">Nick recognition</div><div class="text-sm text-slate-600">9 / 15, plus 6 honestly “uncertain”</div></div>
     <div class="rounded-xl bg-slate-100 p-5"><div class="text-4xl font-extrabold text-slate-700">42 / 43</div><div class="font-semibold mt-1">Location kept</div><div class="text-sm text-slate-600">winning specialist in the right place</div></div>
   </div>
+  <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4"><figure class="rounded-xl border border-slate-200 overflow-hidden bg-white"><img src="img/vr/res/cad6dmg2_1003_02.jpg" alt="Sharp nick" loading="lazy" class="w-full bg-slate-700"><figcaption class="p-3"><div class="flex items-center justify-between gap-2"><b class="text-sm">Sharp nick</b><span class="tag bg-emerald-100 text-emerald-800">judged: nick</span></div><div class="text-xs text-slate-500 mt-1">Correct type, right place.</div></figcaption></figure><figure class="rounded-xl border border-slate-200 overflow-hidden bg-white"><img src="img/vr/res/cad6dmg2_1004_06.jpg" alt="Sharp nick" loading="lazy" class="w-full bg-slate-700"><figcaption class="p-3"><div class="flex items-center justify-between gap-2"><b class="text-sm">Sharp nick</b><span class="tag bg-emerald-100 text-emerald-800">judged: nick</span></div><div class="text-xs text-slate-500 mt-1">Correct type, right place.</div></figcaption></figure><figure class="rounded-xl border border-slate-200 overflow-hidden bg-white"><img src="img/vr/res/cad6dmg2_1004_11.jpg" alt="Hairline crack" loading="lazy" class="w-full bg-slate-700"><figcaption class="p-3"><div class="flex items-center justify-between gap-2"><b class="text-sm">Hairline crack</b><span class="tag bg-emerald-100 text-emerald-800">judged: crack</span></div><div class="text-xs text-slate-500 mt-1">Correct type, right place.</div></figcaption></figure><figure class="rounded-xl border border-slate-200 overflow-hidden bg-white"><img src="img/vr/res/cad6dmg2_1004_12.jpg" alt="Hairline crack" loading="lazy" class="w-full bg-slate-700"><figcaption class="p-3"><div class="flex items-center justify-between gap-2"><b class="text-sm">Hairline crack</b><span class="tag bg-emerald-100 text-emerald-800">judged: crack</span></div><div class="text-xs text-slate-500 mt-1">Correct type, right place.</div></figcaption></figure><figure class="rounded-xl border border-slate-200 overflow-hidden bg-white"><img src="img/vr/res/cad6dmg2_1005_02.jpg" alt="Sharp nick" loading="lazy" class="w-full bg-slate-700"><figcaption class="p-3"><div class="flex items-center justify-between gap-2"><b class="text-sm">Sharp nick</b><span class="tag bg-slate-200 text-slate-700">type uncertain</span></div><div class="text-xs text-slate-500 mt-1">Nick and dent fit equally well: it says so.</div></figcaption></figure><figure class="rounded-xl border border-slate-200 overflow-hidden bg-white"><img src="img/vr/res/cad6dmg2_1004_07.jpg" alt="Sharp nick" loading="lazy" class="w-full bg-slate-700"><figcaption class="p-3"><div class="flex items-center justify-between gap-2"><b class="text-sm">Sharp nick</b><span class="tag bg-rose-100 text-rose-800">judged: dent</span></div><div class="text-xs text-slate-500 mt-1">Wrong type, but right place.</div></figcaption></figure></div>
   <div class="mt-6 h-72"><canvas id="cJudge" aria-label="What the judge said for each true damage type"></canvas></div>
   <p class="mt-3 text-xs text-slate-500">Each bar: what the judge said for each true type. Nick and crack: 32 realistic cases each (round 2, improved specialists). Dent, stain, healthy: 24 cases each. “Stain/nothing” on real damage means the detector did not report it (a miss, not a typing error). Round 1 recognised only 2/32 nicks.</p>
 </section>
@@ -112,16 +134,7 @@
   <span class="tag bg-amber-50 text-amber-700">5 · Identifiability finding</span>
   <h2 class="mt-3 text-2xl font-bold">Why depth is the hard part</h2>
   <div class="mt-6 grid md:grid-cols-2 gap-6 items-center">
-    <div class="grid grid-cols-2 gap-4">
-      <div class="rounded-xl border p-4 text-center">
-        <svg viewBox="0 0 200 90" class="w-full" role="img" aria-label="shallow dent cross-section"><rect x="0" y="45" width="200" height="45" fill="#cbd5e1"/><path d="M0 45 C70 45 85 49 100 49 C115 49 130 45 200 45" fill="none" stroke="#334155" stroke-width="3"/></svg>
-        <div class="text-2xl font-extrabold mt-2">0.06 mm</div><div class="text-sm text-slate-500">what the method measured</div>
-      </div>
-      <div class="rounded-xl border p-4 text-center">
-        <svg viewBox="0 0 200 90" class="w-full" role="img" aria-label="deep dent cross-section"><rect x="0" y="45" width="200" height="45" fill="#cbd5e1"/><path d="M0 45 C75 45 85 80 100 80 C115 80 125 45 200 45" fill="none" stroke="#334155" stroke-width="3"/></svg>
-        <div class="text-2xl font-extrabold mt-2">0.64 mm</div><div class="text-sm text-slate-500">the true depth</div>
-      </div>
-    </div>
+    <figure class="rounded-xl border overflow-hidden"><img src="img/vr/res/cad6_1006_67.jpg" alt="dent found in the right place but measured too shallow" class="w-full bg-slate-700"><figcaption class="p-3 text-sm"><b>True depth 0.64 mm, measured 0.06 mm.</b> Right place (orange and blue overlap), wrong depth. <button class="text-blue-700 font-semibold hover:underline" onclick="pick('cad6_1006_67')">See it in 3D ↑</button></figcaption></figure>
     <div class="space-y-3 text-slate-700">
       <p>A real example on an industrial blade: the dent was found <b>in the right place</b>, but measured 10× too shallow. In two ordinary photos, a small, sharp 0.06 mm dent and a 0.6 mm dent can produce nearly identical pixels.</p>
       <p>Our experiments show depth is <b>not reliably identifiable</b> from two photos: on new designs found dents are measured at a median 60% of their true depth. Better search, more starting points and four cameras instead of two did not fix it, and depth ranges contained the true value only 36 of 109 times.</p>
@@ -167,6 +180,8 @@ const LBL=['dent','nick','crack','stain','uncertain','nothing'],COL=['#1d4ed8','
 new Chart(document.getElementById('cJudge'),{type:'bar',
   data:{labels:TL.map(x=>'True: '+x),datasets:LBL.map((l,i)=>({label:'judged '+l,data:T.map(t=>J[t][i]),backgroundColor:COL[i]}))},
   options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{x:{stacked:true,title:{display:true,text:'cases'}},y:{stacked:true,grid:{display:false}}}}});
+function pick(c){document.getElementById('demoFrame').src='viewer3d.html?case='+c+'&sbs=1';document.querySelectorAll('#demoCases button').forEach(b=>{const on=b.dataset.c===c;b.className='rounded-lg px-3 py-1.5 '+(on?'bg-blue-700 text-white':'bg-slate-200')});document.getElementById('demoFrame').scrollIntoView({behavior:'smooth',block:'center'});}
+document.querySelectorAll('#demoCases button').forEach(b=>b.onclick=()=>pick(b.dataset.c));
 </script>
 </body>
 </html>
