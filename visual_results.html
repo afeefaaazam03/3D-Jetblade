@@ -102,17 +102,19 @@
 <section class="card p-6 sm:p-8">
   <span class="tag bg-blue-50 text-blue-700">Live 3D demo</span>
   <h2 class="mt-3 text-2xl font-bold">The actual damage vs. what the method found, in 3D</h2>
-  <p class="mt-2 text-slate-600">Rotating automatically. <b>Left:</b> the true dent. <b>Right:</b> the method's 3D result. Dents are exaggerated so they are visible. Drag to rotate, scroll to zoom, or pick another case.</p>
+  <p class="mt-2 text-slate-600"><b>Left blade:</b> the true dent. <b>Right blade:</b> the method's 3D result. Click “Load interactive 3D” to rotate and zoom yourself.</p>
   <div class="mt-4 flex flex-wrap gap-2 text-sm" id="demoCases">
     <button data-c="cad6_1005_21" class="rounded-lg px-3 py-1.5 bg-blue-700 text-white">Industrial blade 5: dent found</button>
     <button data-c="test2_0083_3" class="rounded-lg px-3 py-1.5 bg-slate-200">Rotor37: dent found (0.35 vs 0.36 mm)</button>
-    <button data-c="cad6_1006_67" class="rounded-lg px-3 py-1.5 bg-slate-200">Industrial blade 6: depth underestimated</button>
-    <button data-c="test2_0067_1" class="rounded-lg px-3 py-1.5 bg-slate-200">Stain: correctly nothing</button>
   </div>
-  <div class="mt-3 rounded-xl overflow-hidden border border-slate-200 bg-slate-900" style="height:min(70vh,560px)">
-    <iframe id="demoFrame" src="viewer3d.html?case=cad6_1005_21&sbs=1&embed=1" title="3D demo: actual damage vs method result" class="w-full h-full" allow="fullscreen"></iframe>
+  <div class="mt-3 rounded-xl overflow-hidden border border-slate-200 bg-slate-900 relative" id="demoBox">
+    <img id="demoGif" src="img/vr/spin_cad6_1005_21.gif" alt="Rotating 3D view: true dent on the left blade, method result on the right blade" class="w-full">
   </div>
-  <div class="mt-3 flex flex-wrap gap-3"><a id="demoOpen" href="viewer3d.html?case=cad6_1005_21&sbs=1" target="_blank" class="rounded-xl bg-blue-700 text-white px-5 py-3 font-semibold hover:bg-blue-600">Open the 3D demo in a new tab ↗</a><span class="self-center text-sm text-slate-500">If the box above stays dark, use this button: some browsers block 3D inside a page.</span></div>
+  <p class="mt-2 text-xs text-slate-500">Recorded from the 3D viewer (full 360° turn). The coloured bump is the dent, exaggerated ×20 so it is visible.</p>
+  <div class="mt-3 flex flex-wrap gap-3">
+    <button id="liveBtn" class="rounded-xl bg-slate-900 text-white px-5 py-3 font-semibold hover:bg-slate-700">Load interactive 3D here</button>
+    <a id="demoOpen" href="viewer3d.html?case=cad6_1005_21&sbs=1" target="_blank" class="rounded-xl bg-blue-700 text-white px-5 py-3 font-semibold hover:bg-blue-600">Open full 3D demo in a new tab ↗ (33 cases)</a>
+  </div>
 </section>
 
 <!-- Real results gallery -->
@@ -211,8 +213,13 @@ const LBL=['dent','nick','crack','stain','uncertain','nothing'],COL=['#1d4ed8','
 new Chart(document.getElementById('cJudge'),{type:'bar',
   data:{labels:TL.map(x=>'True: '+x),datasets:LBL.map((l,i)=>({label:'judged '+l,data:T.map(t=>J[t][i]),backgroundColor:COL[i]}))},
   options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{x:{stacked:true,title:{display:true,text:'cases'}},y:{stacked:true,grid:{display:false}}}}});
-function pick(c){document.getElementById('demoFrame').src='viewer3d.html?case='+c+'&sbs=1&embed=1';document.getElementById('demoOpen').href='viewer3d.html?case='+c+'&sbs=1';document.querySelectorAll('#demoCases button').forEach(b=>{const on=b.dataset.c===c;b.className='rounded-lg px-3 py-1.5 '+(on?'bg-blue-700 text-white':'bg-slate-200')});document.getElementById('demoFrame').scrollIntoView({behavior:'smooth',block:'center'});}
+let curCase='cad6_1005_21';
+function pick(c){curCase=c;const box=document.getElementById('demoBox');box.innerHTML=GIFS.includes(c)?'<img src="img/vr/spin_'+c+'.gif" alt="rotating 3D view" class="w-full">':'<iframe src="viewer3d.html?case='+c+'&sbs=1&embed=1" title="3D demo" class="w-full" style="height:min(70vh,560px)"></iframe>';
+document.getElementById('demoOpen').href='viewer3d.html?case='+c+'&sbs=1';
+document.querySelectorAll('#demoCases button').forEach(b=>{b.className='rounded-lg px-3 py-1.5 '+(b.dataset.c===c?'bg-blue-700 text-white':'bg-slate-200')});box.scrollIntoView({behavior:'smooth',block:'center'});}
+const GIFS=['cad6_1005_21','test2_0083_3'];
 document.querySelectorAll('#demoCases button').forEach(b=>b.onclick=()=>pick(b.dataset.c));
+document.getElementById('liveBtn').onclick=()=>{document.getElementById('demoBox').innerHTML='<iframe src="viewer3d.html?case='+curCase+'&sbs=1&embed=1" title="3D demo" class="w-full" style="height:min(70vh,560px)"></iframe>';};
 </script>
 </body>
 </html>

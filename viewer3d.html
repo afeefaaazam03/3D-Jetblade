@@ -143,6 +143,8 @@ if (Q.get('mode')) mode = Q.get('mode');
 if (Q.get('sbs') === '1') sideBySide = true;
 if (Q.get('spin') === '0') { controls.autoRotate = false; document.getElementById('spin').setAttribute('aria-pressed', false); }
 resize(); await show(); frame();
+if (Q.get('az')) { const a = parseFloat(Q.get('az')) * Math.PI / 180, p = camera.position, c = Math.cos(a), sn = Math.sin(a);
+  camera.position.set(p.x * c - p.y * sn, p.x * sn + p.y * c, p.z); controls.autoRotate = false; controls.enableDamping = false; controls.update(); }
 renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
 </script>
 </body></html>
