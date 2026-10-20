@@ -79,6 +79,35 @@ def weighted():
                  [[w['set'], w['n'], f"{100 * w['recall']:.0f}%", f"<b>{100 * w['weighted']:.0f}%</b>", f"{100 * w['critical']:.0f}% <span class='m'>(n={w['n_critical']})</span>"] for w in W])
 
 
+def realistic():
+    C = {c['case_id']: c for c in json.loads((ROOT / 'data/benchmark/cad6dmg2/cases.json').read_text())}
+    det = collections.defaultdict(lambda: [0, 0])
+    for f in (R / 'cad6dmg2/v11').glob('cad6dmg2_*.json'):
+        r = json.loads(f.read_text()); d = C[r['case_id']]['defect']
+        loc = r['fit_gain'] > T11 and r['pred_changed_vertices'] > 0 and r.get('centre_err') is not None and r['centre_err'] < .1
+        det[d][0] += 1; det[d][1] += loc
+    out = table(['Defect', 'Cases', 'Found in the right place'], [['Sharp nick', det['nick'][0], pct(det['nick'][1], det['nick'][0])],
+                                                              ['Hairline crack', det['crack'][0], pct(det['crack'][1], det['crack'][0])]])
+    labels = ['dent', 'nick', 'crack', 'uncertain', 'stain', 'nothing']
+    for tag, name in (('', 'Round 1: first specialists (smooth nick, groove crack)'), ('2', 'Round 2: improved specialists (carved notch, dark-line crack)')):
+        q = R / f'phase5/specialists{tag}_cad6dmg2.jsonl'
+        if not q.exists():
+            out += f'<h3>{name}</h3><p class="m">Running.</p>'; continue
+        X = [json.loads(l) for l in q.read_text().splitlines()]
+        M = {t: collections.Counter(x['label'] for x in X if x['defect'] == t) for t in ('nick', 'crack')}
+        dmg = [x for x in X if x.get('reported') and x.get('centre_err_frozen') is not None and x['centre_err_frozen'] < .1]
+        ty = [x for x in dmg if x['label'] != 'uncertain']
+        def cell(t, l):
+            n = sum(M[t].values()) or 1; v = M[t][l]; col = '26,127,55' if l == t else '198,40,40'
+            return f'<span class="hm" style="background:rgba({col},{0.12 + 0.75 * v / n if v else 0})">{v or ""}</span>'
+        out += (f'<h3>{name}</h3><p class="m">{len(X)} of 64 cases.</p>'
+                f'<div class="kpis"><div><b>{pct(sum(x["label"] == x["defect"] for x in ty), len(ty))}</b><span>type correct (when a type is given)</span></div>'
+                f'<div><b>{pct(sum(x["centre_err_best"] is not None and x["centre_err_best"] < .1 for x in dmg), len(dmg))}</b><span>winning specialist in the right place</span></div></div>'
+                + table(['True type', 'n'] + [l.capitalize() for l in labels],
+                        [[{'nick': 'Sharp nick', 'crack': 'Hairline crack'}[t], sum(M[t].values())] + [cell(t, l) for l in labels] for t in ('nick', 'crack')], 'conf'))
+    return out
+
+
 def gallery():
     names = {'dent': 'Dent', 'nick': 'Edge dent', 'crack': 'Groove (scratch-like)', 'stain': 'Stain (not damage)', 'healthy': 'Healthy'}
     cards = ''.join(f'<figure><img src="img/latest/{d}_photo.png" alt="{names[d]} photo" loading="lazy"><img src="img/latest/{d}_diff.png" alt="{names[d]} change" loading="lazy"><figcaption>{names[d]}</figcaption></figure>' for d in names)
@@ -111,6 +140,8 @@ table.conf td:not(:first-child),table.conf th:not(:first-child){{text-align:cent
 <section><h2>The four defect types</h2>{gallery()}<p class="m"><b>Note:</b> the simulated "nicks" are rounded dents on the blade edge and the "cracks" are long, shallow grooves (0.4&nbsp;mm wide), closer to scratches. They are simplified stand-ins, not realistic sharp nicks or hairline cracks. Below, "nick" and "crack" refer to these stand-ins; realistic versions are being built and tested next.</p></section>
 <section><h2>1. Damage-type specialists + judge</h2>
 <p>Four specialists (dent, nick = edge dent, crack = groove, stain) each try to explain the photos; a judge picks the clear winner, says <i>type uncertain</i> when two fit about equally well, and calls it a stain or nothing when no physical damage is detected. Detection is the unchanged frozen method, so false alarms do not change. 136 cases on four held-out industrial blade designs.</p><div class="ch"><canvas id="cs"></canvas></div>{spec}</section>
+<section><h2>1b. Realistic nicks and hairline cracks</h2><p>64 new cases with realistic defects: <b>sharp nicks</b> (material carved out of the blade edge, 0.5&ndash;2&nbsp;mm deep) and <b>hairline cracks</b> (a thin dark wavy line with an almost-zero groove). Detection is the frozen method; the judge is then run with the first and the improved specialists. This shows the iterations.</p>
+<div class="gal" style="grid-template-columns:repeat(2,minmax(150px,260px))"><figure><img src="img/latest/rnick_photo.png" alt="sharp nick"><figcaption>Sharp nick (zoomed)</figcaption></figure><figure><img src="img/latest/rcrack_photo.png" alt="hairline crack"><figcaption>Hairline crack (zoomed)</figcaption></figure></div>{realistic()}</section>
 <section><h2>2. Four defect types: detection</h2><p>Frozen method, 2 photos, no retuning. Stains and healthy blades should not be reported.</p><div class="ch"><canvas id="c4"></canvas></div>{four}
 <p class="m">False alarms 6 of 48 (12.5%) are above the 5% target set on Rotor37 blades; recalibrating on these designs is the next step.</p></section>
 <section><h2>3. Safety-weighted recall</h2><p>Deeper defects count more (weight = true depth in mm; cracks count double). Critical = deeper than 0.2&nbsp;mm, or any crack.</p><div class="ch"><canvas id="cw"></canvas></div>{weighted()}
