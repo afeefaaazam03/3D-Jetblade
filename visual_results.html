@@ -189,6 +189,36 @@
   </div>
 </section>
 
+
+<!-- Expert feedback -->
+<section class="card p-6 sm:p-8">
+  <span class="tag bg-blue-50 text-blue-700">Expert feedback</span>
+  <h2 class="mt-3 text-2xl font-bold">What researchers in the field told us</h2>
+  <p class="mt-2 text-slate-600">We contacted authors of the closest published work. Their advice shaped the framing, the baselines and the next experiments.</p>
+  <div class="mt-5 grid lg:grid-cols-2 gap-4"><div class="rounded-xl border border-slate-200 p-5 bg-white">
+  <div class="flex flex-wrap items-start justify-between gap-2"><div><div class="font-bold">Author of Looking 3D (CVPR 2024)</div><div class="text-xs text-slate-500">Reference-based anomaly detection</div></div><div class="flex flex-wrap gap-1"><span class="tag bg-emerald-100 text-emerald-800">PAD cited</span><span class="tag bg-slate-200 text-slate-700">VGGT not yet</span></div></div>
+  <blockquote class="mt-3 border-l-4 border-blue-300 pl-3 text-slate-700 italic">Looking 3D is not precise enough for this problem. Try VGGT with Sim(3) alignment, or PAD if many images are available; training a new model would need very large GPU resources.</blockquote>
+  <div class="mt-3 text-sm"><b class="text-slate-500 uppercase text-xs tracking-wider">Impact on this project</b><p class="text-slate-700 mt-1">Confirmed that reconstruction-from-scratch methods differ from our CAD-prior approach. PAD is cited in our related work; VGGT + Sim(3) alignment has not been tried yet.</p></div>
+</div><div class="rounded-xl border border-slate-200 p-5 bg-white">
+  <div class="flex flex-wrap items-start justify-between gap-2"><div><div class="font-bold">Author of CADSplat (2026)</div><div class="text-xs text-slate-500">CAD-prior sparse-view reconstruction</div></div><div class="flex flex-wrap gap-1"><span class="tag bg-emerald-100 text-emerald-800">Gap supported</span><span class="tag bg-slate-200 text-slate-700">Deflectometry: future</span></div></div>
+  <blockquote class="mt-3 border-l-4 border-blue-300 pl-3 text-slate-700 italic">CADSplat cannot detect minor defects; its deformation network is noisy, and they are moving to signed distance fields. Suggested phase-measuring deflectometry for small defects.</blockquote>
+  <div class="mt-3 text-sm"><b class="text-slate-500 uppercase text-xs tracking-wider">Impact on this project</b><p class="text-slate-700 mt-1">Supports our research gap from the closest method. Our paper cites only CADSplat’s public statement that measurement-quality surfaces are future work. Deflectometry (structured light on shiny surfaces) fits our planned lighting experiment.</p></div>
+</div><div class="rounded-xl border border-slate-200 p-5 bg-white">
+  <div class="flex flex-wrap items-start justify-between gap-2"><div><div class="font-bold">Second reply (anomaly detection)</div><div class="text-xs text-slate-500">Practical baseline advice</div></div><div class="flex flex-wrap gap-1"><span class="tag bg-emerald-100 text-emerald-800">2D baselines done</span><span class="tag bg-amber-100 text-amber-800">PatchCore: to do</span></div></div>
+  <blockquote class="mt-3 border-l-4 border-blue-300 pl-3 text-slate-700 italic">Start with a simple memory-bank detector (PatchCore) to find defects, then compute the depth difference against a nominal anchor area.</blockquote>
+  <div class="mt-3 text-sm"><b class="text-slate-500 uppercase text-xs tracking-wider">Impact on this project</b><p class="text-slate-700 mt-1">We implemented a 2D U-Net detector and a SIFT change detector as baselines; our method locates more than twice as many dents. PatchCore and the nominal-anchor depth comparison are not yet run.</p></div>
+</div><div class="rounded-xl border border-slate-200 p-5 bg-white">
+  <div class="flex flex-wrap items-start justify-between gap-2"><div><div class="font-bold">Author of PIAD (CVPR 2025)</div><div class="text-xs text-slate-500">Pose- and illumination-agnostic anomaly detection</div></div><div class="flex flex-wrap gap-1"><span class="tag bg-emerald-100 text-emerald-800">Reframed</span></div></div>
+  <blockquote class="mt-3 border-l-4 border-blue-300 pl-3 text-slate-700 italic">The problem is fundamentally difficult. Making a model invariant to lighting removes depth cues. Studying identifiability, and abstaining when the evidence is insufficient, is a meaningful contribution in itself.</blockquote>
+  <div class="mt-3 text-sm"><b class="text-slate-500 uppercase text-xs tracking-wider">Impact on this project</b><p class="text-slate-700 mt-1">The turning point: we reframed the work around identifiability and abstention rather than depth accuracy alone. Our results agree: location is reliable, depth needs better illumination.</p></div>
+</div><div class="rounded-xl border border-slate-200 p-5 bg-white">
+  <div class="flex flex-wrap items-start justify-between gap-2"><div><div class="font-bold">Synthetic-data expert</div><div class="text-xs text-slate-500">Synthetic data for vision</div></div><div class="flex flex-wrap gap-1"><span class="tag bg-emerald-100 text-emerald-800">Lighting + camera done</span><span class="tag bg-amber-100 text-amber-800">Noise/blur: to do</span></div></div>
+  <blockquote class="mt-3 border-l-4 border-blue-300 pl-3 text-slate-700 italic">Synthetic data needs variability and realism (noise, blur, lighting, camera angles). Quantity matters, but realism is key: aim for a pipeline close to the real world.</blockquote>
+  <div class="mt-3 text-sm"><b class="text-slate-500 uppercase text-xs tracking-wider">Impact on this project</b><p class="text-slate-700 mt-1">Partly matches our benchmark: photorealistic Blender renders with lighting changes and camera errors, about 1,350 cases. Not yet modelled: sensor noise, motion blur and material variety. These are the next realism step.</p></div>
+</div></div>
+  <p class="mt-4 text-xs text-slate-500">Quotes are paraphrased from personal correspondence and attributed by paper; names are omitted on this public page.</p>
+</section>
+
 <!-- 7. Links -->
 <section class="card p-6 sm:p-8">
   <span class="tag bg-blue-50 text-blue-700">7 · Explore</span>
