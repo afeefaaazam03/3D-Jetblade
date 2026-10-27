@@ -211,7 +211,7 @@ addEventListener('resize', resize); resize();
 const clock = new THREE.Clock(); window.__started = true;
 renderer.setAnimationLoop(() => {
   const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
-  low.forEach(g => g.rotation.x += dt * 2.4); high.forEach(g => g.rotation.x += dt * 6.2); shaft.rotation.y += dt * 2.4;
+  low.forEach(g => g.rotation.x += dt * 2.4); high.forEach(g => g.rotation.x += dt * 6.2);
   burner.material.emissiveIntensity = .3 + .12 * Math.sin(t * 20);
   mats.forEach(m => { if (m.userData.goalOp !== undefined) { m.opacity += (m.userData.goalOp - m.opacity) * .08; m.color.lerp(m.userData.goalCol, .08); m.depthWrite = m.opacity > .5; } });
   for (let i = 0; i < NP; i++) {
