@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BladeDelta Lab</title>
+<style>
+:root{--bg:#0b1020;--panel:rgba(14,21,38,.9);--fg:#e6ebf5;--muted:#9aa6bd;--ac:#4f8cff;--ok:#22c55e;--bad:#ef4444;--warn:#f59e0b;--line:rgba(255,255,255,.1)}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}
+#c{position:fixed;inset:0}
+header{position:fixed;left:16px;top:12px;right:16px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;pointer-events:none}
+header>*{pointer-events:auto}h1{margin:0;font-size:20px}header p{margin:2px 0 0;color:var(--muted);font-size:13px}
+.cases{display:flex;flex-wrap:wrap;gap:6px;max-width:640px;justify-content:flex-end}
+button{background:rgba(255,255,255,.07);color:var(--fg);border:1px solid var(--line);border-radius:9px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer}
+button:hover{background:rgba(255,255,255,.14)}button[aria-pressed=true]{background:var(--ac);border-color:var(--ac)}
+#panel{position:fixed;left:16px;bottom:16px;width:min(460px,calc(100vw - 32px));background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 18px;backdrop-filter:blur(8px)}
+.steps{display:flex;gap:5px;margin-bottom:10px}.steps span{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,.12)}.steps span.on{background:var(--ac)}
+#stepTitle{margin:0;font-size:18px}#stepText{color:#cfd7e6;margin:6px 0 10px;font-size:14px}
+.nav{display:flex;gap:8px;justify-content:space-between;align-items:center}.nav small{color:var(--muted)}
+#photos{display:none;gap:8px;margin:8px 0}#photos img{width:50%;border-radius:8px;border:1px solid var(--line)}
+#diff{display:none;width:100%;border-radius:8px;border:1px solid var(--line);margin:8px 0}
+#meter{display:none;margin:10px 0}
+.bar{position:relative;height:16px;border-radius:8px;background:linear-gradient(90deg,#1f2a44,#22355e);overflow:hidden}
+.fill{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:8px;transition:width 1.2s cubic-bezier(.2,.8,.2,1)}
+.tau{position:absolute;top:-6px;bottom:-6px;width:2px;background:#fff}.tauL{position:absolute;top:-22px;font-size:11px;color:var(--muted);transform:translateX(-50%);white-space:nowrap}
+.scale{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px}
+#verdict{display:none;margin-top:10px;padding:10px 12px;border-radius:10px;font-weight:700;font-size:16px;text-align:center}
+#truth{display:none;font-size:13px;margin-top:8px}#truth div{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:3px 0}
+.hud{position:fixed;right:16px;bottom:16px;color:var(--muted);font-size:12px;text-align:right;max-width:340px}
+.tag3d{color:#fff;font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;background:rgba(10,16,32,.8);border:1px solid var(--line);pointer-events:none;white-space:nowrap}
+@media (max-width:760px){header p{display:none}.cases{max-width:60vw}#panel{max-height:52vh;overflow:auto}.hud{display:none}}
+</style>
+<script type="importmap">{"imports":{"three":"./vendor/three/three.module.js","three/addons/":"./vendor/three/addons/"}}</script>
+</head>
+<body>
+<div id="fail" style="display:none;position:fixed;inset:0;z-index:50;background:#0b1020;color:#e6ebf5;padding:24px;overflow:auto"><div style="max-width:760px;margin:6vh auto;text-align:center">
+<h2 style="margin:0 0 8px">The interactive 3D view could not start in this browser</h2><p id="failwhy" style="color:#9aa6bd"></p>
+<img src="img/vr/spin_cad6_1005_21.gif" alt="Recorded rotation of a blade: true dent and method result" style="max-width:100%;border-radius:12px">
+<p style="color:#9aa6bd;font-size:13px">Enable hardware acceleration (Chrome: Settings → System → “Use graphics acceleration when available”) and reload, or see the <a style="color:#8fb6ff" href="visual_results.html">results dashboard</a>.</p></div></div>
+<script>(function(){var ok=false;try{var c=document.createElement('canvas');ok=!!(c.getContext('webgl2')||c.getContext('webgl'));}catch(e){}
+window.__fail=function(w){document.getElementById('failwhy').textContent=w;document.getElementById('fail').style.display='block';};
+if(!ok)addEventListener('DOMContentLoaded',function(){__fail('3D graphics (WebGL) are turned off or unavailable.');});
+addEventListener('error',function(e){if(!window.__started)__fail('A script failed to load: '+(e.message||e.filename||'unknown'));},true);
+setTimeout(function(){if(!window.__started)__fail('The 3D view did not start within 15 seconds.');},15000);})();</script>
+
+<canvas id="c"></canvas>
+<header>
+  <div><h1>BladeDelta Lab</h1><p>Step through how the method decides, on real test blades and its real outputs.</p></div>
+  <div class="cases" id="cases"></div>
+</header>
+<div id="panel">
+  <div class="steps" id="steps"></div>
+  <h2 id="stepTitle"></h2>
+  <div id="stepText"></div>
+  <div id="photos"><img id="ph4" alt="input photo, view 1"><img id="ph5" alt="input photo, view 2"></div>
+  <img id="diff" alt="photo, healthy rendering and their difference">
+  <div id="meter"><div class="bar"><div class="fill" id="fill"></div><div class="tau" id="tau"><span class="tauL">threshold τ</span></div></div>
+    <div class="scale"><span>0.01</span><span>0.1</span><span>1</span><span>10</span><span>100</span></div></div>
+  <div id="verdict"></div>
+  <div id="truth"></div>
+  <div class="nav"><button id="prev">← Back</button><small id="count"></small><button id="next" style="background:var(--ac);border-color:var(--ac)">Next →</button></div>
+</div>
+<div class="hud" id="hud">Drag to rotate · scroll to zoom<br>Dents exaggerated ×20 so they are visible</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+const PICK = [
+  ['cad6_1005_21', 'Dent found (new design)'], ['test2_0083_3', 'Dent found (Rotor37)'], ['test2_0067_1', 'Stain: nothing reported'],
+  ['test2_0092_5', 'Hidden dent: abstains'], ['test2_0074_1', 'False alarm'], ['cad6_1006_67', 'Depth too shallow'], ['test2_0075_5', 'Missed dent']];
+const STEPS = [
+  ['1 · The healthy CAD model', c => `We know exactly what this blade should look like: its CAD design${c.group === 'Rotor37' ? ' (a NASA Rotor 37 compressor blade)' : ' (' + c.group.toLowerCase() + ')'}. Everything that follows is compared against it.`],
+  ['2 · Two calibrated photos', c => `Two cameras at known positions photograph the blade. Capture: ${c.capture === 'nominal' ? 'no camera or lighting change' : c.title.split(', ')[1]}. These two images are all the method sees.`],
+  ['3 · Explain without damage', c => `The renderer draws the healthy blade and adjusts camera pose, lighting, brightness and a possible stain until it matches the photos as well as possible. What remains (right image) is what damage would have to explain.`],
+  ['4 · Explain with damage', c => c.results.v11.reported ? `A parametric 3D dent is fitted where the leftover difference is strongest, by rendering, comparing and adjusting. The coloured region is the dent the method found (exaggerated ×20).` : `The method also tries adding a dent. Here the best dent does not explain the photos clearly better than the no-damage explanation, so no dent survives.`],
+  ['5 · Decide', c => `Evidence = how much better the photos are explained <i>with</i> the dent than without. It must clear a threshold τ set on healthy and stained blades (so only ~5% of undamaged blades are flagged).`],
+  ['6 · Check against the truth', c => `Left: the true damage. Right: what the method reported. ${({found: 'Correct: found in the right place.', 'correctly nothing reported': 'Correct: there was no damage, and nothing was reported.', 'correctly declined (hidden)': 'Correct: the dent is on a side the cameras cannot see, so the method did not claim it.', 'false alarm': 'Wrong: a dent was reported where there is none. One of the remaining errors.', missed: 'Missed: a real dent the evidence did not support. An honest miss.'})[c.results.v11.outcome] || ''}`]];
+
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true }); renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.outputColorSpace = THREE.SRGBColorSpace;
+const css = new CSS2DRenderer(); css.domElement.style.cssText = 'position:fixed;inset:0;pointer-events:none'; document.body.appendChild(css.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x0b1020);
+const camera = new THREE.PerspectiveCamera(35, 1, 0.5, 5000);
+const controls = new OrbitControls(camera, renderer.domElement); controls.enableDamping = true; controls.autoRotate = true; controls.autoRotateSpeed = 1.2;
+scene.add(new THREE.HemisphereLight(0xdfe8ff, 0x22283a, 0.9));
+const d1 = new THREE.DirectionalLight(0xffffff, 1.7); d1.position.set(1, 1.4, 1); scene.add(d1);
+const d2 = new THREE.DirectionalLight(0x9fb8ff, 0.6); d2.position.set(-1.2, -0.4, -1); scene.add(d2);
+const world = new THREE.Group(); scene.add(world);
+
+let CASES = {}, CAMS = {}, cur = null, step = 0, grow = 0, growTarget = 0, meshes = [], camObjs = [], tags = [];
+const stops = [[0, [0.79, 0.81, 0.84]], [0.15, [0.99, 0.91, 0.15]], [0.45, [0.98, 0.56, 0.04]], [0.75, [0.74, 0.22, 0.33]], [1, [0.34, 0.06, 0.43]]];
+const ramp = t => { t = Math.max(0, Math.min(1, t)); for (let i = 1; i < stops.length; i++) if (t <= stops[i][0]) { const [a, ca] = stops[i - 1], [b, cb] = stops[i], u = (t - a) / (b - a); return ca.map((x, k) => x + u * (cb[k] - x)); } return stops[4][1]; };
+const MESH = {};
+async function load(c) {
+  if (c.data) return;
+  if (!MESH[c.mesh]) { const buf = await (await fetch('demo3d/mesh_' + c.mesh + '.bin')).arrayBuffer();
+    MESH[c.mesh] = { pos: new Float32Array(buf, 0, c.nv * 3), tri: new Uint32Array(buf, c.nv * 12, c.nf * 3), nrm: new Float32Array(buf, c.nv * 12 + c.nf * 12, c.nv * 3) }; }
+  const fb = await (await fetch('demo3d/case_' + c.id + '.bin')).arrayBuffer(), M = MESH[c.mesh];
+  if (!M.radius) { let r = 0; for (let i = 0; i < M.pos.length; i += 3) r = Math.max(r, Math.hypot(M.pos[i], M.pos[i + 1], M.pos[i + 2])); M.radius = r; }
+  c.data = { ...M, truth: new Float32Array(fb, 0, c.nv), pred: new Float32Array(fb, c.nv * 4, c.nv) };
+}
+function blade(c, field, scale, dx) {
+  const D = c.data, n = c.nv, g = new THREE.BufferGeometry(), p = new Float32Array(n * 3), col = new Float32Array(n * 3), vmax = Math.max(0.05, c.true_depth_mm), ex = 20 * c.span_mm / 74;
+  for (let i = 0; i < n; i++) { const s = field ? field[i] * scale : 0;
+    for (let k = 0; k < 3; k++) p[3 * i + k] = D.pos[3 * i + k] + D.nrm[3 * i + k] * s * ex + (k === 0 ? dx : 0);
+    col.set(field && scale > 0 ? ramp(Math.abs(s) / vmax) : [0.79, 0.81, 0.84], 3 * i); }
+  g.setAttribute('position', new THREE.BufferAttribute(p, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3)); g.setIndex(new THREE.BufferAttribute(D.tri, 1)); g.computeVertexNormals();
+  return new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, metalness: .45, roughness: .38, side: THREE.DoubleSide }));
+}
+function clear() { meshes.forEach(m => { world.remove(m); m.geometry.dispose(); }); meshes = []; tags.forEach(t => world.remove(t)); tags = []; }
+function tag(text, x, y, z) { const d = document.createElement('div'); d.className = 'tag3d'; d.textContent = text; const o = new CSS2DObject(d); o.position.set(x, y, z); world.add(o); tags.push(o); }
+function cameras(show) {
+  camObjs.forEach(o => world.remove(o)); camObjs = []; if (!show) return;
+  const P = CAMS[cur.mesh]; if (!P) return;
+  Object.entries(P).forEach(([vid, xyz], i) => {
+    const pos = new THREE.Vector3(...xyz), len = pos.length(), dir = pos.clone().multiplyScalar(-1).normalize();
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(len * .06, len * .12, 4, 1, true), new THREE.MeshBasicMaterial({ color: 0x4f8cff, wireframe: true }));
+    cone.position.copy(pos.clone().add(dir.clone().multiplyScalar(len * .06))); cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().multiplyScalar(-1));
+    const body = new THREE.Mesh(new THREE.BoxGeometry(len * .07, len * .05, len * .05), new THREE.MeshStandardMaterial({ color: 0x2b3a5c, metalness: .3, roughness: .5 })); body.position.copy(pos); body.lookAt(0, 0, 0);
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([pos, new THREE.Vector3()]), new THREE.LineDashedMaterial({ color: 0x4f8cff, dashSize: len * .03, gapSize: len * .02, transparent: true, opacity: .6 })); line.computeLineDistances();
+    const d = document.createElement('div'); d.className = 'tag3d'; d.textContent = 'camera ' + (i + 1); const t = new CSS2DObject(d); t.position.copy(pos).add(new THREE.Vector3(0, 0, len * .07));
+    [cone, body, line, t].forEach(o => { world.add(o); camObjs.push(o); });
+  });
+}
+function frameView(far) {
+  const R = (cur.data && cur.data.radius) || cur.span_mm, camR = Math.max(...Object.values(CAMS[cur.mesh] || {a: [0, 0, 0]}).map(p => Math.hypot(...p)));
+  const r = far ? camR * 1.45 : R * (step === 5 ? 4.6 : 3.4); const d = new THREE.Vector3(.3, -1, .32).normalize().multiplyScalar(r);
+  const P = Object.values(CAMS[cur.mesh] || {}); const mid = new THREE.Vector3(); P.forEach(q => mid.add(new THREE.Vector3(...q).multiplyScalar(.5 / P.length)));
+  if (far) { d.set(-1, -.25, .9).normalize().multiplyScalar(camR * 2.1); camera.position.copy(d.add(mid)); camera.up.set(0, 0, 1); controls.target.copy(mid); controls.update(); return; }
+  camera.position.copy(d); camera.up.set(0, 0, 1); controls.target.set(0, 0, 0); controls.update(); }
+
+async function render() {
+  const c = cur; await load(c); clear(); const R = c.results.v11;
+  const showCams = step === 1, sbs = step === 5;
+  cameras(showCams);
+  if (sbs) { meshes.push(blade(c, c.data.truth, 1, -0.55 * c.span_mm), blade(c, c.data.pred, 1, 0.55 * c.span_mm)); tag('true damage', -0.55 * c.span_mm, 0, c.span_mm * .62); tag('method result', 0.55 * c.span_mm, 0, c.span_mm * .62); }
+  else meshes.push(blade(c, step >= 3 ? c.data.pred : null, step >= 3 ? grow : 0, 0));
+  meshes.forEach(m => world.add(m));
+  document.getElementById('steps').innerHTML = STEPS.map((_, i) => `<span class="${i <= step ? 'on' : ''}"></span>`).join('');
+  document.getElementById('stepTitle').textContent = STEPS[step][0];
+  document.getElementById('stepText').innerHTML = STEPS[step][1](c);
+  document.getElementById('count').textContent = `${step + 1} / ${STEPS.length}`;
+  document.getElementById('photos').style.display = step === 1 ? 'flex' : 'none';
+  document.getElementById('ph4').src = 'demo3d/' + c.id + '_v004.png'; document.getElementById('ph5').src = 'demo3d/' + c.id + '_v005.png';
+  const diff = document.getElementById('diff'); diff.style.display = step === 2 ? 'block' : 'none'; diff.src = 'demo3d/' + c.id + '_panel.jpg';
+  const meter = document.getElementById('meter'), fill = document.getElementById('fill'), v = document.getElementById('verdict');
+  meter.style.display = step === 4 ? 'block' : 'none'; v.style.display = step === 4 ? 'block' : 'none';
+  const lg = x => Math.max(0, Math.min(100, (Math.log10(Math.max(x, 0.01)) + 2) / 4 * 100));
+  document.getElementById('tau').style.left = lg(R.threshold) + '%';
+  fill.style.width = '0%'; fill.style.background = R.reported ? 'var(--ok)' : 'var(--warn)';
+  if (step === 4) requestAnimationFrame(() => requestAnimationFrame(() => fill.style.width = lg(R.evidence) + '%'));
+  v.style.background = R.reported ? 'rgba(34,197,94,.15)' : 'rgba(245,158,11,.15)'; v.style.border = '1px solid ' + (R.reported ? 'var(--ok)' : 'var(--warn)');
+  v.innerHTML = R.reported ? `REPORT: dent ${R.depth_mm.toFixed(2)} mm deep<div style="font-weight:400;font-size:13px;color:#cfd7e6">evidence ${R.evidence.toFixed(2)} &gt; τ ${R.threshold.toFixed(2)}</div>`
+    : `ABSTAIN: “not enough evidence”<div style="font-weight:400;font-size:13px;color:#cfd7e6">evidence ${R.evidence.toFixed(2)} ≤ τ ${R.threshold.toFixed(2)}</div>`;
+  const tr = document.getElementById('truth'); tr.style.display = step === 5 ? 'block' : 'none';
+  const row = (a, b) => `<div><span>${a}</span><b>${b}</b></div>`;
+  tr.innerHTML = row('True damage', c.true_depth_mm > 0 ? c.true_depth_mm.toFixed(2) + ' mm deep' : 'none') + row('Method', R.reported ? 'dent ' + R.depth_mm.toFixed(2) + ' mm' : 'nothing reported')
+    + (R.centre_err_mm != null ? row('Location error', R.centre_err_mm.toFixed(1) + ' mm') : '') + row('Outcome', R.outcome);
+  document.getElementById('prev').disabled = step === 0; document.getElementById('next').textContent = step === STEPS.length - 1 ? 'Start again ↺' : 'Next →';
+}
+function go(s) { const before = step; step = (s + STEPS.length) % STEPS.length; if (step === 3) { grow = 0; growTarget = 1; } else grow = step > 3 ? 1 : 0;
+  render().then(() => frameView(step === 1)); }
+document.getElementById('next').onclick = () => go(step + 1);
+document.getElementById('prev').onclick = () => go(step - 1);
+addEventListener('keydown', e => { if (e.key === 'ArrowRight') go(step + 1); if (e.key === 'ArrowLeft') go(step - 1); });
+
+function resize() { renderer.setSize(innerWidth, innerHeight, false); css.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight;
+  if (innerWidth > 900) camera.setViewOffset(innerWidth, innerHeight, -Math.min(260, innerWidth * .18), 0, innerWidth, innerHeight); else camera.clearViewOffset();
+  camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+
+const [cl, cm] = await Promise.all([fetch('demo3d/cases.json').then(r => r.json()), fetch('demo3d/cams.json').then(r => r.json())]);
+cl.forEach(c => CASES[c.id] = c); CAMS = cm;
+const box = document.getElementById('cases');
+PICK.filter(([id]) => CASES[id]).forEach(([id, name]) => { const b = document.createElement('button'); b.textContent = name; b.dataset.id = id;
+  b.onclick = () => { cur = CASES[id]; box.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); go(0); }; box.appendChild(b); });
+const q = new URLSearchParams(location.search);
+cur = CASES[q.get('case')] || CASES[PICK[0][0]]; box.querySelector(`[data-id="${cur.id}"]`)?.setAttribute('aria-pressed', 'true');
+step = Math.max(0, Math.min(5, parseInt(q.get('step') || '0'))); go(step);
+window.__started = true;
+let last = 0;
+renderer.setAnimationLoop(t => {
+  if (step === 3 && grow < growTarget && t - last > 40) { last = t; grow = Math.min(1, grow + 0.06); clear(); meshes.push(blade(cur, cur.data.pred, grow, 0)); meshes.forEach(m => world.add(m)); }
+  controls.update(); renderer.render(scene, camera); css.render(scene, camera);
+});
+controls.addEventListener('start', () => controls.autoRotate = false);
+</script>
+</body>
+</html>
