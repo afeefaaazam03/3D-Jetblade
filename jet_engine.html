@@ -24,6 +24,12 @@ button:hover{background:rgba(255,255,255,.14)}button[aria-pressed=true]{backgrou
 .lbl{color:#fff;font-size:12px;font-weight:600;padding:2px 7px;border-radius:6px;background:rgba(10,16,32,.75);border:1px solid var(--line);white-space:nowrap;pointer-events:none}
 .hint{position:fixed;right:16px;bottom:16px;color:var(--muted);font-size:12px;text-align:right;max-width:320px}
 @media (max-width:760px){.ctrl{width:220px}.brand p{display:none}#info{max-height:45vh;overflow:auto}.hint{display:none}}
+#cycle{position:fixed;right:16px;bottom:52px;width:300px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;backdrop-filter:blur(8px);font-size:13px}
+#cycle h3{margin:0 0 2px;font-size:15px}#cycle .mach{color:var(--muted);font-size:12px}#cycle svg{width:100%;height:auto;margin-top:6px}
+#steps{display:none;margin-top:8px}#steps .nav{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+.src{color:var(--muted);font-size:11px;margin-top:6px}.src a{color:#8fb6ff}
+@media (max-width:760px){#cycle{display:none}}
+@media (max-height:860px){#cycle svg{max-height:110px}}
 </style>
 <script type="importmap">{"imports":{"three":"./vendor/three/three.module.js","three/addons/":"./vendor/three/addons/"}}</script>
 </head>
@@ -50,9 +56,16 @@ setTimeout(function(){if(!window.__started)__fail('The 3D view did not start wit
       <button id="cut" aria-pressed="true">Cutaway</button><button id="air" aria-pressed="true">Airflow</button>
       <button id="lab" aria-pressed="true">Labels</button><button id="tour">Guided tour</button><button id="reset">Reset view</button>
     </div>
+    <label><span>Engine type</span><span></span></label>
+    <div class="row" id="types" style="margin-top:4px"></div>
+    <div class="row"><button id="how" style="background:#7c3aed;border-color:#7c3aed;width:100%">How it works: suck · squeeze · bang · blow</button></div>
   </div>
 </div>
 <div id="info"></div>
+<div id="cycle"><h3 id="tname"></h3><div class="mach" id="tmach"></div><div id="tdesc" style="margin-top:4px"></div>
+  <svg id="chart" viewBox="0 0 300 150" role="img" aria-label="Pressure and temperature along the engine"></svg>
+  <div id="steps"><b id="sTitle"></b><div id="sText" style="margin-top:3px"></div><div class="nav"><button id="sPrev">←</button><span id="sCount" style="color:var(--muted)"></span><button id="sNext">→</button></div></div>
+  <div class="src">Facts from <a href="https://aerospaceanswers.com/what-is-a-jet-engine/" target="_blank" rel="noopener">AerospaceAnswers</a> and <a href="https://www.howengineswork.com/engines/jet" target="_blank" rel="noopener">HowEnginesWork</a>; chart: illustrative turbofan values.</div></div>
 <div class="hint">Drag to rotate · scroll to zoom · right-drag to pan<br>Simplified, not to scale.</div>
 
 <script type="module">
@@ -79,28 +92,28 @@ const metal = (c, r = .35, m = .85) => new THREE.MeshStandardMaterial({ color: c
 // ---------- part catalogue ----------
 const PARTS = {
   fan:      { name: 'Fan', color: '#7fb3ff', x: -2.9, desc: 'The large front fan. About 85–90% of the air bypasses the core and produces most of the thrust.',
-              temp: '≈ ambient', speed: 'low-pressure spool, ~3,000–5,000 rpm', damage: 'Nicks and dents from foreign objects (birds, stones, ice), leading-edge erosion.',
+              temp: '≈ ambient', speed: 'low-pressure spool, ~3,000–5,000 rpm', damage: 'Foreign-object damage (birds, stones, ice): nicks and dents; leading-edge erosion; ice accretion.',
               bd: 'Fan blades are large and visible from the inlet, so a CAD model and a few photos can show dents and nicks; BladeDelta would report them in 3D or say the photos are not enough.' },
   lpc:      { name: 'Booster (low-pressure compressor)', color: '#8fd0c4', x: -1.75, desc: 'A few stages on the same shaft as the fan that start compressing the core air.',
               temp: '≈ 50–150 °C', speed: 'low-pressure spool', damage: 'Erosion, small dents from ingested particles.',
               bd: 'Inspected through borescope ports; small dents here are exactly the scale BladeDelta targets (0.1–1 mm).' },
-  hpc:      { name: 'High-pressure compressor', color: '#a3e08f', x: -0.45, desc: 'Many short stages that squeeze the air to 30–50× atmospheric pressure before combustion.',
+  hpc:      { name: 'High-pressure compressor', color: '#a3e08f', x: -0.45, desc: 'Many short axial stages that raise pressure and temperature before combustion; axial compressors reach pressure ratios of about 10:1 to 40:1. Must avoid stall and surge.',
               temp: '≈ 150–650 °C', speed: 'high-pressure spool, ~10,000–15,000 rpm', damage: 'Erosion, tip rubs, dents and nicks from upstream debris.',
               bd: 'Our public test blades (NASA Rotor 37) are compressor blades like these. On them BladeDelta finds 51% of visible dents at 5% false alarms (12 of 13 dents deeper than 0.2 mm).' },
-  comb:     { name: 'Combustor', color: '#ffb066', x: 0.95, desc: 'Fuel is sprayed into the compressed air and burned continuously.',
+  comb:     { name: 'Combustor', color: '#ffb066', x: 0.95, desc: 'Fuel is burned continuously at roughly constant pressure. About 25% of the air enters the primary zone; the rest cools the liner and dilutes the hot gas. Types: can, annular, can-annular.',
               temp: '≈ 1,500–2,000 °C flame', speed: 'static', damage: 'Liner cracking and burn-through, thermal distortion.',
               bd: 'Not a blade row; shown for context. Coatings and liners are inspected separately.' },
   hpt:      { name: 'High-pressure turbine', color: '#ff7a59', x: 1.85, desc: 'Extracts energy from the hottest gas to drive the high-pressure compressor.',
-              temp: '≈ 1,100–1,600 °C gas', speed: 'high-pressure spool', damage: 'Thermal cracks, coating loss, oxidation, tip burning.',
+              temp: '≈ 1,000–1,700 °C turbine inlet (modern engines)', speed: 'high-pressure spool', damage: 'Thermal fatigue cracks, creep, oxidation, coating loss.',
               bd: 'Cracks often appear as thin dark lines. BladeDelta’s crack specialist recognised all 22 located hairline cracks in our rendered tests.' },
   lpt:      { name: 'Low-pressure turbine', color: '#ffa06b', x: 2.95, desc: 'Several stages that drive the fan and booster through the inner shaft.',
               temp: '≈ 600–900 °C gas', speed: 'low-pressure spool', damage: 'Cracks, erosion, nicks from upstream debris.',
               bd: 'Sharp nicks on blade edges: BladeDelta located 66% of realistic nicks on unseen blade designs and typed 9 of 15 correctly.' },
-  nozzle:   { name: 'Exhaust nozzle', color: '#b0b8c8', x: 4.1, desc: 'Accelerates the hot core gas out of the engine for the remaining thrust.',
+  nozzle:   { name: 'Exhaust nozzle', color: '#b0b8c8', x: 4.1, desc: 'Accelerates the remaining hot gas for thrust. Convergent nozzles for subsonic flight, convergent-divergent (de Laval) for supersonic, variable-area on some engines; military engines may add an afterburner.',
               temp: '≈ 500–700 °C', speed: 'static', damage: 'Thermal cracking, distortion.', bd: 'Not a blade row; shown for context.' },
   shaft:    { name: 'Spools (shafts)', color: '#d7dbe5', x: 0.6, desc: 'Two concentric shafts: the inner low-pressure spool (fan, booster, LP turbine) and the outer high-pressure spool (HP compressor, HP turbine).',
               temp: '—', speed: 'low ≈ 4,000 rpm, high ≈ 12,000 rpm', damage: 'Bearing wear, imbalance.', bd: 'Not a blade row; shown for context.' },
-  casing:   { name: 'Nacelle and casing', color: '#9aa6bd', x: 0.4, desc: 'The outer cowling and the core casing; the bypass duct is the gap between them.',
+  casing:   { name: 'Nacelle and casing', color: '#9aa6bd', x: 0.4, desc: 'The inlet lip captures and smooths the incoming air (pressure recovery, stable flow so the compressor does not surge). The bypass duct is the gap between the nacelle and the core casing.',
               temp: '—', speed: 'static', damage: 'Impact damage, acoustic-liner damage.', bd: 'Not a blade row; shown for context.' },
 };
 
@@ -155,6 +168,50 @@ const lip = new THREE.Mesh(new THREE.TorusGeometry(1.75, 0.07, 16, 72), glass(0x
 const core = new THREE.Mesh(new THREE.CylinderGeometry(0.98, 0.98, 5.4, 64, 1, true), glass(0x94a3b8, .45)); core.rotation.z = Math.PI / 2; core.position.x = 0.85;
 groups.casing.add(nacelle, lip, core); [nacelle, lip, core].forEach(o => { o.userData.key = 'casing'; pickables.push(o); });
 
+// ---------- other engine types ----------
+const extra = {};
+{ // turboprop: propeller + gearbox
+  const g = new THREE.Group(); const hub = new THREE.Mesh(new THREE.SphereGeometry(0.28, 24, 16), metal(0xd7dbe5, .3, .9)); hub.scale.set(1.4, 1, 1); g.add(hub);
+  for (let i = 0; i < 4; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.22, 2.3, 0.05), metal(0x2f3640, .5, .4)); b.geometry.translate(0, 1.25, 0); b.rotation.x = i * Math.PI / 2; b.rotateY(0.45); g.add(b); }
+  const gb = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.55, 0.7, 32), metal(0x7b8494, .4, .8)); gb.rotation.z = Math.PI / 2; gb.position.x = 0.55; g.add(gb);
+  g.position.x = -3.75; engine.add(g); extra.prop = g; g.userData.spin = true;
+}
+{ // turboshaft: output shaft + gearbox
+  const g = new THREE.Group(); const s1 = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 2.2, 20), metal(0xe5e7eb, .2, .95)); s1.rotation.z = Math.PI / 2; s1.position.x = -1.1; g.add(s1);
+  const gb = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.9, 0.9), metal(0x7b8494, .4, .8)); gb.position.x = -2.3; g.add(gb);
+  const d = document.createElement('div'); d.className = 'lbl'; d.textContent = 'Output shaft (to rotor)'; const o = new CSS2DObject(d); o.position.set(-2.3, 0.75, 0); g.add(o);
+  g.position.x = -2.0; engine.add(g); extra.shaftOut = g;
+}
+{ // ramjet: inlet spike + duct + flame holder
+  const g = new THREE.Group();
+  const spike = new THREE.Mesh(new THREE.ConeGeometry(0.45, 1.6, 40), metal(0xd7dbe5, .25, .9)); spike.rotation.z = Math.PI / 2; spike.position.x = -3.3; g.add(spike);
+  const duct = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 0.95, 6.0, 64, 1, true), glass(0x94a3b8, .5)); duct.rotation.z = Math.PI / 2; duct.position.x = 0.3; g.add(duct);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.05, 12, 40), metal(0x9ca3af, .4, .8)); ring.rotation.y = Math.PI / 2; ring.position.x = 0.3; g.add(ring);
+  const d = document.createElement('div'); d.className = 'lbl'; d.textContent = 'Inlet spike: shock waves compress the air'; const o = new CSS2DObject(d); o.position.set(-3.3, 0.9, 0); g.add(o);
+  engine.add(g); extra.ram = g;
+}
+const TYPES = {
+  turbofan:  { name: 'Turbofan', mach: 'Mach 0–1 · airliners', desc: 'A big fan does most of the work: most air bypasses the core. Quiet and fuel-efficient for subsonic flight.', hide: [], show: [], bypass: 1 },
+  turbojet:  { name: 'Turbojet', mach: 'Mach 0–3 · early jets, supersonic', desc: 'The original jet: all thrust from one hot, fast core stream. No bypass fan.', hide: ['fan', 'nacelle'], show: [], bypass: 0 },
+  turboprop: { name: 'Turboprop', mach: 'Mach 0.1–0.7 · regional aircraft', desc: 'A gas turbine drives a propeller through a gearbox: bypass ratio taken to the limit. Efficient at lower speeds.', hide: ['fan', 'nacelle'], show: ['prop'], bypass: 2 },
+  turboshaft:{ name: 'Turboshaft', mach: 'Mach 0–0.4 · helicopters', desc: 'All output as shaft power: the turbine drives an output shaft (e.g. a helicopter rotor), not thrust.', hide: ['fan', 'nacelle'], show: ['shaftOut'], bypass: 0 },
+  ramjet:    { name: 'Ramjet', mach: 'Mach 1–5 (scramjet: Mach 4–12)', desc: 'No rotating parts: the vehicle’s speed compresses the air (ram compression), so it only works once already fast.', hide: ['fan', 'lpc', 'hpc', 'hpt', 'lpt', 'shaft', 'nacelle', 'core'], show: ['ram'], bypass: 0 },
+};
+let etype = 'turbofan';
+function syncLabels() {
+  const L = []; scene.traverse(o => { if (o.isCSS2DObject) L.push(o); });
+  L.forEach(o => { let v = labelsOn, q = o.parent; while (q) { if (q.visible === false) { v = false; break; } q = q.parent; } o.visible = v; });
+}
+let labelsOn = true;
+function setType(t) {
+  etype = t; const T = TYPES[t];
+  ['fan', 'lpc', 'hpc', 'hpt', 'lpt', 'shaft'].forEach(k => groups[k].visible = !T.hide.includes(k));
+  nacelle.visible = lip.visible = !T.hide.includes('nacelle'); core.visible = !T.hide.includes('core');
+  Object.entries(extra).forEach(([k, g]) => g.visible = T.show.includes(k));
+  document.querySelectorAll('#types button').forEach(b => b.setAttribute('aria-pressed', b.dataset.t === t));
+  $('tname').textContent = T.name; $('tmach').textContent = T.mach; $('tdesc').textContent = T.desc; drawChart(-1); syncLabels();
+}
+
 // labels
 const labels = [];
 for (const k in PARTS) {
@@ -186,10 +243,10 @@ function show(k) {
 }
 show(null);
 let selected = null;
-function highlight(k) {
-  selected = k;
-  engine.traverse(o => { if (o.material && o.material.emissive && o !== comb) { o.material.emissive.setHex(o.userData.key === k ? 0x1e3a8a : 0x000000); } });
-  show(k);
+function highlight(k, many) {
+  selected = k; const set = many || [k];
+  engine.traverse(o => { if (o.material && o.material.emissive && o !== comb) { o.material.emissive.setHex(set.includes(o.userData.key) ? 0x1e3a8a : 0x000000); } });
+  if (!many) show(k);
 }
 const ray = new THREE.Raycaster(), mouse = new THREE.Vector2(); let down = null;
 renderer.domElement.addEventListener('pointerdown', e => down = [e.clientX, e.clientY]);
@@ -207,7 +264,7 @@ $('ex').oninput = e => { explode = e.target.value / 100; $('exv').textContent = 
 const toggle = (id, fn) => $(id).onclick = e => { const on = e.target.getAttribute('aria-pressed') !== 'true'; e.target.setAttribute('aria-pressed', on); fn(on); };
 toggle('cut', on => { cutOn = on; cutPlane.constant = on ? 0 : 10; });
 toggle('air', on => { airOn = on; particles.visible = on; });
-toggle('lab', on => labels.forEach(l => l.visible = on));
+toggle('lab', on => { labelsOn = on; syncLabels(); });
 $('reset').onclick = () => { camera.position.set(-7.4, 3.4, 8.6); controls.target.set(0.6, 0, 0); touring = false; };
 const OFFS = { fan: -1.6, lpc: -1.0, hpc: -0.4, comb: 0.2, hpt: 0.8, lpt: 1.4, nozzle: 2.0, shaft: 0, casing: 0 };
 
@@ -216,12 +273,50 @@ const TOUR = ['fan', 'lpc', 'hpc', 'comb', 'hpt', 'lpt', 'nozzle']; let touring 
 $('tour').onclick = () => { touring = true; tourI = 0; tourT = 0; highlight(TOUR[0]); };
 const camGoal = new THREE.Vector3(), tgtGoal = new THREE.Vector3();
 
+// ---------- pressure / temperature chart and the four-step cycle ----------
+const ST = [[-3.5, 1, 15], [-2.6, 1.5, 50], [-1.4, 3, 130], [0.6, 40, 620], [1.5, 38, 1600], [2.2, 10, 1050], [3.5, 1.6, 620], [4.7, 1, 520]];
+const STEPS = [
+  { t: '1 · Intake ("suck")', x: [-3.6, -2.4], parts: ['fan', 'casing'], txt: 'The inlet captures and smooths the air; in a turbofan the fan accelerates a large mass of air, most of which bypasses the core.' },
+  { t: '2 · Compression ("squeeze")', x: [-2.4, 0.6], parts: ['lpc', 'hpc'], txt: 'Rotating compressor stages raise the pressure (about 10:1 to 40:1 overall) and the temperature of the core air.' },
+  { t: '3 · Combustion ("bang")', x: [0.6, 1.5], parts: ['comb'], txt: 'Fuel burns continuously at roughly constant pressure; the temperature jumps to well over 1,000 °C.' },
+  { t: '4 · Exhaust ("blow")', x: [1.5, 4.7], parts: ['hpt', 'lpt', 'nozzle'], txt: 'Turbines take energy from the hot gas to drive the compressors and fan; the nozzle accelerates the rest backwards. Pushing gas back pushes the engine forward: Newton’s third law.' }];
+const XS = x => 20 + (x + 3.6) / 8.4 * 265, PY = pr => 120 - Math.log(pr) / Math.log(45) * 100, TY = tc => 120 - tc / 1700 * 100;
+function drawChart(si) {
+  const P = ST.map(s => `${XS(s[0]).toFixed(1)},${PY(s[1]).toFixed(1)}`).join(' '), T = ST.map(s => `${XS(s[0]).toFixed(1)},${TY(s[2]).toFixed(1)}`).join(' ');
+  const sh = si >= 0 ? `<rect x="${XS(STEPS[si].x[0])}" y="15" width="${XS(STEPS[si].x[1]) - XS(STEPS[si].x[0])}" height="107" fill="rgba(124,58,237,.22)"/>` : '';
+  const lab = ['inlet', 'compressor', 'burner', 'turbine', 'nozzle'], lx = [-3.2, -1.2, 1.05, 2.8, 4.3];
+  $('chart').innerHTML = `${sh}<line x1="20" y1="120" x2="285" y2="120" stroke="#3b4660"/>
+    <polyline points="${P}" fill="none" stroke="#4f8cff" stroke-width="2.5"/><polyline points="${T}" fill="none" stroke="#ff7a3d" stroke-width="2.5"/>
+    ${lab.map((l, i) => `<text x="${XS(lx[i])}" y="135" fill="#9aa6bd" font-size="9" text-anchor="middle">${l}</text>`).join('')}
+    <text x="22" y="12" fill="#4f8cff" font-size="10">pressure (up to ~40×)</text><text x="180" y="12" fill="#ff7a3d" font-size="10">temperature (°C)</text>
+    <text x="285" y="147" fill="#9aa6bd" font-size="8" text-anchor="end">front → back</text>`;
+}
+let si = -1;
+const thrustArrow = new THREE.ArrowHelper(new THREE.Vector3(-1, 0, 0), new THREE.Vector3(-3.6, 2.4, 0), 1.6, 0x22c55e, 0.4, 0.25);
+const exhaustArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(4.8, 0, 0), 1.6, 0xff7a3d, 0.4, 0.25);
+{ const d = document.createElement('div'); d.className = 'lbl'; d.textContent = 'Thrust (reaction)'; const o = new CSS2DObject(d); o.position.set(-4.6, 2.75, 0); thrustArrow.add(o);
+  const e = document.createElement('div'); e.className = 'lbl'; e.textContent = 'Exhaust pushed back'; const q = new CSS2DObject(e); q.position.set(0.8, 0.35, 0); exhaustArrow.add(q); }
+thrustArrow.visible = exhaustArrow.visible = false; scene.add(thrustArrow, exhaustArrow); 
+function step(i) {
+  si = (i + STEPS.length) % STEPS.length; const S = STEPS[si];
+  $('steps').style.display = 'block'; $('sTitle').textContent = S.t; $('sText').textContent = S.txt; $('sCount').textContent = `${si + 1} / 4`;
+  highlight(null, S.parts.filter(k => groups[k].visible)); drawChart(si); thrustArrow.visible = exhaustArrow.visible = si === 3; syncLabels();
+  const xm = (S.x[0] + S.x[1]) / 2; camGoalStep.set(xm - 3.8, 2.3, 6.2); tgtGoalStep.set(xm, 0, 0); stepMove = true; touring = false;
+}
+const camGoalStep = new THREE.Vector3(), tgtGoalStep = new THREE.Vector3(); let stepMove = false;
+$('how').onclick = () => step(0); $('sNext').onclick = () => step(si + 1); $('sPrev').onclick = () => step(si - 1);
+Object.entries(TYPES).forEach(([k, T]) => { const b = document.createElement('button'); b.textContent = T.name; b.dataset.t = k; b.onclick = () => setType(k); $('types').appendChild(b); });
+setType('turbofan');
+controls.addEventListener('start', () => stepMove = false);
+
 function resize() { renderer.setSize(innerWidth, innerHeight, false); labelR.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
 addEventListener('resize', resize); resize();
 
 const Q = new URLSearchParams(location.search);
 if (Q.get('az')) { const a = parseFloat(Q.get('az')) * Math.PI / 180, dx = camera.position.x - 0.6, dz = camera.position.z;
   camera.position.x = 0.6 + dx * Math.cos(a) - dz * Math.sin(a); camera.position.z = dx * Math.sin(a) + dz * Math.cos(a); controls.enableDamping = false; controls.update(); }
+if (Q.get('type') && TYPES[Q.get('type')]) setType(Q.get('type'));
+if (Q.get('step')) { step(parseInt(Q.get('step')) - 1); camera.position.copy(camGoalStep); controls.target.copy(tgtGoalStep); }
 if (Q.get('ui') === '0') document.querySelectorAll('.top,#info,.hint').forEach(e => e.style.display = 'none');
 const clock = new THREE.Clock();
 window.__started = true;
@@ -229,14 +324,18 @@ renderer.setAnimationLoop(() => {
   const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
   const wl = (0.6 + 5 * throttle) * dt, wh = wl * 2.6;
   lowSpool.forEach(r => r.rotation.x += wl); highSpool.forEach(r => r.rotation.x += wh); sLow.rotation.y += wl; sHigh.rotation.y += wh;
+  extra.prop.rotation.x += wl * 1.4; extra.shaftOut.children[0].rotation.y += wl * 1.4;
   comb.material.emissiveIntensity = 0.25 + 0.9 * throttle + 0.15 * Math.sin(t * 23) * throttle; flameLight.intensity = 0.6 + 3 * throttle;
   for (const k in groups) groups[k].position.x = (OFFS[k] || 0) * explode;
   if (airOn) {
     for (let i = 0; i < NP; i++) {
-      const p = pData[i]; p.x += p.v * (0.4 + 3.5 * throttle) * dt * (p.bypass ? 1 : (p.x > 0.6 ? 1.8 : 1));
+      const p = pData[i], BY = TYPES[etype].bypass;
+      if (p.bypass && !BY) { pp[i * 3 + 1] = 9999; continue; }
+      p.x += p.v * (0.4 + 3.5 * throttle) * dt * (p.bypass ? 1 : (p.x > 0.6 ? 1.8 : 1));
       if (p.x > (p.bypass ? 1.0 : 5.6)) p.x = -4.5;
       let r = p.r; if (!p.bypass) { if (p.x > -2.2 && p.x < 0.7) r = p.r * (1 - 0.25 * (p.x + 2.2) / 2.9); if (p.x > 3.6) r = p.r * 0.85; }
       if (p.bypass && p.x > -0.2) r = p.r + (p.x + 0.2) * 0.12;
+      if (p.bypass && BY === 2) r *= 1.35;
       const a = p.a + (p.x > -3 && p.x < 3.6 && !p.bypass ? p.x * 0.6 : 0);
       pp[i * 3] = p.x; pp[i * 3 + 1] = Math.cos(a) * r; pp[i * 3 + 2] = Math.sin(a) * r;
       if (p.bypass) tmp.copy(cCold); else if (p.x < 0.6) tmp.copy(cCold).lerp(cMid, Math.max(0, (p.x + 2.2) / 2.8)); else tmp.copy(cHot).lerp(cMid, Math.min(1, Math.max(0, (p.x - 2) / 3.5)));
@@ -244,6 +343,7 @@ renderer.setAnimationLoop(() => {
     }
     pg.attributes.position.needsUpdate = true; pg.attributes.color.needsUpdate = true;
   }
+  if (stepMove) { camera.position.lerp(camGoalStep, 0.05); controls.target.lerp(tgtGoalStep, 0.07); if (camera.position.distanceTo(camGoalStep) < 0.02) stepMove = false; }
   if (touring) {
     tourT += dt; const k = TOUR[tourI], x = PARTS[k].x + (OFFS[k] || 0) * explode;
     camGoal.set(x - 2.2, 1.4, 3.2); tgtGoal.set(x, 0, 0);
