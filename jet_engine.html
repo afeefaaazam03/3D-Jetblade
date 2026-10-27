@@ -25,9 +25,21 @@ button:hover{background:rgba(255,255,255,.14)}button[aria-pressed=true]{backgrou
 .hint{position:fixed;right:16px;bottom:16px;color:var(--muted);font-size:12px;text-align:right;max-width:320px}
 @media (max-width:760px){.ctrl{width:220px}.brand p{display:none}#info{max-height:45vh;overflow:auto}.hint{display:none}}
 </style>
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="importmap">{"imports":{"three":"./vendor/three/three.module.js","three/addons/":"./vendor/three/addons/"}}</script>
 </head>
 <body>
+<div id="fail" style="display:none;position:fixed;inset:0;z-index:50;background:#0b1020;color:#e6ebf5;font:15px/1.5 system-ui,sans-serif;padding:24px;overflow:auto"><div style="max-width:760px;margin:6vh auto;text-align:center">
+<h2 style="margin:0 0 8px">The interactive 3D view could not start in this browser</h2>
+<p id="failwhy" style="color:#9aa6bd;margin:0 0 14px"></p>
+<img id="failgif" alt="Recorded rotation" style="max-width:100%;border-radius:12px;border:1px solid rgba(255,255,255,.12)">
+<p style="color:#9aa6bd;font-size:13px">Above: a recording of the same view. To use the interactive version, enable hardware acceleration (Chrome: Settings → System → “Use graphics acceleration when available”) and reload, or try another browser.</p></div></div>
+<script>
+(function(){var ok=false;try{var c=document.createElement('canvas');ok=!!(c.getContext('webgl2')||c.getContext('webgl'));}catch(e){}
+window.__fail=function(why){var f=document.getElementById('fail');if(!f)return;document.getElementById('failwhy').textContent=why;document.getElementById('failgif').src='img/jet_spin.gif';f.style.display='block';};
+if(!ok)addEventListener('DOMContentLoaded',function(){__fail('3D graphics (WebGL) are turned off or unavailable.');});
+addEventListener('error',function(e){if(!window.__started)__fail('A script failed to load: '+(e.message||e.filename||'unknown error'));},true);
+setTimeout(function(){if(!window.__started)__fail('The 3D view did not start within 12 seconds.');},12000);})();
+</script>
 <canvas id="c"></canvas>
 <div class="top">
   <div class="brand"><h1>Inside a Jet Engine</h1><p>An interactive high-bypass turbofan. Click any part to learn what it does and how its blades get damaged.</p></div>
@@ -207,7 +219,12 @@ const camGoal = new THREE.Vector3(), tgtGoal = new THREE.Vector3();
 function resize() { renderer.setSize(innerWidth, innerHeight, false); labelR.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
 addEventListener('resize', resize); resize();
 
+const Q = new URLSearchParams(location.search);
+if (Q.get('az')) { const a = parseFloat(Q.get('az')) * Math.PI / 180, dx = camera.position.x - 0.6, dz = camera.position.z;
+  camera.position.x = 0.6 + dx * Math.cos(a) - dz * Math.sin(a); camera.position.z = dx * Math.sin(a) + dz * Math.cos(a); controls.enableDamping = false; controls.update(); }
+if (Q.get('ui') === '0') document.querySelectorAll('.top,#info,.hint').forEach(e => e.style.display = 'none');
 const clock = new THREE.Clock();
+window.__started = true;
 renderer.setAnimationLoop(() => {
   const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
   const wl = (0.6 + 5 * throttle) * dt, wh = wl * 2.6;
