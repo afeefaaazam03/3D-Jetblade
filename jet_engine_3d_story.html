@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How a Jet Engine Works in 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#ffffff;--fg:#1d2433;--muted:#5d6779;--soft:#f4f6fa;--line:#e3e7ee;--ac:#1f4fb4}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font:18px/1.7 "Source Serif 4",Georgia,serif}
+h1,h2,.sans,.kpi,.btn,.tag{font-family:Inter,system-ui,sans-serif}
+.layout{display:grid;grid-template-columns:minmax(0,520px) minmax(0,1fr);gap:0}
+.text{padding:0 40px 30vh 56px}
+.stage{position:sticky;top:0;height:100vh;background:radial-gradient(ellipse at 60% 45%,#ffffff 0%,#eef2f8 60%,#e4e9f2 100%)}
+#c{width:100%;height:100%;display:block}
+header{padding:64px 0 10px}
+.kicker{font:600 13px Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ac)}
+h1{font-size:clamp(34px,4.4vw,50px);line-height:1.08;letter-spacing:-.02em;margin:.25em 0 .35em;font-weight:800}
+.lede{font-size:20px;color:var(--muted)}
+.byline{font:500 14px Inter,sans-serif;color:var(--muted);margin-top:12px}
+.hint{font:500 13px Inter,sans-serif;color:var(--muted);margin-top:28px}
+section.chap{min-height:78vh;padding:12vh 0 4vh;opacity:.32;transition:opacity .4s}
+section.chap.active{opacity:1}
+.num{font:700 13px Inter,sans-serif;color:var(--ac);letter-spacing:.06em}
+h2{font-size:28px;line-height:1.2;margin:.3em 0 .4em;letter-spacing:-.01em}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 0}
+.kpi{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.kpi b{display:block;font-size:20px;color:var(--ac);line-height:1.2}.kpi span{font-size:13px;color:var(--muted);display:block;margin-top:3px;line-height:1.35}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font:500 13px Inter,sans-serif;color:var(--muted);margin-top:8px}
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.gallery{display:grid;grid-template-columns:1fr;gap:10px;margin:14px 0}.gallery img{width:100%;border-radius:10px;border:1px solid var(--line);display:block}
+.gallery figcaption{font:13px Inter,sans-serif;color:var(--muted);margin-top:4px}
+.btn{display:inline-block;font-weight:600;font-size:15px;background:var(--ac);color:#fff;text-decoration:none;padding:10px 16px;border-radius:10px;margin:6px 8px 0 0}
+.btn.alt{background:transparent;color:var(--ac);border:1px solid var(--ac)}
+.src{font-size:14px;color:var(--muted)}.src a{color:var(--muted)}
+.lbl{font:600 12px Inter,sans-serif;color:#1d2433;background:rgba(255,255,255,.92);border:1px solid #d6dbe4;padding:2px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;transition:opacity .3s}
+.lbl.dim{opacity:.25}
+.caption3d{position:absolute;left:24px;bottom:20px;font:500 13px Inter,sans-serif;color:var(--muted)}
+@media (max-width:900px){.layout{grid-template-columns:1fr}.stage{position:sticky;top:0;height:46vh;z-index:2;border-bottom:1px solid var(--line)}.text{padding:0 20px 30vh}.layout{display:flex;flex-direction:column-reverse}section.chap{min-height:60vh}}
+</style>
+<script type="importmap">{"imports":{"three":"./vendor/three/three.module.js","three/addons/":"./vendor/three/addons/"}}</script>
+</head>
+<body>
+<div id="fail" style="display:none;position:fixed;inset:0;z-index:50;background:#fff;padding:24px;overflow:auto;font-family:Inter,sans-serif"><div style="max-width:760px;margin:6vh auto;text-align:center">
+<h2>The 3D view could not start in this browser</h2><p id="failwhy" style="color:#5d6779"></p>
+<img src="img/jet_spin.gif" alt="Recorded rotation of the 3D engine" style="max-width:100%;border-radius:12px">
+<p style="color:#5d6779;font-size:14px">Enable hardware acceleration (Chrome: Settings → System → “Use graphics acceleration when available”) and reload, or read the <a href="how_jet_engines_work.html">illustrated 2D version</a>.</p></div></div>
+<script>(function(){var ok=false;try{var c=document.createElement('canvas');ok=!!(c.getContext('webgl2')||c.getContext('webgl'));}catch(e){}
+window.__fail=function(w){document.getElementById('failwhy').textContent=w;document.getElementById('fail').style.display='block';};
+if(!ok)addEventListener('DOMContentLoaded',function(){__fail('3D graphics (WebGL) are turned off or unavailable.');});
+addEventListener('error',function(e){if(!window.__started)__fail('A script failed to load: '+(e.message||e.filename||'unknown'));},true);
+setTimeout(function(){if(!window.__started)__fail('The 3D view did not start within 15 seconds.');},15000);})();</script>
+
+<div class="layout">
+<div class="text">
+<header>
+  <div class="kicker">Explainer · 3D</div>
+  <h1>How a Jet Engine Works</h1>
+  <p class="lede">Scroll to follow the air through a turbofan, the engine on almost every airliner. The 3D model on the right follows the story.</p>
+  <div class="byline">Afeefa Azam · Khalifa University</div>
+  <div class="hint">↓ Scroll to begin · drag the model to look around</div>
+</header>
+
+<section class="chap" data-k="intro"><div class="num">THE BIG PICTURE</div><h2>Throw air back, move forward</h2>
+<p>A jet engine turns fuel into thrust by throwing a large mass of air backwards. Pushing air back pushes the engine forward: Newton’s third law. The jet engine was invented independently by Frank Whittle and Hans von Ohain in the 1930s.</p>
+<div class="legend"><span><i class="dot" style="background:#2b8a3e"></i>thrust</span><span><i class="dot" style="background:#d9480f"></i>exhaust pushed back</span></div></section>
+
+<section class="chap" data-k="intake"><div class="num">STEP 1</div><h2>Air intake</h2>
+<p>The inlet slows incoming air to around 350 mph and delivers smooth, stable flow to the fan. Disturbed flow can make the compressor stall or surge.</p>
+<div class="kpis"><div class="kpi"><b>≈ 350 mph</b><span>air speed at the fan face</span></div></div></section>
+
+<section class="chap" data-k="fan"><div class="num">STEP 2</div><h2>The fan and bypass air</h2>
+<p>The fan accelerates a huge mass of air. Most of it, 80–90%, flows <i>around</i> the core through the bypass duct (blue), and this cooler air produces most of the thrust.</p>
+<div class="kpis"><div class="kpi"><b>9:1 – 12:1</b><span>bypass ratio, modern engines</span></div><div class="kpi"><b>18–24</b><span>fan blades, tips over 1,000 mph</span></div></div>
+<div class="legend"><span><i class="dot" style="background:#1c7ed6"></i>bypass air</span><span><i class="dot" style="background:#e8590c"></i>core air</span></div></section>
+
+<section class="chap" data-k="comp"><div class="num">STEP 3</div><h2>Compressor</h2>
+<p>The core air passes through 8–14 compressor stages, rings of rotating blades and fixed vanes that squeeze it to 30–50 times its inlet pressure and heat it.</p>
+<div class="kpis"><div class="kpi"><b>30:1 – 50:1</b><span>pressure rise</span></div><div class="kpi"><b>600–900 °F</b><span>before fuel is added</span></div></div></section>
+
+<section class="chap" data-k="comb"><div class="num">STEP 4</div><h2>Combustion</h2>
+<p>Fuel is sprayed into the compressed air and burned continuously. Only about a quarter of the air takes part in burning; the rest cools the chamber walls and dilutes the hot gas.</p>
+<div class="kpis"><div class="kpi"><b>3,000–3,600 °F</b><span>combustion temperature</span></div><div class="kpi"><b>≈ 25%</b><span>of the air burns</span></div></div></section>
+
+<section class="chap" data-k="turb"><div class="num">STEP 5</div><h2>Turbine</h2>
+<p>The hot gas spins the turbines, which drive the compressor and fan through two concentric shafts: a fast high-pressure spool and a slower low-pressure spool. Turbine blades run in gas hotter than their own melting point, kept alive by cooling and coatings.</p>
+<div class="kpis"><div class="kpi"><b>10,000–15,000</b><span>rpm</span></div><div class="kpi"><b>2 spools</b><span>on concentric shafts</span></div></div></section>
+
+<section class="chap" data-k="exhaust"><div class="num">STEP 6</div><h2>Exhaust and thrust</h2>
+<p>The nozzle accelerates the remaining core gas backwards at 1,200–1,500 mph. Yet the core gives only 20–25% of the thrust: the bypass air from the fan gives the other 75–80%.</p>
+<div class="kpis"><div class="kpi"><b>75–80%</b><span>thrust from the fan</span></div><div class="kpi"><b>20–25%</b><span>thrust from the core</span></div></div></section>
+
+<section class="chap" data-k="damage"><div class="num">WHY BLADES MATTER</div><h2>Where blades get damaged</h2>
+<p>Every stage holds rows of precision blades. The cold front stages take impacts from birds, stones and ice (dents and nicks); the compressor erodes; the hot turbines crack and lose their coatings. Engines must survive a 4-pound bird strike and run 25,000–50,000 hours between overhauls, so blades are inspected regularly.</p>
+<div class="legend"><span><i class="dot" style="background:#1c7ed6"></i>impacts, dents, nicks</span><span><i class="dot" style="background:#2b8a3e"></i>erosion</span><span><i class="dot" style="background:#d9480f"></i>thermal cracks</span></div></section>
+
+<section class="chap" data-k="inspect"><div class="num">MY RESEARCH</div><h2>Proving damage from photos</h2>
+<p>A dark spot in a blade photo can be damage, a stain, a lighting change or a moved camera. <b>BladeDelta</b> compares a few calibrated photos with the blade’s healthy CAD model and reports damage in 3D only when the photos prove it; otherwise it says “not enough evidence”.</p>
+<div class="gallery"><figure style="margin:0"><img src="img/vr/res/test2_0083_3.jpg" alt="Dent found on a compressor blade"><figcaption>Real output: dent found on a compressor blade (true 0.36 mm, measured 0.35 mm). Orange = truth, blue = found.</figcaption></figure></div>
+<p class="sans" style="font-size:15px">On computer-rendered blades: 51% of visible dents found at a 5% false-alarm rate (other methods ≤ 19%); all 22 located hairline cracks recognised as cracks.</p>
+<a class="btn" href="lab.html">Step through the method in 3D</a><a class="btn alt" href="visual_results.html">Results</a></section>
+
+<section class="chap" data-k="end" style="min-height:40vh"><p class="src">Facts paraphrased from <a href="https://theflyingengineer.com/how-do-jet-engines-work/">The Flying Engineer</a>, <a href="https://aerospaceanswers.com/what-is-a-jet-engine/">AerospaceAnswers</a> and <a href="https://www.howengineswork.com/engines/jet">HowEnginesWork</a>; typical ranges for modern engines. The 3D model is simplified and not to scale. <a href="how_jet_engines_work.html">2D illustrated version</a>.</p></section>
+</div>
+
+<div class="stage"><canvas id="c"></canvas><div class="caption3d" id="cap3d">Simplified turbofan · not to scale</div></div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+const stage = document.querySelector('.stage'), canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true }); renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.localClippingEnabled = true; renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+const css = new CSS2DRenderer(); css.domElement.style.cssText = 'position:absolute;inset:0;pointer-events:none'; stage.appendChild(css.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
+const controls = new OrbitControls(camera, canvas); controls.enableDamping = true; controls.enableZoom = false; controls.enablePan = false;
+scene.add(new THREE.HemisphereLight(0xffffff, 0xc9d2e3, 1.6));
+const kl = new THREE.DirectionalLight(0xffffff, 2.0); kl.position.set(-4, 7, 6); scene.add(kl);
+const rl = new THREE.DirectionalLight(0xdbe6ff, 0.8); rl.position.set(5, -2, -4); scene.add(rl);
+const shadow = new THREE.Mesh(new THREE.CircleGeometry(4.5, 48), new THREE.MeshBasicMaterial({ color: 0x9aa6bd, transparent: true, opacity: .13 }));
+
+
+const cut = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);
+const parts = {}, mats = [];
+function mat(color, o = {}) { const m = new THREE.MeshStandardMaterial({ color, roughness: o.r ?? .42, metalness: o.m ?? .55, transparent: true, opacity: o.op ?? 1, side: o.ds ? THREE.DoubleSide : THREE.FrontSide, clippingPlanes: o.clip ? [cut] : null });
+  m.userData.base = new THREE.Color(color); m.userData.op = o.op ?? 1; mats.push(m); return m; }
+function part(k) { if (!parts[k]) { parts[k] = new THREE.Group(); parts[k].userData.mats = []; scene.add(parts[k]); } return parts[k]; }
+function add(k, mesh) { part(k).add(mesh); mesh.traverse(o => o.material && part(k).userData.mats.push(o.material)); return mesh; }
+const low = [], high = [];
+function row(k, x, n, r0, r1, chord, twist, color, spool, th = .025) {
+  const geo = new THREE.BoxGeometry(chord, r1 - r0, th); geo.translate(0, (r0 + r1) / 2, 0); const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) { const y = pos.getY(i), a = twist * (.35 + .65 * (y - r0) / (r1 - r0)), xx = pos.getX(i), zz = pos.getZ(i); pos.setX(i, xx * Math.cos(a) - zz * Math.sin(a)); pos.setZ(i, xx * Math.sin(a) + zz * Math.cos(a)); }
+  geo.computeVertexNormals(); const im = new THREE.InstancedMesh(geo, mat(color, { r: .32, m: .7 }), n), M = new THREE.Matrix4();
+  for (let i = 0; i < n; i++) { M.makeRotationX(i / n * Math.PI * 2); im.setMatrixAt(i, M); }
+  const disk = new THREE.Mesh(new THREE.CylinderGeometry(r0, r0, chord * 1.05, 40), mat(0x8a94a6, { r: .5, m: .6 })); disk.rotation.z = Math.PI / 2;
+  const g = new THREE.Group(); g.add(im, disk); g.position.x = x; add(k, g); (spool === 'low' ? low : high).push(g);
+}
+row('fan', -2.9, 22, .42, 1.62, .42, .9, 0x9fb3d1, 'low', .035);
+const spin = new THREE.Mesh(new THREE.ConeGeometry(.46, .8, 40), mat(0xe9edf3, { r: .25, m: .8 })); spin.rotation.z = Math.PI / 2; spin.position.x = -3.45; add('fan', spin); low.push(spin);
+[-2.1, -1.8, -1.5].forEach((x, i) => row('comp', x, 30, .45, .82 - i * .03, .14, .7, 0x7fc4b4, 'low'));
+for (let i = 0; i < 8; i++) row('comp', -1.1 + i * .2, 34, .42, .72 - i * .025, .1, .65, 0x86c98a, 'high', .02);
+const burner = new THREE.Mesh(new THREE.TorusGeometry(.62, .11, 20, 60), mat(0xf59f00, { r: .5, m: .3 })); burner.material.emissive = new THREE.Color(0xff7a1a); burner.material.emissiveIntensity = .25;
+burner.rotation.y = Math.PI / 2; burner.position.x = .95; burner.scale.set(1, 1, 2.2); add('comb', burner);
+[1.7, 1.95].forEach(x => row('turb', x, 40, .45, .72, .12, -.75, 0xf08c4f, 'high'));
+[2.55, 2.82, 3.09, 3.36].forEach((x, i) => row('turb', x, 46, .45, .8 + i * .05, .13, -.7, 0xf5a96b, 'low', .022));
+const noz = new THREE.Mesh(new THREE.CylinderGeometry(.62, .95, 1.2, 48, 1, true), mat(0xb8c0cc, { ds: true, clip: true })); noz.rotation.z = Math.PI / 2; noz.position.x = 4.1; add('exhaust', noz);
+const plug = new THREE.Mesh(new THREE.ConeGeometry(.42, 1.3, 40), mat(0xa9b1be)); plug.rotation.z = -Math.PI / 2; plug.position.x = 4.25; add('exhaust', plug);
+const shaft = new THREE.Mesh(new THREE.CylinderGeometry(.09, .09, 6.8, 24), mat(0xd7dbe5, { m: .9, r: .2 })); shaft.rotation.z = Math.PI / 2; shaft.position.x = .3; add('turb', shaft);
+const nac = new THREE.Mesh(new THREE.CylinderGeometry(1.78, 1.72, 3.6, 72, 1, true), mat(0xd5dbe4, { op: .55, ds: true, clip: true })); nac.rotation.z = Math.PI / 2; nac.position.x = -1.6; add('intake', nac);
+const lip = new THREE.Mesh(new THREE.TorusGeometry(1.75, .07, 16, 72), mat(0xe9edf3, { clip: true })); lip.rotation.y = Math.PI / 2; lip.position.x = -3.4; add('intake', lip);
+const core = new THREE.Mesh(new THREE.CylinderGeometry(.98, .98, 5.4, 64, 1, true), mat(0x9aa4b4, { op: .5, ds: true, clip: true })); core.rotation.z = Math.PI / 2; core.position.x = .85; add('casing', core);
+
+// labels
+const LBL = { intake: ['Inlet', -3.4, 2.05], fan: ['Fan', -2.9, 1.85], comp: ['Compressor', -.6, 1.15], comb: ['Combustor', .95, 1.25], turb: ['Turbines', 2.6, 1.3], exhaust: ['Nozzle', 4.2, 1.1] };
+const labels = {};
+for (const k in LBL) { const d = document.createElement('div'); d.className = 'lbl'; d.textContent = LBL[k][0]; const o = new CSS2DObject(d); o.position.set(LBL[k][1], LBL[k][2], 0); scene.add(o); labels[k] = d; }
+
+// airflow
+const NP = 1300, pg = new THREE.BufferGeometry(), pp = new Float32Array(NP * 3), pc = new Float32Array(NP * 3), P = [];
+for (let i = 0; i < NP; i++) { const by = i < NP * .6; P.push({ by, a: Math.random() * 6.283, r: by ? 1.05 + Math.random() * .6 : .2 + Math.random() * .45, x: -4.6 + Math.random() * 9.6, v: .8 + Math.random() * .6 }); }
+pg.setAttribute('position', new THREE.BufferAttribute(pp, 3)); pg.setAttribute('color', new THREE.BufferAttribute(pc, 3));
+const flow = new THREE.Points(pg, new THREE.PointsMaterial({ size: .05, vertexColors: true, transparent: true, opacity: .85, depthWrite: false })); scene.add(flow);
+const cB = new THREE.Color(0x1c7ed6), cC = new THREE.Color(0x4dabf7), cH = new THREE.Color(0xe8590c), cM = new THREE.Color(0xf59f00), tc = new THREE.Color();
+
+// arrows
+const thrust = new THREE.ArrowHelper(new THREE.Vector3(-1, 0, 0), new THREE.Vector3(-3.7, 2.5, 0), 1.7, 0x2b8a3e, .45, .28);
+const exh = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(4.9, 0, 0), 1.7, 0xd9480f, .45, .28); scene.add(thrust, exh);
+
+// damage overlay colours
+const DMG = { fan: 0x1971c2, comp: 0x2f9e44, turb: 0xe03131 };
+
+// ---------- chapters ----------
+const CH = {
+  intro:   { cam: [-8.6, 4.0, 10.6], tgt: [.6, 0, 0], on: null, arrows: true, flow: 'all' },
+  intake:  { cam: [-6.2, 1.6, 4.6], tgt: [-2.8, 0, 0], on: ['intake', 'fan'], flow: 'all' },
+  fan:     { cam: [-5.4, 2.2, 4.6], tgt: [-2.6, 0, 0], on: ['fan'], flow: 'all' },
+  comp:    { cam: [-2.4, 1.8, 4.2], tgt: [-1.0, 0, 0], on: ['comp'], flow: 'core' },
+  comb:    { cam: [-.2, 1.6, 3.6], tgt: [.95, 0, 0], on: ['comb'], flow: 'core' },
+  turb:    { cam: [1.2, 1.8, 4.2], tgt: [2.6, 0, 0], on: ['turb'], flow: 'core' },
+  exhaust: { cam: [2.0, 2.6, 6.2], tgt: [3.6, 0, 0], on: ['exhaust'], arrows: true, flow: 'all' },
+  damage:  { cam: [-7.0, 4.2, 9.4], tgt: [.6, 0, 0], on: ['fan', 'comp', 'turb'], dmg: true, flow: 'none' },
+  inspect: { cam: [-3.4, 2.0, 4.2], tgt: [-1.0, 0, 0], on: ['comp'], dmg: true, flow: 'none' },
+  end:     { cam: [-8.6, 4.0, 10.6], tgt: [.6, 0, 0], on: null, flow: 'all' } };
+let cur = CH.intro, flowMode = 'all';
+const camGoal = new THREE.Vector3(-8.6, 4.0, 10.6), tgtGoal = new THREE.Vector3(.6, 0, 0);
+camera.position.copy(camGoal); controls.target.copy(tgtGoal);
+function apply(k) {
+  cur = CH[k]; camGoal.set(...cur.cam); tgtGoal.set(...cur.tgt); flowMode = cur.flow; thrust.visible = exh.visible = !!cur.arrows;
+  for (const p in parts) {
+    const lit = !cur.on || cur.on.includes(p), dmgCol = cur.dmg && DMG[p] ? new THREE.Color(DMG[p]) : null;
+    parts[p].userData.mats.forEach(m => { m.userData.goalOp = lit ? m.userData.op : Math.min(m.userData.op, .12); m.userData.goalCol = dmgCol || m.userData.base; });
+  }
+  const DL = { fan: 'Fan: impacts, dents, nicks', comp: 'Compressor: erosion, dents', turb: 'Turbines: thermal cracks, coating loss' };
+  for (const l in labels) { labels[l].textContent = cur.dmg && DL[l] ? DL[l] : LBL[l][0]; labels[l].style.borderColor = cur.dmg && DMG[l] ? '#' + DMG[l].toString(16).padStart(6, '0') : '';
+    labels[l].classList.toggle('dim', !!cur.on && !cur.on.includes(l) && !(l === 'intake' && cur.on.includes('fan'))); }
+}
+const secs = [...document.querySelectorAll('section.chap')];
+const io = new IntersectionObserver(es => { es.forEach(e => { if (e.isIntersecting) { secs.forEach(s => s.classList.toggle('active', s === e.target)); apply(e.target.dataset.k); } }); }, { rootMargin: '-45% 0px -45% 0px' });
+secs.forEach(s => io.observe(s));
+const q0 = new URLSearchParams(location.search).get('ch'); apply(q0 && CH[q0] ? q0 : 'intro'); if (q0) { camera.position.copy(camGoal); controls.target.copy(tgtGoal); secs.forEach(s => s.classList.toggle('active', s.dataset.k === q0)); }
+let userMoved = false; controls.addEventListener('start', () => userMoved = true); addEventListener('scroll', () => userMoved = false, { passive: true });
+
+function resize() { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false); css.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+const clock = new THREE.Clock(); window.__started = true;
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
+  low.forEach(g => g.rotation.x += dt * 2.4); high.forEach(g => g.rotation.x += dt * 6.2); shaft.rotation.y += dt * 2.4;
+  burner.material.emissiveIntensity = .3 + .12 * Math.sin(t * 20);
+  mats.forEach(m => { if (m.userData.goalOp !== undefined) { m.opacity += (m.userData.goalOp - m.opacity) * .08; m.color.lerp(m.userData.goalCol, .08); m.depthWrite = m.opacity > .5; } });
+  for (let i = 0; i < NP; i++) {
+    const p = P[i], show = flowMode === 'all' || (flowMode === 'core' && !p.by);
+    if (!show) { pp[i * 3 + 1] = 999; continue; }
+    p.x += p.v * 2.4 * dt * (p.by ? 1 : (p.x > .6 ? 1.8 : 1)); if (p.x > (p.by ? 1.0 : 5.6)) p.x = -4.6;
+    let r = p.r; if (!p.by) { if (p.x > -2.2 && p.x < .7) r = p.r * (1 - .25 * (p.x + 2.2) / 2.9); if (p.x > 3.6) r = p.r * .85; } else if (p.x > -.2) r = p.r + (p.x + .2) * .12;
+    const a = p.a + (!p.by && p.x > -3 && p.x < 3.6 ? p.x * .6 : 0);
+    pp[i * 3] = p.x; pp[i * 3 + 1] = Math.cos(a) * r; pp[i * 3 + 2] = Math.sin(a) * r;
+    if (p.by) tc.copy(cB); else if (p.x < .6) tc.copy(cC).lerp(cM, Math.max(0, (p.x + 2.2) / 2.8)); else tc.copy(cH).lerp(cM, Math.min(1, Math.max(0, (p.x - 2) / 3.5)));
+    pc[i * 3] = tc.r; pc[i * 3 + 1] = tc.g; pc[i * 3 + 2] = tc.b;
+  }
+  pg.attributes.position.needsUpdate = pg.attributes.color.needsUpdate = true;
+  if (!userMoved) { camera.position.lerp(camGoal, .045); controls.target.lerp(tgtGoal, .06); }
+  controls.update(); renderer.render(scene, camera); css.render(scene, camera);
+});
+</script>
+</body>
+</html>
