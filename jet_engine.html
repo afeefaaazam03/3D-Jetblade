@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Interactive Jet Engine</title>
+<style>
+:root{--bg:#0b1020;--panel:rgba(15,22,40,.86);--fg:#e6ebf5;--muted:#9aa6bd;--ac:#4f8cff;--line:rgba(255,255,255,.1)}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}
+#c{position:fixed;inset:0}
+.top{position:fixed;left:16px;top:14px;right:16px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;gap:12px}
+.brand{pointer-events:auto}.brand h1{margin:0;font-size:20px;letter-spacing:.2px}.brand p{margin:2px 0 0;color:var(--muted);font-size:13px}
+.ctrl{pointer-events:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;backdrop-filter:blur(8px);width:280px}
+.ctrl label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:8px}
+.ctrl input[type=range]{width:100%;accent-color:var(--ac)}
+.row{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+button{background:rgba(255,255,255,.07);color:var(--fg);border:1px solid var(--line);border-radius:9px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer}
+button:hover{background:rgba(255,255,255,.14)}button[aria-pressed=true]{background:var(--ac);border-color:var(--ac)}
+#info{position:fixed;left:16px;bottom:16px;width:min(420px,calc(100vw - 32px));background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;backdrop-filter:blur(8px);transition:opacity .25s}
+#info h2{margin:0 0 4px;font-size:18px}#info .tag{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0b1020;padding:2px 8px;border-radius:999px}
+#info dl{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;margin:10px 0;font-size:13px}#info dt{color:var(--muted)}#info dd{margin:0}
+#info .bd{margin-top:10px;padding:10px 12px;border-radius:10px;background:rgba(79,140,255,.12);border:1px solid rgba(79,140,255,.35);font-size:13px}
+#info a{color:#8fb6ff}
+.lbl{color:#fff;font-size:12px;font-weight:600;padding:2px 7px;border-radius:6px;background:rgba(10,16,32,.75);border:1px solid var(--line);white-space:nowrap;pointer-events:none}
+.hint{position:fixed;right:16px;bottom:16px;color:var(--muted);font-size:12px;text-align:right;max-width:320px}
+@media (max-width:760px){.ctrl{width:220px}.brand p{display:none}#info{max-height:45vh;overflow:auto}.hint{display:none}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="top">
+  <div class="brand"><h1>Inside a Jet Engine</h1><p>An interactive high-bypass turbofan. Click any part to learn what it does and how its blades get damaged.</p></div>
+  <div class="ctrl">
+    <label><span>Throttle</span><span id="thv">60%</span></label><input id="th" type="range" min="0" max="100" value="60">
+    <label><span>Exploded view</span><span id="exv">0%</span></label><input id="ex" type="range" min="0" max="100" value="0">
+    <div class="row">
+      <button id="cut" aria-pressed="true">Cutaway</button><button id="air" aria-pressed="true">Airflow</button>
+      <button id="lab" aria-pressed="true">Labels</button><button id="tour">Guided tour</button><button id="reset">Reset view</button>
+    </div>
+  </div>
+</div>
+<div id="info"></div>
+<div class="hint">Drag to rotate · scroll to zoom · right-drag to pan<br>Simplified, not to scale.</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.localClippingEnabled = true;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.outputColorSpace = THREE.SRGBColorSpace;
+const labelR = new CSS2DRenderer(); labelR.domElement.style.cssText = 'position:fixed;inset:0;pointer-events:none'; document.body.appendChild(labelR.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x0b1020); scene.fog = new THREE.Fog(0x0b1020, 18, 40);
+const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100); camera.position.set(-7.4, 3.4, 8.6);
+const controls = new OrbitControls(camera, renderer.domElement); controls.enableDamping = true; controls.target.set(0.6, 0, 0); controls.minDistance = 3; controls.maxDistance = 22;
+scene.add(new THREE.HemisphereLight(0xcfe0ff, 0x1a1f2e, 0.9));
+const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(-4, 6, 5); scene.add(key);
+const rim = new THREE.DirectionalLight(0x88aaff, 1.0); rim.position.set(6, -2, -6); scene.add(rim);
+const grid = new THREE.GridHelper(30, 30, 0x1d2742, 0x141b30); grid.position.y = -2.4; scene.add(grid);
+
+const cutPlane = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0); // hides the +z half of the casings
+const metal = (c, r = .35, m = .85) => new THREE.MeshStandardMaterial({ color: c, roughness: r, metalness: m });
+
+// ---------- part catalogue ----------
+const PARTS = {
+  fan:      { name: 'Fan', color: '#7fb3ff', x: -2.9, desc: 'The large front fan. About 85–90% of the air bypasses the core and produces most of the thrust.',
+              temp: '≈ ambient', speed: 'low-pressure spool, ~3,000–5,000 rpm', damage: 'Nicks and dents from foreign objects (birds, stones, ice), leading-edge erosion.',
+              bd: 'Fan blades are large and visible from the inlet, so a CAD model and a few photos can show dents and nicks; BladeDelta would report them in 3D or say the photos are not enough.' },
+  lpc:      { name: 'Booster (low-pressure compressor)', color: '#8fd0c4', x: -1.75, desc: 'A few stages on the same shaft as the fan that start compressing the core air.',
+              temp: '≈ 50–150 °C', speed: 'low-pressure spool', damage: 'Erosion, small dents from ingested particles.',
+              bd: 'Inspected through borescope ports; small dents here are exactly the scale BladeDelta targets (0.1–1 mm).' },
+  hpc:      { name: 'High-pressure compressor', color: '#a3e08f', x: -0.45, desc: 'Many short stages that squeeze the air to 30–50× atmospheric pressure before combustion.',
+              temp: '≈ 150–650 °C', speed: 'high-pressure spool, ~10,000–15,000 rpm', damage: 'Erosion, tip rubs, dents and nicks from upstream debris.',
+              bd: 'Our public test blades (NASA Rotor 37) are compressor blades like these. On them BladeDelta finds 51% of visible dents at 5% false alarms (12 of 13 dents deeper than 0.2 mm).' },
+  comb:     { name: 'Combustor', color: '#ffb066', x: 0.95, desc: 'Fuel is sprayed into the compressed air and burned continuously.',
+              temp: '≈ 1,500–2,000 °C flame', speed: 'static', damage: 'Liner cracking and burn-through, thermal distortion.',
+              bd: 'Not a blade row; shown for context. Coatings and liners are inspected separately.' },
+  hpt:      { name: 'High-pressure turbine', color: '#ff7a59', x: 1.85, desc: 'Extracts energy from the hottest gas to drive the high-pressure compressor.',
+              temp: '≈ 1,100–1,600 °C gas', speed: 'high-pressure spool', damage: 'Thermal cracks, coating loss, oxidation, tip burning.',
+              bd: 'Cracks often appear as thin dark lines. BladeDelta’s crack specialist recognised all 22 located hairline cracks in our rendered tests.' },
+  lpt:      { name: 'Low-pressure turbine', color: '#ffa06b', x: 2.95, desc: 'Several stages that drive the fan and booster through the inner shaft.',
+              temp: '≈ 600–900 °C gas', speed: 'low-pressure spool', damage: 'Cracks, erosion, nicks from upstream debris.',
+              bd: 'Sharp nicks on blade edges: BladeDelta located 66% of realistic nicks on unseen blade designs and typed 9 of 15 correctly.' },
+  nozzle:   { name: 'Exhaust nozzle', color: '#b0b8c8', x: 4.1, desc: 'Accelerates the hot core gas out of the engine for the remaining thrust.',
+              temp: '≈ 500–700 °C', speed: 'static', damage: 'Thermal cracking, distortion.', bd: 'Not a blade row; shown for context.' },
+  shaft:    { name: 'Spools (shafts)', color: '#d7dbe5', x: 0.6, desc: 'Two concentric shafts: the inner low-pressure spool (fan, booster, LP turbine) and the outer high-pressure spool (HP compressor, HP turbine).',
+              temp: '—', speed: 'low ≈ 4,000 rpm, high ≈ 12,000 rpm', damage: 'Bearing wear, imbalance.', bd: 'Not a blade row; shown for context.' },
+  casing:   { name: 'Nacelle and casing', color: '#9aa6bd', x: 0.4, desc: 'The outer cowling and the core casing; the bypass duct is the gap between them.',
+              temp: '—', speed: 'static', damage: 'Impact damage, acoustic-liner damage.', bd: 'Not a blade row; shown for context.' },
+};
+
+const engine = new THREE.Group(); scene.add(engine);
+const groups = {}; const pickables = [];
+for (const k in PARTS) { const g = new THREE.Group(); g.userData.key = k; g.userData.baseX = 0; groups[k] = g; engine.add(g); }
+const lowSpool = [], highSpool = [];
+
+function bladeRow(part, x, n, rIn, rOut, chord, twist, color, spool, thick = .025) {
+  const geo = new THREE.BoxGeometry(chord, rOut - rIn, thick); geo.translate(0, (rIn + rOut) / 2, 0);
+  const pos = geo.attributes.position; // twist the blade along its span
+  for (let i = 0; i < pos.count; i++) {
+    const y = pos.getY(i), t = (y - rIn) / (rOut - rIn), a = twist * (0.35 + 0.65 * t);
+    const xx = pos.getX(i), zz = pos.getZ(i); pos.setX(i, xx * Math.cos(a) - zz * Math.sin(a)); pos.setZ(i, xx * Math.sin(a) + zz * Math.cos(a));
+  }
+  geo.computeVertexNormals();
+  const mesh = new THREE.InstancedMesh(geo, metal(color, .3, .8), n); const m = new THREE.Matrix4();
+  for (let i = 0; i < n; i++) { m.makeRotationX((i / n) * Math.PI * 2); mesh.setMatrixAt(i, m); }
+  const disk = new THREE.Mesh(new THREE.CylinderGeometry(rIn, rIn, chord * 1.05, 40), metal(0x6b7280, .45, .7)); disk.rotation.z = Math.PI / 2;
+  const row = new THREE.Group(); row.add(mesh, disk); row.position.x = x; groups[part].add(row); (spool === 'low' ? lowSpool : highSpool).push(row);
+  mesh.userData.key = part; disk.userData.key = part; pickables.push(mesh, disk);
+  return row;
+}
+// fan + spinner
+bladeRow('fan', -2.9, 22, 0.42, 1.62, 0.42, 0.9, 0xb8c8e6, 'low', 0.035);
+const spinner = new THREE.Mesh(new THREE.ConeGeometry(0.46, 0.8, 40), metal(0xd7dbe5, .25, .9)); spinner.rotation.z = Math.PI / 2; spinner.position.x = -3.45;
+groups.fan.add(spinner); spinner.userData.key = 'fan'; pickables.push(spinner); lowSpool.push(spinner);
+// booster
+[-2.1, -1.8, -1.5].forEach((x, i) => bladeRow('lpc', x, 30, 0.45, 0.82 - i * .03, 0.14, 0.7, 0x9fd8cc, 'low'));
+// HPC
+for (let i = 0; i < 8; i++) bladeRow('hpc', -1.1 + i * 0.2, 34, 0.42, 0.72 - i * 0.025, 0.1, 0.65, 0xb5e6a3, 'high', 0.02);
+// combustor
+const comb = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.11, 20, 60), new THREE.MeshStandardMaterial({ color: 0x5a3b24, roughness: .5, metalness: .6, emissive: 0xff5a1f, emissiveIntensity: .5 }));
+comb.rotation.y = Math.PI / 2; comb.position.x = 0.95; comb.scale.set(1, 1, 2.2); groups.comb.add(comb); comb.userData.key = 'comb'; pickables.push(comb);
+const flameLight = new THREE.PointLight(0xff6a2a, 3, 3); flameLight.position.set(0.95, 0, 0); groups.comb.add(flameLight);
+// turbines
+[1.7, 1.95].forEach(x => bladeRow('hpt', x, 40, 0.45, 0.72, 0.12, -0.75, 0xffb08a, 'high', 0.025));
+[2.55, 2.82, 3.09, 3.36].forEach((x, i) => bladeRow('lpt', x, 46, 0.45, 0.8 + i * 0.05, 0.13, -0.7, 0xffc39a, 'low', 0.022));
+// nozzle + plug
+const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.95, 1.2, 48, 1, true), new THREE.MeshStandardMaterial({ color: 0x9aa1ad, roughness: .4, metalness: .85, side: THREE.DoubleSide, clippingPlanes: [cutPlane] }));
+nozzle.rotation.z = Math.PI / 2; nozzle.position.x = 4.1; groups.nozzle.add(nozzle);
+const plug = new THREE.Mesh(new THREE.ConeGeometry(0.42, 1.3, 40), metal(0x8a919c, .4, .85)); plug.rotation.z = -Math.PI / 2; plug.position.x = 4.25; groups.nozzle.add(plug);
+nozzle.userData.key = plug.userData.key = 'nozzle'; pickables.push(nozzle, plug);
+// shafts
+const sLow = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 6.8, 24), metal(0xd7dbe5, .2, .95)); sLow.rotation.z = Math.PI / 2; sLow.position.x = 0.3;
+const sHigh = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 3.3, 24), metal(0xa9b0bd, .25, .9)); sHigh.rotation.z = Math.PI / 2; sHigh.position.x = 0.4;
+groups.shaft.add(sLow, sHigh); sLow.userData.key = sHigh.userData.key = 'shaft'; pickables.push(sLow, sHigh);
+// casings (clipped for the cutaway)
+const glass = (c, o) => new THREE.MeshStandardMaterial({ color: c, roughness: .35, metalness: .6, transparent: true, opacity: o, side: THREE.DoubleSide, clippingPlanes: [cutPlane] });
+const nacelle = new THREE.Mesh(new THREE.CylinderGeometry(1.78, 1.72, 3.6, 72, 1, true), glass(0xcbd5e1, .55)); nacelle.rotation.z = Math.PI / 2; nacelle.position.x = -1.6;
+const lip = new THREE.Mesh(new THREE.TorusGeometry(1.75, 0.07, 16, 72), glass(0xe2e8f0, .8)); lip.rotation.y = Math.PI / 2; lip.position.x = -3.4;
+const core = new THREE.Mesh(new THREE.CylinderGeometry(0.98, 0.98, 5.4, 64, 1, true), glass(0x94a3b8, .45)); core.rotation.z = Math.PI / 2; core.position.x = 0.85;
+groups.casing.add(nacelle, lip, core); [nacelle, lip, core].forEach(o => { o.userData.key = 'casing'; pickables.push(o); });
+
+// labels
+const labels = [];
+for (const k in PARTS) {
+  const d = document.createElement('div'); d.className = 'lbl'; d.textContent = PARTS[k].name.split(' (')[0];
+  const o = new CSS2DObject(d); const y = { casing: 2.15, shaft: -0.6, fan: 1.95, lpc: 1.45, hpc: 1.05, comb: 1.45, hpt: 1.0, lpt: 1.55, nozzle: 0.95 }[k] ?? 1.25; o.position.set(PARTS[k].x, y, 0); groups[k].add(o); labels.push(o);
+}
+
+// airflow particles
+const NP = 1400, pg = new THREE.BufferGeometry(), pp = new Float32Array(NP * 3), pc = new Float32Array(NP * 3), pData = [];
+for (let i = 0; i < NP; i++) {
+  const bypass = i < NP * 0.6, a = Math.random() * Math.PI * 2, r = bypass ? 1.05 + Math.random() * 0.6 : 0.2 + Math.random() * 0.45;
+  pData.push({ bypass, a, r, x: -4.5 + Math.random() * 9.5, v: 0.8 + Math.random() * 0.6 });
+}
+pg.setAttribute('position', new THREE.BufferAttribute(pp, 3)); pg.setAttribute('color', new THREE.BufferAttribute(pc, 3));
+const particles = new THREE.Points(pg, new THREE.PointsMaterial({ size: 0.045, vertexColors: true, transparent: true, opacity: .9, depthWrite: false, blending: THREE.AdditiveBlending }));
+scene.add(particles);
+const cCold = new THREE.Color(0x6fb1ff), cHot = new THREE.Color(0xff6a2a), cMid = new THREE.Color(0xffd27a), tmp = new THREE.Color();
+
+// ---------- UI ----------
+const info = document.getElementById('info');
+function show(k) {
+  const p = PARTS[k];
+  info.innerHTML = k ? `<span class="tag" style="background:${p.color}">${k === 'shaft' || k === 'casing' || k === 'comb' || k === 'nozzle' ? 'structure' : 'blade row'}</span>
+    <h2>${p.name}</h2><div>${p.desc}</div>
+    <dl><dt>Temperature</dt><dd>${p.temp}</dd><dt>Rotation</dt><dd>${p.speed}</dd><dt>Typical damage</dt><dd>${p.damage}</dd></dl>
+    <div class="bd"><b>BladeDelta:</b> ${p.bd} <a href="visual_results.html">See results →</a></div>` :
+    `<h2>Click a part</h2><div>Air enters the <b>fan</b>; most of it bypasses the core. The rest is squeezed by the <b>compressors</b>, burned in the <b>combustor</b>, and expands through the <b>turbines</b>, which drive the compressors and fan through two shafts.</div>
+     <div class="bd"><b>Why this matters:</b> blades in every stage can be dented, nicked or cracked. My research, BladeDelta, finds such damage in 3D from a CAD model and a few photos, and says when the photos are not enough. <a href="viewer3d.html">3D results →</a></div>`;
+}
+show(null);
+let selected = null;
+function highlight(k) {
+  selected = k;
+  engine.traverse(o => { if (o.material && o.material.emissive && o !== comb) { o.material.emissive.setHex(o.userData.key === k ? 0x1e3a8a : 0x000000); } });
+  show(k);
+}
+const ray = new THREE.Raycaster(), mouse = new THREE.Vector2(); let down = null;
+renderer.domElement.addEventListener('pointerdown', e => down = [e.clientX, e.clientY]);
+renderer.domElement.addEventListener('pointerup', e => {
+  if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5) return;
+  mouse.set(e.clientX / innerWidth * 2 - 1, -e.clientY / innerHeight * 2 + 1); ray.setFromCamera(mouse, camera);
+  const hit = ray.intersectObjects(pickables, false).find(h => !(cutOn && h.point.z > 0.02 && h.object.userData.key === 'casing'));
+  highlight(hit ? hit.object.userData.key : null);
+});
+
+const $ = id => document.getElementById(id);
+let throttle = .6, explode = 0, cutOn = true, airOn = true;
+$('th').oninput = e => { throttle = e.target.value / 100; $('thv').textContent = e.target.value + '%'; };
+$('ex').oninput = e => { explode = e.target.value / 100; $('exv').textContent = e.target.value + '%'; };
+const toggle = (id, fn) => $(id).onclick = e => { const on = e.target.getAttribute('aria-pressed') !== 'true'; e.target.setAttribute('aria-pressed', on); fn(on); };
+toggle('cut', on => { cutOn = on; cutPlane.constant = on ? 0 : 10; });
+toggle('air', on => { airOn = on; particles.visible = on; });
+toggle('lab', on => labels.forEach(l => l.visible = on));
+$('reset').onclick = () => { camera.position.set(-7.4, 3.4, 8.6); controls.target.set(0.6, 0, 0); touring = false; };
+const OFFS = { fan: -1.6, lpc: -1.0, hpc: -0.4, comb: 0.2, hpt: 0.8, lpt: 1.4, nozzle: 2.0, shaft: 0, casing: 0 };
+
+// guided tour
+const TOUR = ['fan', 'lpc', 'hpc', 'comb', 'hpt', 'lpt', 'nozzle']; let touring = false, tourI = 0, tourT = 0;
+$('tour').onclick = () => { touring = true; tourI = 0; tourT = 0; highlight(TOUR[0]); };
+const camGoal = new THREE.Vector3(), tgtGoal = new THREE.Vector3();
+
+function resize() { renderer.setSize(innerWidth, innerHeight, false); labelR.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
+  const wl = (0.6 + 5 * throttle) * dt, wh = wl * 2.6;
+  lowSpool.forEach(r => r.rotation.x += wl); highSpool.forEach(r => r.rotation.x += wh); sLow.rotation.y += wl; sHigh.rotation.y += wh;
+  comb.material.emissiveIntensity = 0.25 + 0.9 * throttle + 0.15 * Math.sin(t * 23) * throttle; flameLight.intensity = 0.6 + 3 * throttle;
+  for (const k in groups) groups[k].position.x = (OFFS[k] || 0) * explode;
+  if (airOn) {
+    for (let i = 0; i < NP; i++) {
+      const p = pData[i]; p.x += p.v * (0.4 + 3.5 * throttle) * dt * (p.bypass ? 1 : (p.x > 0.6 ? 1.8 : 1));
+      if (p.x > (p.bypass ? 1.0 : 5.6)) p.x = -4.5;
+      let r = p.r; if (!p.bypass) { if (p.x > -2.2 && p.x < 0.7) r = p.r * (1 - 0.25 * (p.x + 2.2) / 2.9); if (p.x > 3.6) r = p.r * 0.85; }
+      if (p.bypass && p.x > -0.2) r = p.r + (p.x + 0.2) * 0.12;
+      const a = p.a + (p.x > -3 && p.x < 3.6 && !p.bypass ? p.x * 0.6 : 0);
+      pp[i * 3] = p.x; pp[i * 3 + 1] = Math.cos(a) * r; pp[i * 3 + 2] = Math.sin(a) * r;
+      if (p.bypass) tmp.copy(cCold); else if (p.x < 0.6) tmp.copy(cCold).lerp(cMid, Math.max(0, (p.x + 2.2) / 2.8)); else tmp.copy(cHot).lerp(cMid, Math.min(1, Math.max(0, (p.x - 2) / 3.5)));
+      pc[i * 3] = tmp.r; pc[i * 3 + 1] = tmp.g; pc[i * 3 + 2] = tmp.b;
+    }
+    pg.attributes.position.needsUpdate = true; pg.attributes.color.needsUpdate = true;
+  }
+  if (touring) {
+    tourT += dt; const k = TOUR[tourI], x = PARTS[k].x + (OFFS[k] || 0) * explode;
+    camGoal.set(x - 2.2, 1.4, 3.2); tgtGoal.set(x, 0, 0);
+    camera.position.lerp(camGoal, 0.04); controls.target.lerp(tgtGoal, 0.06);
+    if (tourT > 4.5) { tourT = 0; tourI++; if (tourI >= TOUR.length) { touring = false; } else highlight(TOUR[tourI]); }
+  }
+  controls.update(); renderer.render(scene, camera); labelR.render(scene, camera);
+});
+controls.addEventListener('start', () => touring = false);
+</script>
+</body>
+</html>
