@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How a Jet Engine Works</title>
+<meta name="description" content="A step-by-step illustrated guide to the turbofan jet engine, and where its blades get damaged.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#ffffff;--fg:#1d2433;--muted:#5d6779;--soft:#f4f6fa;--line:#e3e7ee;--ac:#1f4fb4;--hot:#d9480f;--cold:#1c7ed6;--warm:#f08c00;--ok:#2b8a3e}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f141c;--fg:#e7ebf2;--muted:#9aa4b5;--soft:#171e29;--line:#263042;--ac:#7aa2ff}}
+:root[data-theme="dark"]{--bg:#0f141c;--fg:#e7ebf2;--muted:#9aa4b5;--soft:#171e29;--line:#263042;--ac:#7aa2ff}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font:18px/1.7 "Source Serif 4",Georgia,serif}
+h1,h2,h3,.sans,nav,figcaption,.card,.kpi,table,button{font-family:Inter,system-ui,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px;display:grid;grid-template-columns:240px minmax(0,760px);gap:56px}
+@media (max-width:980px){.wrap{grid-template-columns:minmax(0,1fr)}nav.toc{display:none}}
+header.hero{max-width:1180px;margin:0 auto;padding:56px 20px 24px}
+.kicker{font:600 13px Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ac)}
+h1{font-size:clamp(34px,5vw,52px);line-height:1.08;letter-spacing:-.02em;margin:.25em 0 .3em;font-weight:800}
+.lede{font-size:21px;color:var(--muted);max-width:760px;margin:0}
+.byline{font:500 14px Inter,sans-serif;color:var(--muted);margin-top:14px}
+nav.toc{position:sticky;top:24px;align-self:start;font-size:14px;padding-top:8px}
+nav.toc b{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+nav.toc a{display:block;color:var(--muted);text-decoration:none;padding:4px 0 4px 12px;border-left:2px solid var(--line)}
+nav.toc a.on,nav.toc a:hover{color:var(--ac);border-left-color:var(--ac)}
+main section{padding-top:18px;scroll-margin-top:12px}
+h2{font-size:28px;line-height:1.2;margin:1.6em 0 .5em;letter-spacing:-.01em}
+h3{font-size:19px;margin:1.3em 0 .3em}
+p{margin:.6em 0}
+figure{margin:22px 0}figure svg,figure img{display:block;width:100%;height:auto}
+figcaption{font-size:14px;color:var(--muted);margin-top:8px;line-height:1.5}
+.diagram{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:14px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+.kpi{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi b{display:block;font-size:22px;color:var(--ac);line-height:1.2}.kpi span{font-size:13px;color:var(--muted);line-height:1.4;display:block;margin-top:4px}
+.steps{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 4px}
+.steps button{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:999px;padding:6px 14px;font-size:14px;cursor:pointer}
+.steps button[aria-pressed=true]{background:var(--ac);border-color:var(--ac);color:#fff}
+.step-text{min-height:5.5em}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
+.card{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:14px;line-height:1.5}
+.card b{font-size:15px}.card svg{width:100%;height:auto;margin:6px 0}
+table{width:100%;border-collapse:collapse;font-size:15px;margin:12px 0}th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+.callout{border-left:4px solid var(--ac);background:var(--soft);padding:14px 18px;border-radius:0 12px 12px 0;margin:22px 0}
+.callout.res{border-left-color:var(--ok)}
+.btn{display:inline-block;font:600 15px Inter,sans-serif;background:var(--ac);color:#fff;text-decoration:none;padding:10px 18px;border-radius:10px;margin:6px 8px 6px 0}
+.btn.alt{background:transparent;color:var(--ac);border:1px solid var(--ac)}
+.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}.gallery figure{margin:0}.gallery img{border-radius:10px;border:1px solid var(--line)}
+.src{font-size:14px;color:var(--muted)}.src a{color:var(--muted)}
+a{color:var(--ac)}
+footer{max-width:1180px;margin:40px auto 0;padding:24px 20px 60px;border-top:1px solid var(--line);font:14px Inter,sans-serif;color:var(--muted)}
+svg text{font-family:Inter,system-ui,sans-serif}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="kicker">Explainer</div>
+  <h1>How a Jet Engine Works</h1>
+  <p class="lede">A step-by-step illustrated guide to the turbofan, the engine on almost every airliner, and to the blades inside it that inspectors must check for damage.</p>
+  <div class="byline">Afeefa Azam · Khalifa University · facts from the sources listed at the end</div>
+</header>
+
+<div class="wrap">
+<nav class="toc" aria-label="Contents"><b>Contents</b>
+  <a href="#basic">The basic idea</a><a href="#types">Four types of engine</a><a href="#steps">The turbofan, step by step</a>
+  <a href="#thrust">Where the thrust comes from</a><a href="#bypass">Bypass ratio</a><a href="#parts">Key components</a>
+  <a href="#blades">Where blades get damaged</a><a href="#inspect">Inspecting blades from photos</a><a href="#sources">Sources</a>
+</nav>
+<main>
+
+<figure class="diagram" style="margin-top:0"><div id="hero"></div>
+<figcaption>Cross-section of a two-spool, high-bypass turbofan (simplified, not to scale). Blue: bypass air around the core. Red: core air that is compressed, burned and expanded.</figcaption></figure>
+
+<section id="basic"><h2>The basic idea</h2>
+<p>A jet engine turns the chemical energy of fuel into thrust by throwing air backwards very fast. Pushing air back pushes the engine forward: Newton’s third law. The jet engine was invented independently by Frank Whittle and Hans von Ohain in the 1930s.</p>
+<figure class="diagram"><svg viewBox="0 0 760 170" role="img" aria-label="Air pushed backwards, engine pushed forwards">
+  <defs><marker id="ahg" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 z" fill="#2b8a3e"/></marker><marker id="aho" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 z" fill="#d9480f"/></marker></defs>
+  <line x1="250" y1="60" x2="120" y2="60" stroke="#2b8a3e" stroke-width="5" marker-end="url(#ahg)"/>
+  <text x="40" y="40" font-size="15" font-weight="700" fill="#2b8a3e">Thrust: engine pushed forward</text>
+  <path d="M260 85 L470 70 L470 130 L260 115 Z" fill="#c7cfdb" stroke="#5d6779"/><circle cx="262" cy="100" r="16" fill="#9aa3b2"/>
+  <line x1="490" y1="100" x2="700" y2="100" stroke="#d9480f" stroke-width="5" marker-end="url(#aho)"/>
+  <text x="490" y="84" font-size="15" font-weight="700" fill="#d9480f">Hot gas thrown backwards</text>
+  <text x="380" y="160" font-size="14" fill="#5d6779" text-anchor="middle">Equal and opposite: the faster and the more air is thrown back, the greater the thrust.</text>
+</svg></figure>
+<div class="kpis"><div class="kpi"><b>20–30%</b><span>better fuel efficiency of the newest airliner engines (Boeing 787, Airbus A350) than the previous generation</span></div>
+<div class="kpi"><b>&gt; 500 mph</b><span>cruise speeds where jets are efficient; propellers top out around 400 mph</span></div></div>
+</section>
+
+<section id="types"><h2>Four types of engine</h2>
+<p>All gas-turbine engines share the same core (compressor, combustor, turbine). They differ in what that core drives.</p>
+<div class="grid4" id="typecards"></div>
+<p class="src">Ramjets and scramjets have no rotating parts at all: the aircraft’s own speed compresses the air, so they only work once already flying fast (Mach 1–5 and 4–12).</p>
+</section>
+
+<section id="steps"><h2>The turbofan, step by step</h2>
+<p>Follow the air through the engine. Choose a step:</p>
+<div class="steps" id="stepbtns"></div>
+<figure class="diagram"><div id="stepfig"></div></figure>
+<h3 id="stepTitle"></h3><p class="step-text" id="stepText"></p>
+<div class="kpis" id="stepKpis"></div>
+</section>
+
+<section id="thrust"><h2>Where the thrust comes from</h2>
+<p>It is tempting to think the hot exhaust does the work. In a modern turbofan it does not: most of the thrust comes from the large mass of cooler air that the fan pushes around the core.</p>
+<figure class="diagram"><svg viewBox="0 0 760 120" role="img" aria-label="Thrust split: fan 75 to 80 percent, core 20 to 25 percent">
+  <rect x="20" y="30" width="540" height="44" rx="8" fill="#1c7ed6"/><rect x="560" y="30" width="180" height="44" rx="8" fill="#d9480f"/>
+  <text x="290" y="58" font-size="17" font-weight="700" fill="#fff" text-anchor="middle">Fan (bypass air) ≈ 75–80%</text>
+  <text x="650" y="58" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">Core ≈ 20–25%</text>
+  <text x="20" y="100" font-size="14" fill="#5d6779">Bypass air leaves at roughly 900–1,100 mph; core exhaust at about 1,200–1,500 mph.</text>
+</svg><figcaption>Moving a lot of air a little faster is more efficient (and quieter) than moving a little air very fast.</figcaption></figure>
+</section>
+
+<section id="bypass"><h2>Bypass ratio</h2>
+<p>The bypass ratio is the mass of air that flows around the core divided by the mass that flows through it. Higher bypass ratios mean better fuel economy and less noise, at the cost of a bigger fan.</p>
+<figure class="diagram"><div id="bypassfig"></div><figcaption>Typical bypass ratios. Bypass air at about 900 mph is far quieter than core exhaust at about 1,400 mph.</figcaption></figure>
+</section>
+
+<section id="parts"><h2>Key components</h2>
+<table><thead><tr><th>Component</th><th>What it does</th><th>Typical numbers</th></tr></thead><tbody>
+<tr><td><b>Fan</b></td><td>Accelerates a large mass of air; most of it bypasses the core</td><td>18–24 blades; tip speed over 1,000 mph; 61–134 in diameter</td></tr>
+<tr><td><b>Compressor</b></td><td>Squeezes the core air in low- and high-pressure sections</td><td>8–14 stages; pressure ratio 30:1–50:1</td></tr>
+<tr><td><b>Combustor</b></td><td>Burns fuel continuously; usually an annular chamber</td><td>3,000–3,600 °F; only ~25% of its air takes part in burning</td></tr>
+<tr><td><b>Turbine</b></td><td>Extracts energy to drive the compressor and fan</td><td>10,000–15,000 rpm; single-crystal superalloy blades running hotter than their melting point, kept alive by cooling</td></tr>
+<tr><td><b>Nozzle</b></td><td>Accelerates the remaining gas</td><td>Fixed or variable geometry</td></tr>
+<tr><td><b>Gearbox</b> (geared fans)</td><td>Lets the fan turn slower than the turbine</td><td>15–20% efficiency gain (e.g. PW1000G)</td></tr>
+</tbody></table>
+</section>
+
+<section id="blades"><h2>Where blades get damaged</h2>
+<p>Every stage contains rows of precision blades, and each region of the engine damages them in its own way. Engines are built to swallow a 4-pound bird and to run 25,000–50,000 hours between major overhauls, so regular blade inspection is a core part of keeping them safe.</p>
+<figure class="diagram"><div id="damagefig"></div><figcaption>Typical damage by region. Cold front stages suffer impacts and erosion; hot rear stages suffer heat-driven cracking and coating loss.</figcaption></figure>
+</section>
+
+<section id="inspect"><h2>Inspecting blades from photos</h2>
+<p>Inspectors look at blades through borescopes and photographs. The difficulty is that a dark spot in a photo can be real damage, a harmless stain, a lighting change or a slightly moved camera. My research, <b>BladeDelta</b>, compares a few calibrated photos with the blade’s healthy CAD model, and reports damage in 3D <i>only when the photos can prove it</i>; otherwise it says “not enough evidence”.</p>
+<div class="gallery">
+  <figure><img src="img/vr/res/test2_0083_3.jpg" alt="Dent found: photo, healthy rendering, difference"><figcaption>Dent found: true 0.36 mm, measured 0.35 mm.</figcaption></figure>
+  <figure><img src="img/vr/res/cad6dmg2_1003_02.jpg" alt="Sharp nick found"><figcaption>Sharp nick on the blade edge: found and recognised as a nick.</figcaption></figure>
+  <figure><img src="img/vr/res/cad6dmg2_1004_11.jpg" alt="Hairline crack found"><figcaption>Hairline crack: found and recognised as a crack.</figcaption></figure>
+</div>
+<div class="callout res sans" style="font-size:16px"><b>Results so far, on computer-rendered blades:</b> 51% of visible dents found at a 5% false-alarm rate (other methods: at most 19%); 12 of 13 dents deeper than 0.2 mm found; all 22 located hairline cracks recognised as cracks. Validation on real, 3D-printed and scanned blades is next.</div>
+<a class="btn" href="lab.html">Step through the method in 3D</a><a class="btn alt" href="visual_results.html">Full results</a><a class="btn alt" href="jet_engine.html">Explore the engine in 3D</a>
+</section>
+
+<section id="sources"><h2>Sources</h2>
+<p class="src">Engine facts and numbers are paraphrased from <a href="https://theflyingengineer.com/how-do-jet-engines-work/">The Flying Engineer, “How do jet engines work?”</a>, <a href="https://aerospaceanswers.com/what-is-a-jet-engine/">AerospaceAnswers, “What is a jet engine?”</a> and <a href="https://www.howengineswork.com/engines/jet">HowEnginesWork, “Jet engines”</a>. Values are typical ranges for modern engines, not data for a specific engine. Diagrams are simplified and not to scale. Inspection results are from the BladeDelta experiments.</p>
+</section>
+</main>
+</div>
+<footer>How a Jet Engine Works · Afeefa Azam · Khalifa University</footer>
+
+<script>
+// ---------- turbofan cross-section (SVG), with optional highlight ----------
+const C = { cold: '#1c7ed6', hot: '#d9480f', warm: '#f08c00', metal: '#8d97a8', dark: '#4a5466', line: '#5d6779' };
+function engineSVG(hi, opts = {}) {
+  const Y = 180, on = k => !hi || hi.includes(k), op = k => on(k) ? 1 : .22;
+  const blades = (x, n, r0, r1, w, col, key) => { let s = ''; for (let i = 0; i < n; i++) { const xx = x + i * (w + 6); const rr = typeof r1 === 'function' ? r1(i) : r1;
+      s += `<rect x="${xx}" y="${Y - rr}" width="${w}" height="${rr - r0}" rx="2" fill="${col}"/><rect x="${xx}" y="${Y + r0}" width="${w}" height="${rr - r0}" rx="2" fill="${col}"/>`; }
+    return `<g opacity="${op(key)}">${s}</g>`; };
+  const arrow = (x1, y1, x2, y2, col, key) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="3.5" marker-end="url(#a_${col.slice(1)})" opacity="${op(key)}"/>`;
+  const lab = (x, y, tx, ty, t, key) => on(key) ? `<line x1="${x}" y1="${y}" x2="${tx}" y2="${ty + (ty < y ? 5 : -15)}" stroke="#9aa3b2" stroke-dasharray="3 3"/><text x="${tx}" y="${ty}" font-size="14" font-weight="600" fill="currentColor" text-anchor="middle">${t}</text>` : '';
+  return `<svg viewBox="0 -48 900 408" role="img" aria-label="Turbofan cross-section" style="color:var(--fg)">
+  <defs>${[C.cold, C.hot].map(c => `<marker id="a_${c.slice(1)}" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="${c}"/></marker>`).join('')}</defs>
+  <g opacity="${op('nacelle')}"><path d="M70 ${Y - 150} Q90 ${Y - 162} 140 ${Y - 160} L560 ${Y - 150} L560 ${Y - 138} L150 ${Y - 146} Q95 ${Y - 147} 70 ${Y - 150}Z" fill="${C.metal}"/>
+  <path d="M70 ${Y + 150} Q90 ${Y + 162} 140 ${Y + 160} L560 ${Y + 150} L560 ${Y + 138} L150 ${Y + 146} Q95 ${Y + 147} 70 ${Y + 150}Z" fill="${C.metal}"/></g>
+  <g opacity="${op('core')}"><path d="M165 ${Y - 98} L560 ${Y - 95} L700 ${Y - 74} L700 ${Y - 66} L560 ${Y - 86} L170 ${Y - 90}Z" fill="${C.dark}"/>
+  <path d="M165 ${Y + 98} L560 ${Y + 95} L700 ${Y + 74} L700 ${Y + 66} L560 ${Y + 86} L170 ${Y + 90}Z" fill="${C.dark}"/></g>
+  <rect x="120" y="${Y - 5}" width="560" height="10" rx="5" fill="#b8c0cc" opacity="${op('shaft')}"/>
+  <path d="M84 ${Y} Q96 ${Y - 30} 132 ${Y - 32} L132 ${Y + 32} Q96 ${Y + 30} 84 ${Y}Z" fill="#c7cfdb" opacity="${op('fan')}"/>
+  ${blades(132, 1, 32, 140, 18, '#6c8fd6', 'fan')}
+  ${blades(178, 3, 30, i => 84 - i * 3, 8, '#5fb0a0', 'lpc')}
+  ${blades(232, 9, 26, i => 76 - i * 3.4, 8, '#5aa469', 'hpc')}
+  <g opacity="${op('comb')}"><rect x="368" y="${Y - 72}" width="78" height="34" rx="16" fill="${C.warm}"/><rect x="368" y="${Y + 38}" width="78" height="34" rx="16" fill="${C.warm}"/>
+  <path d="M378 ${Y - 55} q12 -12 24 0 q12 12 24 0 q8 -8 14 0" stroke="#fff3bf" stroke-width="3" fill="none"/><path d="M378 ${Y + 55} q12 -12 24 0 q12 12 24 0 q8 -8 14 0" stroke="#fff3bf" stroke-width="3" fill="none"/></g>
+  ${blades(458, 2, 28, 66, 9, '#e8590c', 'hpt')}
+  ${blades(492, 4, 28, i => 70 + i * 5, 9, '#f08c00', 'lpt')}
+  <g opacity="${op('nozzle')}"><path d="M570 ${Y - 30} L760 ${Y} L570 ${Y + 30}Z" fill="#aeb6c3"/></g>
+  ${arrow(30, Y - 120, 120, Y - 120, C.cold, 'air')}${arrow(170, Y - 120, 540, Y - 118, C.cold, 'bypass')}${arrow(580, Y - 122, 700, Y - 128, C.cold, 'bypass')}
+  ${arrow(30, Y + 120, 120, Y + 120, C.cold, 'air')}${arrow(170, Y + 120, 540, Y + 118, C.cold, 'bypass')}${arrow(580, Y + 122, 700, Y + 128, C.cold, 'bypass')}
+  ${arrow(30, Y - 50, 120, Y - 50, C.cold, 'air')}${arrow(178, Y - 52, 350, Y - 42, C.hot, 'corein')}${arrow(460, Y - 30, 560, Y - 30, C.hot, 'coreout')}${arrow(700, Y - 42, 860, Y - 20, C.hot, 'exhaust')}
+  ${arrow(30, Y + 50, 120, Y + 50, C.cold, 'air')}${arrow(178, Y + 52, 350, Y + 42, C.hot, 'corein')}${arrow(460, Y + 30, 560, Y + 30, C.hot, 'coreout')}${arrow(700, Y + 42, 860, Y + 20, C.hot, 'exhaust')}
+  ${opts.labels === false ? '' : lab(141, Y - 162, 141, -28, 'Fan', 'fan') + lab(190, Y - 84, 215, -6, 'Booster', 'lpc') + lab(290, Y - 70, 310, -28, 'Compressor', 'hpc') + lab(407, Y - 74, 410, -6, 'Combustor', 'comb')
+    + lab(463, Y - 68, 500, -28, 'HP turbine', 'hpt') + lab(520, Y - 82, 600, -6, 'LP turbine', 'lpt') + lab(720, Y - 6, 790, 300, 'Nozzle', 'nozzle')
+    + (on('bypass') && !hi ? `<text x="355" y="${Y - 126}" font-size="13" fill="${C.cold}" text-anchor="middle" font-weight="600">bypass air</text>` : '')
+    + (on('corein') && !hi ? `<text x="300" y="${Y + 20}" font-size="13" fill="${C.hot}" text-anchor="middle" font-weight="600">core</text>` : '')}
+  </svg>`;
+}
+document.getElementById('hero').innerHTML = engineSVG(null);
+
+// ---------- engine types ----------
+const mini = t => {
+  const core = `<rect x="70" y="40" width="80" height="30" rx="6" fill="#4a5466"/><rect x="95" y="46" width="22" height="18" rx="5" fill="#f08c00"/>`;
+  const extra = { turbojet: `<path d="M150 45 L190 52 L190 58 L150 65Z" fill="#aeb6c3"/>`,
+    turbofan: `<rect x="40" y="18" width="130" height="8" rx="4" fill="#8d97a8"/><rect x="40" y="84" width="130" height="8" rx="4" fill="#8d97a8"/><rect x="52" y="22" width="8" height="66" rx="3" fill="#6c8fd6"/>`,
+    turboprop: `<rect x="40" y="6" width="7" height="98" rx="3" fill="#2f3640"/><rect x="47" y="48" width="23" height="14" fill="#8d97a8"/>`,
+    turboshaft: `<rect x="20" y="52" width="50" height="6" fill="#b8c0cc"/><rect x="8" y="42" width="18" height="26" rx="3" fill="#8d97a8"/>` }[t];
+  return `<svg viewBox="0 0 200 110" role="img" aria-label="${t} schematic">${core}${extra}</svg>`;
+};
+const TYPES = [['turbojet', 'Turbojet', 'The original design: all air goes through the core. Fast but thirsty and loud, so no longer used on airliners.'],
+  ['turbofan', 'Turbofan', 'A large fan pushes most air around the core. The most common engine on commercial aircraft.'],
+  ['turboprop', 'Turboprop', 'The core turns a propeller through a gearbox. Efficient below about 400 mph and 25,000 ft.'],
+  ['turboshaft', 'Turboshaft', 'The core delivers shaft power, for example to a helicopter rotor, rather than thrust.']];
+document.getElementById('typecards').innerHTML = TYPES.map(([k, n, d]) => `<div class="card"><b>${n}</b>${mini(k)}${d}</div>`).join('');
+
+// ---------- steps ----------
+const STEPS = [
+  { b: '1 · Intake', hi: ['air', 'nacelle', 'fan'], t: 'Air intake', x: 'The inlet slows the incoming air to around 350 mph and delivers smooth, stable flow to the fan; disturbed flow can make the compressor stall or surge.', k: [['≈ 350 mph', 'air speed at the fan face']] },
+  { b: '2 · Fan', hi: ['fan', 'bypass', 'nacelle'], t: 'Fan and bypass air', x: 'The fan accelerates a large mass of air. Most of it, 80–90%, flows around the core through the bypass duct and produces most of the thrust.', k: [['9:1 – 12:1', 'bypass ratio of modern engines'], ['61–134 in', 'fan diameter, regional jets to GE9X']] },
+  { b: '3 · Compressor', hi: ['lpc', 'hpc', 'corein', 'core'], t: 'Compressor', x: 'The remaining core air passes through 8–14 compressor stages, each a ring of rotating blades and stationary vanes, which squeeze it to 30–50 times its inlet pressure and heat it.', k: [['30:1 – 50:1', 'overall pressure rise'], ['600–900 °F', 'air temperature before fuel is added']] },
+  { b: '4 · Combustor', hi: ['comb', 'core'], t: 'Combustion', x: 'Fuel is sprayed into the compressed air and burned continuously. Only about a quarter of the air takes part in burning; the rest cools the chamber walls and dilutes the hot gas.', k: [['3,000–3,600 °F', 'combustion temperature'], ['≈ 25%', 'of the air takes part in burning']] },
+  { b: '5 · Turbine', hi: ['hpt', 'lpt', 'shaft', 'coreout', 'core'], t: 'Turbine', x: 'The hot gas spins the turbines, which drive the compressor and fan through two concentric shafts. Turbine blades run hotter than their own melting point and survive only through internal cooling and coatings.', k: [['10,000–15,000 rpm', 'turbine speed'], ['> melting point', 'gas temperature at the blades']] },
+  { b: '6 · Exhaust', hi: ['nozzle', 'exhaust', 'bypass'], t: 'Exhaust and thrust', x: 'The nozzle accelerates the remaining core gas backwards. Together with the bypass air, this rearward momentum is the engine’s thrust.', k: [['1,200–1,500 mph', 'core exhaust velocity'], ['20–30%', 'of total thrust from the core']] }];
+let cur = 0;
+function setStep(i) {
+  cur = i; const s = STEPS[i];
+  document.getElementById('stepfig').innerHTML = engineSVG(s.hi);
+  document.getElementById('stepTitle').textContent = s.t; document.getElementById('stepText').textContent = s.x;
+  document.getElementById('stepKpis').innerHTML = s.k.map(([a, b]) => `<div class="kpi"><b>${a}</b><span>${b}</span></div>`).join('');
+  document.querySelectorAll('#stepbtns button').forEach((b, j) => b.setAttribute('aria-pressed', j === i));
+}
+document.getElementById('stepbtns').innerHTML = STEPS.map((s, i) => `<button onclick="setStep(${i})">${s.b}</button>`).join('');
+setStep(0);
+
+// ---------- bypass ratio chart ----------
+const BP = [['Low bypass (military)', 0.5, 2], ['Medium (older airliners)', 4, 6], ['High (modern airliners)', 9, 12], ['Ultra-high (future)', 15, 20]];
+document.getElementById('bypassfig').innerHTML = `<svg viewBox="0 0 820 230" role="img" aria-label="Bypass ratio ranges">
+  ${[0, 5, 10, 15, 20].map(v => `<line x1="${230 + v * 25}" y1="20" x2="${230 + v * 25}" y2="200" stroke="#d6dbe4"/><text x="${230 + v * 25}" y="220" font-size="13" fill="#5d6779" text-anchor="middle">${v}:1</text>`).join('')}
+  ${BP.map(([n, a, b], i) => `<text x="220" y="${48 + i * 44}" font-size="14" text-anchor="end" fill="currentColor">${n}</text><rect x="${230 + a * 25}" y="${32 + i * 44}" width="${(b - a) * 25}" height="24" rx="6" fill="${['#adb5bd', '#74c0fc', '#1c7ed6', '#1864ab'][i]}"/><text x="${236 + b * 25}" y="${49 + i * 44}" font-size="13" fill="#5d6779">${a}–${b}:1</text>`).join('')}
+</svg>`;
+
+// ---------- damage map ----------
+document.getElementById('damagefig').innerHTML = engineSVG(null, { labels: false }).replace('</svg>', `
+  <g font-size="13" font-family="Inter,sans-serif">
+   <rect x="20" y="372" width="270" height="52" rx="8" fill="#e7f5ff" stroke="#1c7ed6"/><text x="32" y="392" font-weight="700" fill="#1864ab">Fan &amp; front stages (cold)</text><text x="32" y="412" fill="#1d2433">bird/debris impacts, dents, nicks</text>
+   <rect x="310" y="372" width="240" height="52" rx="8" fill="#ebfbee" stroke="#2b8a3e"/><text x="322" y="392" font-weight="700" fill="#2b8a3e">Compressor</text><text x="322" y="412" fill="#1d2433">erosion, tip rubs, dents from debris</text>
+   <rect x="570" y="372" width="310" height="52" rx="8" fill="#fff4e6" stroke="#d9480f"/><text x="582" y="392" font-weight="700" fill="#d9480f">Turbines (hot)</text><text x="582" y="412" fill="#1d2433">thermal cracks, coating loss, oxidation, creep</text>
+   <line x1="141" y1="368" x2="141" y2="322" stroke="#1c7ed6" stroke-dasharray="4 3"/><line x1="300" y1="368" x2="290" y2="252" stroke="#2b8a3e" stroke-dasharray="4 3"/><line x1="600" y1="368" x2="515" y2="252" stroke="#d9480f" stroke-dasharray="4 3"/>
+  </g></svg>`).replace('viewBox="0 -48 900 408"', 'viewBox="0 0 900 432"');
+
+// ---------- table of contents highlight ----------
+const links = [...document.querySelectorAll('nav.toc a')], secs = links.map(a => document.querySelector(a.getAttribute('href')));
+addEventListener('scroll', () => { let k = 0; secs.forEach((s, i) => { if (s.getBoundingClientRect().top < 140) k = i; }); links.forEach((a, i) => a.classList.toggle('on', i === k)); }, { passive: true });
+</script>
+</body>
+</html>
