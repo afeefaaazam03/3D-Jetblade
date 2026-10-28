@@ -137,6 +137,13 @@ table.conf td:not(:first-child),table.conf th:not(:first-child){{text-align:cent
 .hm{{display:inline-block;min-width:34px;padding:4px 6px;border-radius:6px;font-weight:600}}.kpis span{{color:var(--m);font-size:13px}}ul{{margin:6px 0;padding-left:20px}}
 </style></head><body><main>
 <h1>BladeDelta: latest results</h1><p class="sub">Finding 3D damage on aero-engine blades from a CAD model and a few photos, and saying when the photos are not enough. All results on computer-rendered blades. Author: Afeefa Azam.</p>
+<section><h2>0. Latest: class thresholds, counting, YOLO baseline</h2><ul>
+<li><b>Class-specific thresholds:</b> false alarms 10% → 4%, damage type correct 73% → 81%, detection unchanged.</li>
+<li><b>Counting:</b> exact count on 67% of 64 blades (healthy 8/8 and stains 7/8 counted as zero).</li>
+<li><b>YOLOv8 baseline:</b> mAP@50 0.75, ≈2 ms/image; at equal false alarms dents 15/24 (ours 24/24), nicks 27/32 (ours 21/32), cracks 30/32 (ours 30/32); no 3D location, depth or abstention.</li>
+<li><b>Output vector:</b> [Defective, Type, Intensity (mm), Count]; e.g. hairline crack → [True, "crack", 9.33, 1].</li>
+<li><b>Folded dents:</b> 24/24 located; type judge did not abstain (0/24 uncertain).</li></ul>
+<p class="m">Full details: <a href="visual_results.html">visual results</a>.</p></section>
 <section><h2>The four defect types</h2>{gallery()}<p class="m"><b>Note:</b> the simulated "nicks" are rounded dents on the blade edge and the "cracks" are long, shallow grooves (0.4&nbsp;mm wide), closer to scratches. They are simplified stand-ins, not realistic sharp nicks or hairline cracks. Below, "nick" and "crack" refer to these stand-ins; realistic versions are being built and tested next.</p></section>
 <section><h2>1. Damage-type specialists + judge</h2>
 <p>Four specialists (dent, nick = edge dent, crack = groove, stain) each try to explain the photos; a judge picks the clear winner, says <i>type uncertain</i> when two fit about equally well, and calls it a stain or nothing when no physical damage is detected. Detection is the unchanged frozen method, so false alarms do not change. 136 cases on four held-out industrial blade designs.</p><div class="ch"><canvas id="cs"></canvas></div>{spec}</section>
